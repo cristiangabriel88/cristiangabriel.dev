@@ -5,49 +5,72 @@
 
 const { useState, useEffect, useRef } = React;
 
-// Typewriter hook
+// ###### TYPEWRITER (ref-driven, no React re-renders) ######
+// The previous version stored the in-progress text in useState, so every
+// character ticked a full HomePage re-render (~14–28×/s). That reconciliation
+// work blocked the main thread and made the leaf-trail RAF skip frames in
+// sync with the typing cadence. This version writes textContent directly to
+// a DOM node via a ref — React is at rest during typing.
 function useTypewriter(phrases, { speed = 70, pauseAfter = 1800, deleteSpeed = 35 } = {}) {
-  const [text, setText] = useState('');
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [deleting, setDeleting] = useState(false);
-
+  const ref = useRef(null);
   useEffect(() => {
-    const current = phrases[phraseIdx % phrases.length];
-    let t;
-    if (!deleting && text === current) {
-      t = setTimeout(() => setDeleting(true), pauseAfter);
-    } else if (deleting && text === '') {
-      setDeleting(false);
-      setPhraseIdx(i => i + 1);
-    } else {
-      t = setTimeout(() => {
-        setText(prev => deleting
-          ? prev.slice(0, -1)
-          : current.slice(0, prev.length + 1));
-      }, deleting ? deleteSpeed : speed);
-    }
-    return () => clearTimeout(t);
-  }, [text, deleting, phraseIdx, phrases, speed, pauseAfter, deleteSpeed]);
+    const el = ref.current;
+    if (!el) return;
+    let text = '';
+    let phraseIdx = 0;
+    let deleting = false;
+    let timer = 0;
+    let cancelled = false;
 
-  return text;
+    function paint() {
+      // Non-breaking space when empty so the inline baseline stays put and
+      // the cursor doesn't shift onto a different line for a frame.
+      el.textContent = text === '' ? ' ' : text;
+    }
+    paint();
+
+    function step() {
+      if (cancelled) return;
+      const current = phrases[phraseIdx % phrases.length];
+      if (!deleting && text === current) {
+        timer = setTimeout(() => { deleting = true; step(); }, pauseAfter);
+      } else if (deleting && text === '') {
+        deleting = false;
+        phraseIdx++;
+        step();
+      } else {
+        timer = setTimeout(() => {
+          text = deleting ? text.slice(0, -1) : current.slice(0, text.length + 1);
+          paint();
+          step();
+        }, deleting ? deleteSpeed : speed);
+      }
+    }
+    step();
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [phrases, speed, pauseAfter, deleteSpeed]);
+
+  return ref;
 }
+
+// Hero phrases live at module scope so the array reference is stable across
+// renders — keeps the typewriter effect from re-mounting on every parent re-render.
+const HERO_PHRASES = [
+  'I build things on the JVM.',
+  'Java, Spring Boot, PostgreSQL.',
+  'Practical, well-structured solutions.',
+  'Currently exploring LLM prompting.',
+];
 
 // ──────────── HOME ────────────
 function HomePage({ onNav, tweaks }) {
-  const phrases = [
-    'I build things on the JVM.',
-    'Java, Spring Boot, PostgreSQL.',
-    'Practical, well-structured solutions.',
-    'Currently exploring LLM prompting.',
-  ];
-  const tag = useTypewriter(phrases);
+  const tagRef = useTypewriter(HERO_PHRASES);
 
   return React.createElement('section', { className: 'page-inner hero fade-in' },
     React.createElement('div', { className: 'eyebrow' },
       React.createElement('span', { className: 'rule' }),
       React.createElement('span', null, 'PORTFOLIO · 2026'),
-      React.createElement('span', { className: 'dot' }),
-      React.createElement('span', { style: { color: 'var(--forest)' } }, 'Available for work'),
     ),
     React.createElement('h1', null,
       'Hey there, ',
@@ -55,11 +78,13 @@ function HomePage({ onNav, tweaks }) {
       'I’m ', React.createElement('em', null, 'Cristian'), '.'
     ),
     React.createElement('p', { className: 'tagline' },
-      React.createElement('span', null, tag),
+      // Typewriter writes textContent directly to this span via tagRef — no
+      // React re-renders fire while typing, so the leaf trail stays smooth.
+      React.createElement('span', { ref: tagRef }, ' '),
       React.createElement('span', { className: 'cursor' }),
     ),
     React.createElement('p', { className: 'hero-blurb' },
-      'A software engineer based in Bucharest, building server-side applications and personal side-quests outside of client work. This is my own little plot of the internet — quiet, green, occasionally pixelated.'
+      'A software engineer based in Bucharest, building server-side applications and personal side-quests outside of client work. This is my own little plot of the internet. Quiet, green, occasionally pixelated.'
     ),
     React.createElement('div', { className: 'cta-row' },
       React.createElement('button', { className: 'btn', onClick: () => onNav('projects') },
@@ -86,7 +111,10 @@ function HomePage({ onNav, tweaks }) {
       ),
       React.createElement('div', null,
         'Status',
-        React.createElement('strong', null, 'Open to collaboration'),
+        React.createElement('strong', null,
+          React.createElement('span', { className: 'status-dot', 'aria-hidden': 'true' }),
+          'Open to collaboration',
+        ),
       ),
     ),
   );
@@ -102,14 +130,14 @@ function AboutPage({ tweaks }) {
   ];
 
   const timeline = [
-    { year: '2024 — now', title: 'Server-side & data work', body: 'Application logic, data modeling, PDF report generation in Java / Spring Boot.' },
-    { year: '2023', title: 'Personal portfolio launch', body: 'Built this site from scratch — handwritten HTML, CSS, vanilla JS.' },
+    { year: '2024 →', title: 'Server-side & data work', body: 'Application logic, data modeling, PDF report generation in Java / Spring Boot.' },
+    { year: '2023', title: 'Personal portfolio launch', body: 'Built this site from scratch. Handwritten HTML, CSS, vanilla JS.' },
     { year: '2022', title: 'Deeper into the JVM', body: 'Picked up Spring Boot + Thymeleaf, started shipping passion projects.' },
     { year: '2021', title: 'First lines', body: 'HTML, CSS, JavaScript, Bootstrap. Followed the curiosity.' },
   ];
 
   return React.createElement('section', { className: 'page-inner about-wrap fade-in' },
-    React.createElement('div', { className: 'about-kicker' }, '01 — About me'),
+    React.createElement('div', { className: 'about-kicker' }, 'About me'),
     React.createElement('h1', null,
       'A quiet ', React.createElement('em', null, 'engineer'),
       React.createElement('br'),
@@ -149,7 +177,6 @@ function AboutPage({ tweaks }) {
     tweaks.showPixelArt && React.createElement(PixelDivider, { width: 480 }),
 
     React.createElement('div', { className: 'section-label' },
-      React.createElement('span', { className: 'num' }, '02 /'),
       React.createElement('h3', null, 'Tech ', React.createElement('em', null, 'stack')),
     ),
     React.createElement('div', { className: 'tech-grid' },
@@ -164,7 +191,6 @@ function AboutPage({ tweaks }) {
     ),
 
     React.createElement('div', { className: 'section-label' },
-      React.createElement('span', { className: 'num' }, '03 /'),
       React.createElement('h3', null, 'A short ', React.createElement('em', null, 'timeline')),
     ),
     React.createElement('div', { className: 'timeline' },
@@ -232,12 +258,12 @@ function ProjectsPage({ tweaks, onCardHover }) {
   ];
 
   return React.createElement('section', { className: 'page-inner projects-wrap fade-in' },
-    React.createElement('div', { className: 'about-kicker' }, '02 — Projects'),
+    React.createElement('div', { className: 'about-kicker' }, 'Projects'),
     React.createElement('h1', null,
       'Things I’ve ', React.createElement('em', null, 'made'), '.'
     ),
     React.createElement('p', { className: 'projects-intro' },
-      'A handful of personal projects — built outside of client work, for the joy of it. Each one was a chance to learn something specific, ship something real, and overengineer a little.'
+      'A handful of personal projects, built outside of client work, for the joy of it. Each one was a chance to learn something specific, ship something real, and overengineer a little.'
     ),
 
     tweaks.showPixelArt && React.createElement(PixelDivider, { width: 520 }),

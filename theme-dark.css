@@ -1,0 +1,131 @@
+/* =====================================================================
+   theme-dark.css — opt-in dark mode
+   Activated by [data-theme="dark"] on <html> (managed in chrome.jsx).
+   Palette: warm, earthy — deep browns, sepia, charred bark. No blue.
+   Same family as the light parchment theme, just shaded down.
+   ===================================================================== */
+
+:root[data-theme="dark"] {
+  /* surfaces — softer dark warm browns (lifted from near-black so the eye
+     gets some surface tone to rest on) */
+  --parchment:   #2B231B;  /* base bg — warm dark oak */
+  --parchment-2: #362B22;  /* card / sidebar */
+  --parchment-3: #423429;  /* raised surface */
+
+  /* ink — warm creams that read as text on dark bg */
+  --ink:         #ECE3CC;  /* primary text */
+  --ink-soft:    #BFB59A;  /* secondary text */
+  --ink-mute:    #847962;  /* tertiary, captions */
+
+  /* forest — pushed brighter so titles, italic accents and the small "Open
+     to collaboration" line read crisply against the warm dark surface */
+  --forest:      #D2EEBE;  /* titles, accents, brand */
+  --forest-deep: #E5F5D5;  /* hover */
+  --moss:        #B5DFAA;  /* status dot, secondary accent */
+  --moss-soft:   #E0EFD2;
+
+  /* dedicated button surface for dark mode — deeper green so off-white text
+     on it stays readable (the page-level --forest is too bright for a button bg) */
+  --btn-bg:       #3F6924;
+  --btn-bg-hover: #4F8030;
+
+  /* rules — warm dim glow rather than cold gray */
+  --rule:        rgba(197, 230, 176, 0.24);
+  --rule-soft:   rgba(236, 227, 204, 0.12);
+}
+
+/* ###### SOFT TONE SHIFTS THAT THE TOKEN OVERRIDES DON'T CATCH ###### */
+
+:root[data-theme="dark"] body::before {
+  /* The grain gradient was forest-tinted; in dark mode lift it slightly
+     so the surface stays warm rather than flat black. */
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(143, 181, 122, 0.05), transparent 50%),
+    radial-gradient(circle at 85% 90%, rgba(143, 181, 122, 0.07), transparent 55%);
+  mix-blend-mode: screen;
+}
+
+:root[data-theme="dark"] ::selection {
+  background: var(--forest);
+  color: var(--parchment);
+}
+
+/* sidebar gets a slight inner glow rather than a flat panel */
+:root[data-theme="dark"] .sidebar {
+  background: linear-gradient(180deg, rgba(54, 43, 34, 0.92) 0%, rgba(43, 35, 27, 0.7) 100%);
+}
+
+/* topnav pill — slightly more visible on dark */
+:root[data-theme="dark"] .topnav {
+  background: rgba(54, 43, 34, 0.88);
+  box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.5);
+}
+
+/* tech cells + project cards: warm card surface instead of white wash */
+:root[data-theme="dark"] .tech-cell {
+  background: rgba(232, 223, 200, 0.04);
+}
+:root[data-theme="dark"] .tech-cell:hover {
+  background: rgba(232, 223, 200, 0.08);
+}
+:root[data-theme="dark"] .project-card {
+  background: rgba(232, 223, 200, 0.04);
+}
+:root[data-theme="dark"] .project-card:hover {
+  background: rgba(232, 223, 200, 0.08);
+  box-shadow: 0 24px 40px -28px rgba(143, 181, 122, 0.35);
+}
+:root[data-theme="dark"] .project-thumb {
+  background: var(--parchment-3);
+}
+:root[data-theme="dark"] .project-thumb.placeholder {
+  background:
+    repeating-linear-gradient(45deg, var(--parchment-2) 0 12px, var(--parchment-3) 12px 24px);
+}
+
+/* nav buttons — deep green pill with off-white text so the active state
+   reads cleanly without a glaring bright-green tab */
+:root[data-theme="dark"] .nav-btn.active {
+  background: var(--btn-bg);
+  color: var(--ink);
+}
+
+/* primary button: deep green surface, off-white text */
+:root[data-theme="dark"] .btn {
+  background: var(--btn-bg);
+  color: var(--ink);
+  border-color: var(--btn-bg);
+}
+:root[data-theme="dark"] .btn:hover {
+  background: var(--btn-bg-hover);
+  border-color: var(--btn-bg-hover);
+  color: var(--ink);
+}
+/* ghost button: lifted forest text on transparent — already legible with the
+   brighter --forest, but tighten the border so it reads as a button at rest */
+:root[data-theme="dark"] .btn.ghost {
+  background: transparent;
+  color: var(--forest);
+  border-color: var(--rule);
+}
+:root[data-theme="dark"] .btn.ghost:hover {
+  background: rgba(210, 238, 190, 0.08);
+  border-color: var(--forest);
+  color: var(--forest-deep);
+}
+
+/* ###### BOTANICAL ANCHORS IN DARK MODE ######
+   The plant photos were chosen for parchment via mix-blend-multiply.
+   On a dark surround that blend mode would crush them to near-black.
+   Drop opacity so they stay as a quiet atmospheric layer. */
+:root[data-theme="dark"] .botanical.home,
+:root[data-theme="dark"] .botanical.about {
+  opacity: 0.55;
+}
+:root[data-theme="dark"] .botanical.projects {
+  mix-blend-mode: screen;
+  opacity: 0.22;
+}
+
+/* terminal already uses its own dark green palette — leave it as-is.
+   The terminal-minimized-pill stays legible against either theme. */

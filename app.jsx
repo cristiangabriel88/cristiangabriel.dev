@@ -94,7 +94,8 @@ function App() {
 
     // ###### EASTER EGGS ######
     t.showLeafParticles  && React.createElement(LeafParticles,   { enabled: true, burstRef }),
-    t.showPixelCharacter && React.createElement(PixelCharacter,  { enabled: true }),
+    // Walking pixel character disabled — uncomment to bring it back:
+    // t.showPixelCharacter && React.createElement(PixelCharacter,  { enabled: true }),
 
     React.createElement(Terminal, {
       open: termOpen,

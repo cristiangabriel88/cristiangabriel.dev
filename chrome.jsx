@@ -4,7 +4,21 @@
 // Persistent across all pages
 // ─────────────────────────────────────────────────────────────
 
-const { useEffect } = React;
+const { useEffect, useState } = React;
+
+// ###### THEME (LIGHT / DARK) ######
+// Drives [data-theme="dark"] on <html>. theme-dark.css picks it up.
+// Persisted in localStorage so the choice sticks across reloads.
+const THEME_KEY = 'cg.theme';
+function readStoredTheme() {
+  try { return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'; }
+  catch (e) { return 'light'; }
+}
+function applyTheme(theme) {
+  if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  else document.documentElement.removeAttribute('data-theme');
+  try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+}
 
 // ###### SVG ICON SET ######
 // Stroke-based, forest green
@@ -34,10 +48,14 @@ function Ico({ name }) {
 
 // ###### SIDEBAR ######
 function Sidebar() {
+  const [theme, setTheme] = useState(readStoredTheme);
+  useEffect(() => { applyTheme(theme); }, [theme]);
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+
   return React.createElement('aside', { className: 'sidebar' },
     React.createElement('div', { className: 'brand' },
       // Asymmetric leaf-mark sigil — modern, minimal, logo-style
-      React.createElement('a', { href: '#', className: 'brand-mark', onClick: (e) => e.preventDefault(), 'aria-label': 'Cristian Gabriel — Home' },
+      React.createElement('a', { href: '#', className: 'brand-mark', onClick: (e) => e.preventDefault(), 'aria-label': 'Cristian Gabriel, Home' },
         React.createElement('svg', { viewBox: '0 0 40 56', width: 44, height: 60, fill: 'none' },
           // long curved stem
           React.createElement('path', {
@@ -84,11 +102,40 @@ function Sidebar() {
       ),
       React.createElement('a', { className: 'social', href: 'mailto:me@cristiangabriel.dev' },
         React.createElement('span', { className: 'social-ico' }, React.createElement(Ico, { name: 'mail' })),
-        React.createElement('span', { className: 'social-label' }, 'me@cristiangabriel.dev'),
+        React.createElement('span', { className: 'social-label' }, 'Email me'),
       ),
     ),
     React.createElement('div', { className: 'sidebar-footer' },
-      'Est. ', React.createElement('span', { style: { fontFamily: 'var(--serif)', fontStyle: 'italic', textTransform: 'none', fontSize: 12, letterSpacing: 0 } }, '2021'),
+      React.createElement('span', null,
+        'Est. ',
+        React.createElement('span', { style: { fontFamily: 'var(--serif)', fontStyle: 'italic', textTransform: 'none', fontSize: 12, letterSpacing: 0 } }, '2021'),
+      ),
+      // ###### HIDDEN DARK MODE TOGGLE ######
+      // Unlabeled icon — discoverable on hover. Sun when dark (click to lighten), moon when light.
+      React.createElement('button', {
+        className: 'theme-toggle',
+        onClick: toggleTheme,
+        title: theme === 'dark' ? 'Light mode' : 'Dark mode',
+        'aria-label': 'Toggle theme',
+      },
+        theme === 'dark'
+          ? React.createElement('svg', { viewBox: '0 0 16 16', width: 13, height: 13, fill: 'currentColor', 'aria-hidden': 'true' },
+              React.createElement('circle', { cx: 8, cy: 8, r: 3 }),
+              React.createElement('g', { stroke: 'currentColor', strokeWidth: 1.2, strokeLinecap: 'round' },
+                React.createElement('line', { x1: 8, y1: 1, x2: 8, y2: 3 }),
+                React.createElement('line', { x1: 8, y1: 13, x2: 8, y2: 15 }),
+                React.createElement('line', { x1: 1, y1: 8, x2: 3, y2: 8 }),
+                React.createElement('line', { x1: 13, y1: 8, x2: 15, y2: 8 }),
+                React.createElement('line', { x1: 3, y1: 3, x2: 4.4, y2: 4.4 }),
+                React.createElement('line', { x1: 11.6, y1: 11.6, x2: 13, y2: 13 }),
+                React.createElement('line', { x1: 3, y1: 13, x2: 4.4, y2: 11.6 }),
+                React.createElement('line', { x1: 11.6, y1: 4.4, x2: 13, y2: 3 }),
+              )
+            )
+          : React.createElement('svg', { viewBox: '0 0 16 16', width: 13, height: 13, fill: 'currentColor', 'aria-hidden': 'true' },
+              React.createElement('path', { d: 'M 8 1 A 7 7 0 1 0 15 8 A 5 5 0 0 1 8 1 Z' })
+            )
+      ),
     )
   );
 }

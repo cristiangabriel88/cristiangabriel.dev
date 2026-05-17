@@ -39,6 +39,12 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Reserve the vertical scrollbar gutter always — prevents the layout from
+   shifting when navigating between pages that do/don't overflow the viewport. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   min-height: 100vh;
   position: relative;
@@ -249,9 +255,36 @@ img.botanical[src=""] { display: none; }
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-mute);
-  text-align: center;
   padding-top: 18px;
   border-top: 1px solid var(--rule-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ###### HIDDEN DARK MODE TOGGLE ######
+   Unlabeled icon button in the sidebar footer. Low contrast at rest,
+   reveals on hover — discoverable but not advertised. */
+.theme-toggle {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 4px;
+  border-radius: 999px;
+  color: var(--ink-mute);
+  opacity: 0.5;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 180ms ease, color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+.theme-toggle:hover {
+  opacity: 1;
+  color: var(--forest);
+  background: rgba(45, 80, 22, 0.06);
+  transform: rotate(-12deg);
 }
 
 /* ---------- Top-right nav ---------- */
@@ -310,10 +343,15 @@ img.botanical[src=""] { display: none; }
   gap: 14px;
   margin-bottom: 28px;
 }
-.eyebrow .dot {
-  width: 6px; height: 6px;
+/* Pulsing availability dot — now lives next to "Open to collaboration" in
+   the hero-meta strip, not the eyebrow. */
+.hero-meta .status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
   background: var(--moss);
   border-radius: 50%;
+  margin-right: 10px;
+  vertical-align: 1px;
   box-shadow: 0 0 0 0 rgba(122, 163, 85, 0.5);
   animation: pulse 2.2s ease-out infinite;
 }
@@ -355,9 +393,13 @@ img.botanical[src=""] { display: none; }
   margin-bottom: 14px;
   display: flex;
   align-items: baseline;
-  min-height: 32px;
+  /* Locked dimensions — height stays put as the typewriter deletes back to empty,
+     width is reserved so the cursor's horizontal position doesn't push the hero around. */
+  height: 32px;
+  width: 620px;
+  max-width: 100%;
+  line-height: 32px;
   white-space: nowrap;
-  max-width: 620px;
   overflow: hidden;
 }
 .tagline .cursor {
@@ -820,11 +862,43 @@ img.botanical[src=""] { display: none; }
   border-bottom: 1px solid #2D5016;
   gap: 8px;
 }
-.terminal-bar .dots { display: flex; gap: 6px; }
-.terminal-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
-.terminal-bar .dot.r { background: #cf6a5b; }
-.terminal-bar .dot.y { background: #d4b045; }
-.terminal-bar .dot.g { background: #7AA355; }
+.terminal-bar .dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 56px;
+}
+.terminal-bar .dot {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  display: grid;
+  place-items: center;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.55);
+  transition: filter 120ms ease;
+}
+.terminal-bar .dot.r { background: #FF5F57; }
+.terminal-bar .dot.y { background: #FEBC2E; }
+.terminal-bar .dot.g { background: #28C840; }
+.terminal-bar .dot:hover { filter: brightness(1.05); }
+/* Mac-style hover glyphs — only show when hovering the dots cluster */
+.terminal-bar .dots:hover .dot::before {
+  display: block;
+  margin-top: -1px;
+}
+.terminal-bar .dots:hover .dot.r::before { content: '×'; font-size: 12px; }
+.terminal-bar .dots:hover .dot.y::before { content: '−'; font-size: 12px; }
+.terminal-bar .dots:hover .dot.g::before { content: '+'; font-size: 10px; }
 .terminal-bar .title {
   flex: 1;
   text-align: center;
@@ -868,7 +942,54 @@ img.botanical[src=""] { display: none; }
 .terminal .dim { color: #5A7838; }
 .terminal .err { color: #D69273; }
 
-/* mini-game (catch falling leaves) */
+/* ---------- Terminal: maximized (green button) ---------- */
+.terminal-backdrop.maximized { padding: 0; }
+.terminal.maximized {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  border-radius: 0;
+  border-width: 0;
+}
+
+/* ---------- Terminal: minimized (yellow button → bottom-right pill) ---------- */
+.terminal-minimized-pill {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #0F1A07;
+  color: #B5DFAA;
+  font-family: var(--pixel);
+  font-size: 16px;
+  border: 1px solid #2D5016;
+  border-radius: 999px;
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  animation: fadeIn 180ms ease-out;
+}
+.terminal-minimized-pill:hover {
+  background: #1A2A0F;
+  border-color: #7AA355;
+}
+.terminal-minimized-pill .mp-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.terminal-minimized-pill .mp-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #7AA355;
+  opacity: 0.6;
+}
+.terminal-minimized-pill .mp-dot:nth-child(1) { background: #FF5F57; opacity: 0.8; }
+.terminal-minimized-pill .mp-dot:nth-child(2) { background: #FEBC2E; opacity: 0.8; }
+.terminal-minimized-pill .mp-dot:nth-child(3) { background: #28C840; opacity: 0.8; }
+
+/* ---------- Mini-game (Snake) ---------- */
 .mini-game {
   position: relative;
   width: 100%;
@@ -877,29 +998,50 @@ img.botanical[src=""] { display: none; }
   overflow: hidden;
   font-family: var(--pixel);
   color: #B5DFAA;
+  display: flex;
+  flex-direction: column;
 }
 .mg-hud {
-  position: absolute;
-  top: 8px; left: 12px; right: 12px;
   display: flex;
   justify-content: space-between;
-  font-size: 18px;
+  padding: 8px 14px;
+  border-bottom: 1px dashed rgba(122, 163, 85, 0.2);
+  font-size: 16px;
   z-index: 2;
 }
-.mg-basket {
-  position: absolute;
-  bottom: 8px;
-  width: 60px;
-  height: 16px;
-  background: #7AA355;
-  border-radius: 4px 4px 8px 8px;
-  box-shadow: 0 0 0 2px #2D5016 inset;
+.snake-board {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  margin: 12px;
+  padding: 4px;
+  background: rgba(122, 163, 85, 0.05);
+  border: 1px solid rgba(122, 163, 85, 0.18);
+  border-radius: 4px;
 }
-.mg-falling {
-  position: absolute;
-  width: 12px;
-  height: 12px;
+.snake-cell {
+  background: transparent;
+  border-radius: 2px;
 }
+.snake-cell.body {
+  background: #5a8a3c;
+  box-shadow: 0 0 0 1px rgba(45, 80, 22, 0.5) inset;
+}
+.snake-cell.head {
+  background: #B5DFAA;
+  box-shadow: 0 0 4px rgba(181, 223, 170, 0.7);
+}
+.snake-cell.food {
+  background: #D69273;
+  border-radius: 50%;
+  transform: scale(0.72);
+  animation: foodPulse 1.4s ease-in-out infinite;
+}
+@keyframes foodPulse {
+  0%, 100% { transform: scale(0.72); }
+  50%      { transform: scale(0.92); }
+}
+
 .mg-overlay {
   position: absolute;
   inset: 0;
@@ -908,11 +1050,11 @@ img.botanical[src=""] { display: none; }
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(15, 26, 7, 0.85);
+  background: rgba(15, 26, 7, 0.88);
   text-align: center;
   z-index: 3;
 }
-.mg-overlay h4 { font-family: var(--pixel); font-size: 28px; color: #DFEFD2; }
+.mg-overlay h4 { font-family: var(--pixel); font-size: 28px; color: #DFEFD2; letter-spacing: 0.16em; }
 .mg-overlay p { font-size: 16px; color: #7AA355; max-width: 320px; }
 .mg-btn {
   font-family: var(--pixel);
