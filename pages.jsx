@@ -57,6 +57,7 @@ function useTypewriter(phrases, { speed = 70, pauseAfter = 1800, deleteSpeed = 3
 // Hero phrases live at module scope so the array reference is stable across
 // renders — keeps the typewriter effect from re-mounting on every parent re-render.
 const HERO_PHRASES = [
+  'Full Stack developer',
   'Still learning how to ask better questions.',
   'Currently debugging my prompts.',
   'Usually fixing something.',
@@ -150,7 +151,7 @@ function AboutPage({ tweaks }) {
   const timeline = [
     { year: '2025', title: 'Systems, workflows & LLMs', body: 'Exploring AI-assisted workflows, prompting, automation, and quieter ways to build useful things.' },
     { year: '2024', title: 'Server-side & data work', body: 'Application logic, PostgreSQL, PDF generation, registry systems in Java / Spring Boot.' },
-    { year: '2023', title: 'Personal portfolio launch', body: 'Built this site from scratch. Handwritten HTML, CSS, vanilla JavaScript.' },
+    { year: '2023', title: 'Freelance projects', body: 'Small client sites, landing pages, and odd commissions. First taste of real briefs, real deadlines, and real feedback.' },
     { year: '2022', title: 'Deeper into the JVM', body: 'Picked up Spring Boot + Thymeleaf, started shipping passion projects.' },
     { year: '2021', title: 'First serious front-end work', body: 'HTML, CSS, JavaScript, Bootstrap. Started building interfaces from scratch.' },
     { year: '2015', title: 'Recording & sound exploration', body: 'Focused on recording, mixing, sound design, and home studio experimentation. Learned patience, repetition, and attention to detail.' },
@@ -160,10 +161,22 @@ function AboutPage({ tweaks }) {
 
   return React.createElement('section', { className: 'page-inner about-wrap fade-in' },
     React.createElement('div', { className: 'about-kicker' }, 'About me'),
-    React.createElement('h1', null,
-      'Still learning,',
-      React.createElement('br'),
-      'building and ', React.createElement('em', null, 'refining'), '.'
+    React.createElement('div', { className: 'about-hero' },
+      React.createElement('div', { className: 'about-hero-text' },
+        React.createElement('h1', null,
+          'Full stack developer,',
+          React.createElement('br'),
+          'always improving and ', React.createElement('em', null, 'refining'), '.'
+        ),
+      ),
+      React.createElement('div', { className: 'about-portrait' },
+        React.createElement('img', {
+          src: 'resources/images/me.jpg',
+          alt: 'Cristian Gabriel',
+          loading: 'lazy',
+          decoding: 'async',
+        }),
+      ),
     ),
 
     React.createElement('div', { className: 'about-body', style: { marginTop: 28 } },

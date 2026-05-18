@@ -55,7 +55,11 @@ function LeafParticles({ enabled = true }) {
         particlesRef.current.push({
           el,
           x, y,
-          left, top,             // cached so the tick loop never reads layout
+          // Transform baseline = un-shifted spawn coords. The CSS left/top is
+          // offset by -size/2 to center the leaf on the cursor; using that as
+          // the translate baseline made every leaf jump by (size/2, size/2)
+          // on its first frame.
+          ox: x, oy: y,
           vx: (Math.random() - 0.5) * 1.6,
           vy: 0.3 + Math.random() * 1.2,
           rot: Math.random() * 360,
@@ -90,8 +94,7 @@ function LeafParticles({ enabled = true }) {
         p.vy += 0.0003 * dt;           // gentle gravity (already time-scaled)
         p.rot += p.vr * 0.02 * tScale;
         const alpha = Math.max(0, 1 - p.life / p.maxLife);
-        // Cached spawn coords — no `parseFloat(p.el.style.left)` layout read.
-        p.el.style.transform = `translate3d(${p.x - p.left}px, ${p.y - p.top}px, 0) rotate(${p.rot}deg)`;
+        p.el.style.transform = `translate3d(${p.x - p.ox}px, ${p.y - p.oy}px, 0) rotate(${p.rot}deg)`;
         p.el.style.opacity = alpha;
         if (p.life > p.maxLife) {
           p.el.remove();
@@ -253,7 +256,7 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
       print('  projects  · list of projects');
       print('  stack     · tech stack');
       print('  contact   · how to reach me');
-      print('  game      · play snake');
+      print('  snake     · play snake');
       print('  whoami    · guess');
       print('  date      · current date');
       print('  clear     · clear the screen');
@@ -278,7 +281,7 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
       print('guest@cristiangabriel.dev');
     } else if (cmd === 'date') {
       print(new Date().toString());
-    } else if (cmd === 'game') {
+    } else if (cmd === 'snake') {
       print('Launching snake... arrow keys / WASD to steer. Esc to exit.', 'dim');
       setTimeout(() => setGameOpen(true), 300);
     } else if (cmd === 'clear') {

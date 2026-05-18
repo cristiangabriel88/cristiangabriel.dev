@@ -35,15 +35,32 @@ function App() {
   const [tweaksOpen, setTweaksOpen] = useState(false);
 
   // ###### APPLY DESIGN TOKENS ######
+  // The accent overrides write inline custom properties on <html>, which would
+  // otherwise beat theme-dark.css (selector specificity loses to inline styles).
+  // In dark mode we clear those three so the dark theme's lifted greens win.
   useEffect(() => {
-    const root = document.documentElement.style;
-    root.setProperty('--forest', t.accent);
-    const palette = ACCENT_PALETTES.find(p => p[0] === t.accent);
-    if (palette) {
-      root.setProperty('--moss', palette[1]);
-      root.setProperty('--moss-soft', palette[2]);
-    }
-    root.setProperty('--headline-scale', String(t.headlineSize));
+    const html = document.documentElement;
+    const root = html.style;
+    const apply = () => {
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        root.removeProperty('--forest');
+        root.removeProperty('--moss');
+        root.removeProperty('--moss-soft');
+      } else {
+        root.setProperty('--forest', t.accent);
+        const palette = ACCENT_PALETTES.find(p => p[0] === t.accent);
+        if (palette) {
+          root.setProperty('--moss', palette[1]);
+          root.setProperty('--moss-soft', palette[2]);
+        }
+      }
+      root.setProperty('--headline-scale', String(t.headlineSize));
+    };
+    apply();
+    const mo = new MutationObserver(apply);
+    mo.observe(html, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => mo.disconnect();
   }, [t.accent, t.headlineSize]);
 
   // ###### SHORTCUTS ######

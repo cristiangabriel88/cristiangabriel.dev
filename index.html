@@ -5,6 +5,25 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Cristian Gabriel · Portfolio</title>
+	<meta name="description" content="Cristian Gabriel — full-stack developer based in Bucharest. Personal portfolio of projects, experiments, and side-quests." />
+
+	<!-- Open Graph / WhatsApp / Facebook — square preview for chat link unfurls -->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Cristian Gabriel · Portfolio" />
+	<meta property="og:description" content="Full-stack developer based in Bucharest. Projects, experiments, and side-quests." />
+	<meta property="og:url" content="https://cristiangabriel88.github.io/" />
+	<meta property="og:image" content="https://cristiangabriel88.github.io/resources/images/og-preview.jpg" />
+	<meta property="og:image:secure_url" content="https://cristiangabriel88.github.io/resources/images/og-preview.jpg" />
+	<meta property="og:image:type" content="image/jpeg" />
+	<meta property="og:image:width" content="1080" />
+	<meta property="og:image:height" content="1080" />
+	<meta property="og:image:alt" content="Cristian Gabriel" />
+
+	<!-- Twitter / X -->
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="Cristian Gabriel · Portfolio" />
+	<meta name="twitter:description" content="Full-stack developer based in Bucharest." />
+	<meta name="twitter:image" content="https://cristiangabriel88.github.io/resources/images/og-preview.jpg" />
 
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,8 +32,9 @@
 		rel="stylesheet" />
 
 	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
-	<link rel="stylesheet" href="styles.css" />
-	<link rel="stylesheet" href="theme-dark.css" />
+	<!-- Bump ?v= on every deploy to bust GitHub Pages / browser cache. -->
+	<link rel="stylesheet" href="styles.css?v=2026-05-18h" />
+	<link rel="stylesheet" href="theme-dark.css?v=2026-05-18h" />
 
 	<!-- Cache-warm project thumbs at first paint so navigating to Projects is instant. -->
 	<link rel="preload" as="image" href="resources/images/Projects/impostorGame.webp" />
@@ -39,12 +59,13 @@
 
 	<!-- ###### SCRIPT LOAD ORDER ###### -->
 	<!-- pixel-art -> chrome -> pages -> easter-eggs -> tweaks-panel -> app -->
-	<script type="text/babel" src="pixel-art.jsx"></script>
-	<script type="text/babel" src="chrome.jsx"></script>
-	<script type="text/babel" src="pages.jsx"></script>
-	<script type="text/babel" src="easter-eggs.jsx"></script>
-	<script type="text/babel" src="tweaks-panel.jsx"></script>
-	<script type="text/babel" src="app.jsx"></script>
+	<!-- Bump ?v= on every deploy to bust GitHub Pages / browser cache. -->
+	<script type="text/babel" src="pixel-art.jsx?v=2026-05-18h"></script>
+	<script type="text/babel" src="chrome.jsx?v=2026-05-18h"></script>
+	<script type="text/babel" src="pages.jsx?v=2026-05-18h"></script>
+	<script type="text/babel" src="easter-eggs.jsx?v=2026-05-18h"></script>
+	<script type="text/babel" src="tweaks-panel.jsx?v=2026-05-18h"></script>
+	<script type="text/babel" src="app.jsx?v=2026-05-18h"></script>
 </body>
 
 </html>

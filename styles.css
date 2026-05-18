@@ -544,12 +544,40 @@ img.botanical[src=""] { display: none; }
   padding-top: 110px;
   max-width: 680px;
 }
+.about-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+}
+.about-hero-text { min-width: 0; }
+.about-portrait {
+  width: 190px;
+  height: 190px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--parchment-2);
+  box-shadow: 0 10px 28px rgba(45, 80, 22, 0.12);
+}
+.about-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+@media (max-width: 720px) {
+  .about-hero { grid-template-columns: 1fr; justify-items: start; }
+  .about-portrait { width: 140px; height: 140px; }
+}
 .about-wrap h1 {
   font-family: var(--serif);
   font-weight: 300;
-  font-size: clamp(48px, 5.5vw, 72px);
-  line-height: 1.02;
-  letter-spacing: -0.022em;
+  font-size: clamp(36px, 4.2vw, 54px);
+  line-height: 1.05;
+  letter-spacing: -0.018em;
   color: var(--ink);
   margin-bottom: 12px;
 }
@@ -715,16 +743,22 @@ a.timeline-year:hover {
   text-decoration: none;
   color: inherit;
   overflow: hidden;
-  transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1),
-              border-color 200ms,
-              background 200ms,
-              box-shadow 320ms;
+  /* Single curve + matching duration across every animated property so
+     the card moves as one piece — expo-out (0.16, 1, 0.3, 1) gives the
+     buttery deceleration used by Stripe/Linear. will-change promotes
+     the card to its own compositor layer so the first hover doesn't
+     pay the layer-creation tax. */
+  transition: transform 440ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 440ms cubic-bezier(0.16, 1, 0.3, 1),
+              background 440ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 440ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 .project-card:hover {
   border-color: var(--forest);
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
-  box-shadow: 0 24px 40px -28px rgba(45, 80, 22, 0.4);
+  background: rgba(255, 255, 255, 0.92);
+  transform: translateY(-4px);
+  box-shadow: 0 28px 48px -28px rgba(45, 80, 22, 0.38);
 }
 
 .project-thumb {
@@ -742,6 +776,14 @@ a.timeline-year:hover {
   height: 100%;
   object-fit: cover;
   display: block;
+  /* Thumbnail glides in slightly slower than the card lifts (560 vs
+     440ms) so the image looks like it's "settling into" the hover,
+     rather than locking step with the card and feeling mechanical. */
+  transition: transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.project-card:hover .project-thumb img {
+  transform: scale(1.04);
 }
 .project-thumb.placeholder {
   background:
@@ -809,8 +851,8 @@ a.timeline-year:hover {
   margin-top: 12px;
   font-weight: 600;
 }
-.project-card:hover .project-cta .arrow { transform: translateX(3px); }
-.project-cta .arrow { transition: transform 200ms; }
+.project-card:hover .project-cta .arrow { transform: translateX(5px); }
+.project-cta .arrow { transition: transform 440ms cubic-bezier(0.16, 1, 0.3, 1); }
 
 /* corner pixel sprouts */
 .corner-sprout {
@@ -832,6 +874,36 @@ a.timeline-year:hover {
   z-index: 3;
 }
 .footer .sep { color: var(--rule); margin: 0 12px; }
+
+/* Periodic jump + jiggle on the word "ssh" to flag the easter egg. */
+.ssh-word {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--forest-deep);
+  background: var(--moss-soft);
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.24em;
+  animation: ssh-jiggle 7s ease-in-out infinite;
+  transform-origin: center bottom;
+  will-change: transform;
+}
+@keyframes ssh-jiggle {
+  0%, 82%, 100% { transform: translate(0, 0) rotate(0deg); }
+  /* jump */
+  84%  { transform: translate(0, -4px) rotate(0deg); }
+  86%  { transform: translate(0, -1px) rotate(0deg); }
+  /* jiggle */
+  88%  { transform: translate(-1.5px, 0) rotate(-3deg); }
+  90%  { transform: translate(1.5px, -2px) rotate(3deg); }
+  92%  { transform: translate(-1.5px, 0)  rotate(-2deg); }
+  94%  { transform: translate(1px, -1px)  rotate(1.5deg); }
+  96%  { transform: translate(-0.5px, 0)  rotate(-0.8deg); }
+  98%  { transform: translate(0, 0)       rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ssh-word { animation: none; }
+}
 
 /* ---------- Leaf particles ---------- */
 .leaf-layer {

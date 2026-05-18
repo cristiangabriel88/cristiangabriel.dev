@@ -102,7 +102,12 @@ function Sidebar({ onNav }) {
         React.createElement('span', { className: 'social-ico' }, React.createElement(Ico, { name: 'stack' })),
         React.createElement('span', { className: 'social-label' }, 'Stack Overflow'),
       ),
-      React.createElement('a', { className: 'social', href: '#', onClick: (e) => e.preventDefault() },
+      React.createElement('a', {
+        className: 'social',
+        href: 'https://www.google.com/maps/search/?api=1&query=Bucharest%2C+Romania',
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      },
         React.createElement('span', { className: 'social-ico' }, React.createElement(Ico, { name: 'pin' })),
         React.createElement('span', { className: 'social-label' }, 'Bucharest, RO'),
       ),
@@ -113,8 +118,8 @@ function Sidebar({ onNav }) {
     ),
     React.createElement('div', { className: 'sidebar-footer' },
       React.createElement('span', null,
-        'Est. ',
-        React.createElement('span', { style: { fontFamily: 'var(--serif)', fontStyle: 'italic', textTransform: 'none', fontSize: 12, letterSpacing: 0 } }, '2021'),
+        '© ',
+        React.createElement('span', { style: { fontFamily: 'var(--serif)', fontStyle: 'italic', textTransform: 'none', fontSize: 12, letterSpacing: 0 } }, new Date().getFullYear()),
       ),
       // ###### HIDDEN DARK MODE TOGGLE ######
       // Unlabeled icon — discoverable on hover. Sun when dark (click to lighten), moon when light.
@@ -190,7 +195,9 @@ function PageFooter({ page }) {
   return React.createElement('div', { className: 'footer' },
     React.createElement('span', null, '© 2021–', year),
     React.createElement('span', { className: 'sep' }, '·'),
-    React.createElement('span', { style: { color: 'var(--forest)', letterSpacing: '0.22em' } }, 'Type "ssh" to open a shell'),
+    React.createElement('span', { className: 'ssh-hint', style: { color: 'var(--forest)', letterSpacing: '0.22em' } },
+      'Type ', React.createElement('span', { className: 'ssh-word' }, 'ssh'), ' to open a shell'
+    ),
   );
 }
 

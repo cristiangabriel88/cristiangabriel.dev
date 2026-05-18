@@ -8,26 +8,26 @@
 :root[data-theme="dark"] {
   /* surfaces — softer dark warm browns (lifted from near-black so the eye
      gets some surface tone to rest on) */
-  --parchment:   #2B231B;  /* base bg — warm dark oak */
-  --parchment-2: #362B22;  /* card / sidebar */
-  --parchment-3: #423429;  /* raised surface */
+  --parchment:   #3A2E23;  /* base bg — warm dark oak */
+  --parchment-2: #463729;  /* card / sidebar */
+  --parchment-3: #534230;  /* raised surface */
 
   /* ink — warm creams that read as text on dark bg */
   --ink:         #ECE3CC;  /* primary text */
   --ink-soft:    #BFB59A;  /* secondary text */
-  --ink-mute:    #847962;  /* tertiary, captions */
+  --ink-mute:    #948871;  /* tertiary, captions */
 
-  /* forest — pushed brighter so titles, italic accents and the small "Open
-     to collaboration" line read crisply against the warm dark surface */
-  --forest:      #D2EEBE;  /* titles, accents, brand */
-  --forest-deep: #E5F5D5;  /* hover */
-  --moss:        #B5DFAA;  /* status dot, secondary accent */
-  --moss-soft:   #E0EFD2;
+  /* forest — very light, high-luminance greens so titles, italic accents and
+     small text (timeline year etc.) read crisply against the warm dark surface */
+  --forest:      #E6FACB;  /* titles, accents, brand */
+  --forest-deep: #F3FDE2;  /* hover — nearly white-green */
+  --moss:        #D5F0B0;  /* status dot, secondary accent */
+  --moss-soft:   #F0FADE;
 
   /* dedicated button surface for dark mode — deeper green so off-white text
      on it stays readable (the page-level --forest is too bright for a button bg) */
-  --btn-bg:       #3F6924;
-  --btn-bg-hover: #4F8030;
+  --btn-bg:       #466F28;
+  --btn-bg-hover: #588934;
 
   /* rules — warm dim glow rather than cold gray */
   --rule:        rgba(197, 230, 176, 0.24);
@@ -52,12 +52,12 @@
 
 /* sidebar gets a slight inner glow rather than a flat panel */
 :root[data-theme="dark"] .sidebar {
-  background: linear-gradient(180deg, rgba(54, 43, 34, 0.92) 0%, rgba(43, 35, 27, 0.7) 100%);
+  background: linear-gradient(180deg, rgba(70, 55, 41, 0.92) 0%, rgba(58, 46, 35, 0.7) 100%);
 }
 
 /* topnav pill — slightly more visible on dark */
 :root[data-theme="dark"] .topnav {
-  background: rgba(54, 43, 34, 0.88);
+  background: rgba(70, 55, 41, 0.88);
   box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.5);
 }
 
