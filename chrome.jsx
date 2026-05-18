@@ -47,7 +47,7 @@ function Ico({ name }) {
 }
 
 // ###### SIDEBAR ######
-function Sidebar() {
+function Sidebar({ onNav }) {
   const [theme, setTheme] = useState(readStoredTheme);
   useEffect(() => { applyTheme(theme); }, [theme]);
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
@@ -55,7 +55,13 @@ function Sidebar() {
   return React.createElement('aside', { className: 'sidebar' },
     React.createElement('div', { className: 'brand' },
       // Asymmetric leaf-mark sigil — modern, minimal, logo-style
-      React.createElement('a', { href: '#', className: 'brand-mark', onClick: (e) => e.preventDefault(), 'aria-label': 'Cristian Gabriel, Home' },
+      React.createElement('a', {
+        href: '#',
+        className: 'brand-mark',
+        onClick: (e) => { e.preventDefault(); if (onNav) onNav('home'); },
+        'aria-label': 'Cristian Gabriel, Home',
+        title: 'Home',
+      },
         React.createElement('svg', { viewBox: '0 0 40 56', width: 44, height: 60, fill: 'none' },
           // long curved stem
           React.createElement('path', {
@@ -159,15 +165,19 @@ function TopNav({ page, onNav }) {
 }
 
 // ###### BOTANICAL ANCHOR ######
-// Decorative plant photo per page, named after the page (home / about / projects).
-// All three are PNGs with white backgrounds — mix-blend-multiply (in CSS) drops the
-// white and leaves only the plant against the parchment.
+// Decorative plant photo per page. home.png and about.png have black/colored
+// backgrounds and render as-is; the projects anchor is a white-bg PNG that
+// uses mix-blend-multiply (see styles.css) to drop the white cleanly.
+const BOTANICAL_SRC = {
+  home: 'resources/images/home.png',
+  about: 'resources/images/about.png',
+  projects: 'resources/images/contact2.png',
+};
 function BotanicalAnchor({ page }) {
-  const src = `resources/images/${page}.png`;
   return React.createElement('img', {
     key: page, // force reload+fade on page change
     className: `botanical ${page} fade-in`,
-    src,
+    src: BOTANICAL_SRC[page],
     alt: '',
     'aria-hidden': 'true',
     draggable: 'false',
@@ -180,7 +190,7 @@ function PageFooter({ page }) {
   return React.createElement('div', { className: 'footer' },
     React.createElement('span', null, '© 2021–', year),
     React.createElement('span', { className: 'sep' }, '·'),
-    React.createElement('span', { style: { color: 'var(--forest)', letterSpacing: '0.22em' } }, 'Type "cg" for a surprise'),
+    React.createElement('span', { style: { color: 'var(--forest)', letterSpacing: '0.22em' } }, 'Type "ssh" to open a shell'),
   );
 }
 

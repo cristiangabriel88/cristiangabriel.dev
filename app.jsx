@@ -7,7 +7,7 @@
    PixelGrid, SPRITES
 */
 
-const { useState, useEffect, useRef, useCallback } = React;
+const { useState, useEffect, useCallback } = React;
 
 // ###### DESIGN TOKENS ######
 // These drive the tweaks panel (hidden behind the `tweak` shortcut) when it's open.
@@ -33,7 +33,6 @@ function App() {
   const [termOpen, setTermOpen] = useState(false);
   const [autoLaunchGame, setAutoLaunchGame] = useState(false);
   const [tweaksOpen, setTweaksOpen] = useState(false);
-  const burstRef = useRef(null);
 
   // ###### APPLY DESIGN TOKENS ######
   useEffect(() => {
@@ -48,7 +47,9 @@ function App() {
   }, [t.accent, t.headlineSize]);
 
   // ###### SHORTCUTS ######
-  // Type "cg" anywhere → toggle terminal
+  // Type "ssh" anywhere → toggle terminal (witty trigger: literally "open a shell")
+  // Type "cg" anywhere → also toggles terminal (legacy trigger, kept as backup)
+  useSecretShortcut('ssh', useCallback(() => setTermOpen(o => !o), []));
   useSecretShortcut('cg', useCallback(() => setTermOpen(o => !o), []));
   // Type "tweak" anywhere → toggle the design tweaks panel
   // The panel listens for __activate_edit_mode / __deactivate_edit_mode postMessages
@@ -76,24 +77,26 @@ function App() {
     setAutoLaunchGame(false);
   }, []);
 
-  function onCardHover(el) {
-    if (burstRef.current) burstRef.current(el);
-  }
-
   return React.createElement(React.Fragment, null,
-    React.createElement(Sidebar, null),
+    React.createElement(Sidebar, { onNav: setPage }),
     React.createElement(TopNav, { page, onNav: setPage }),
     React.createElement(BotanicalAnchor, { page }),
 
-    React.createElement('main', { className: 'page', key: page },
-      page === 'home'     && React.createElement(HomePage,     { onNav: setPage, tweaks: t }),
-      page === 'about'    && React.createElement(AboutPage,    { tweaks: t }),
-      page === 'projects' && React.createElement(ProjectsPage, { tweaks: t, onCardHover }),
+    // All three pages mount once and stay mounted. The `hidden` attribute toggles
+    // display:none so inactive pages keep their DOM (and decoded <img> bitmaps)
+    // intact — return visits to Projects don't refetch or re-decode anything.
+    React.createElement('main', { className: 'page' },
+      React.createElement('div', { className: 'page-slot', hidden: page !== 'home' },
+        React.createElement(HomePage, { onNav: setPage, tweaks: t })),
+      React.createElement('div', { className: 'page-slot', hidden: page !== 'about' },
+        React.createElement(AboutPage, { tweaks: t })),
+      React.createElement('div', { className: 'page-slot', hidden: page !== 'projects' },
+        React.createElement(ProjectsPage, { tweaks: t })),
       React.createElement(PageFooter, { page }),
     ),
 
     // ###### EASTER EGGS ######
-    t.showLeafParticles  && React.createElement(LeafParticles,   { enabled: true, burstRef }),
+    t.showLeafParticles  && React.createElement(LeafParticles,   { enabled: true }),
     // Walking pixel character disabled — uncomment to bring it back:
     // t.showPixelCharacter && React.createElement(PixelCharacter,  { enabled: true }),
 

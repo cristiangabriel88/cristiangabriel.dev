@@ -10,7 +10,7 @@
 const { useState, useEffect, useRef, useCallback } = React;
 
 // ─────────── 1. Leaf particles ───────────
-function LeafParticles({ enabled = true, burstRef }) {
+function LeafParticles({ enabled = true }) {
   const layerRef = useRef(null);
   const particlesRef = useRef([]);
   const lastEmitRef = useRef(0);
@@ -34,8 +34,7 @@ function LeafParticles({ enabled = true, burstRef }) {
     }
     // Per-particle SVG markup is identical except for the leaf color tints,
     // so we keep it as a template string and substitute in `spawn`.
-    function spawn(x, y, intensity = 1, fragment = null) {
-      const target = fragment || layer;
+    function spawn(x, y, intensity = 1) {
       for (let i = 0; i < intensity; i++) {
         const el = document.createElement('div');
         el.className = 'leaf';
@@ -52,7 +51,7 @@ function LeafParticles({ enabled = true, burstRef }) {
           <path d="M8 1 C 13 4, 14 10, 8 15 C 2 10, 3 4, 8 1 Z" fill="hsl(${hue},${sat}%,${lite}%)" opacity="0.85"/>
           <path d="M8 1 L 8 15" stroke="hsl(${hue},${sat}%,${lite - 12}%)" stroke-width="0.8" />
         </svg>`;
-        target.appendChild(el);
+        layer.appendChild(el);
         particlesRef.current.push({
           el,
           x, y,
@@ -68,22 +67,6 @@ function LeafParticles({ enabled = true, burstRef }) {
         });
       }
     }
-
-    // Burst on demand (project hover) — batch all 14 appends through a single
-    // DocumentFragment so we hit the DOM once instead of fourteen times.
-    burstRef.current = (originEl) => {
-      if (!originEl) return;
-      const r = originEl.getBoundingClientRect();
-      const ox = r.left + r.width / 2;
-      const oy = r.top + r.height / 2;
-      const frag = document.createDocumentFragment();
-      for (let i = 0; i < 14; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * 40;
-        spawn(ox + Math.cos(angle) * dist, oy + Math.sin(angle) * dist, 1, frag);
-      }
-      layer.appendChild(frag);
-    };
 
     let last = performance.now();
     function tick(now) {
@@ -125,7 +108,7 @@ function LeafParticles({ enabled = true, burstRef }) {
       particlesRef.current.forEach(p => p.el.remove());
       particlesRef.current = [];
     };
-  }, [enabled, burstRef]);
+  }, [enabled]);
 
   return React.createElement('div', { ref: layerRef, className: 'leaf-layer' });
 }
@@ -401,26 +384,49 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
 }
 
 // ###### SNAKE ######
-// Grid-based snake on a 24×16 board. Arrow keys / WASD to steer, eat the fruit,
-// don't bite yourself or hit a wall. Tick speeds up slightly as you grow.
+// Canvas-rendered snake on a 32×20 board. Walls wrap (toroidal), so the snake
+// re-enters from the opposite edge. Game state lives in refs; only HUD/score
+// goes through React, so the tick loop never triggers a 600-cell re-render.
+//
+// Rendering: requestAnimationFrame drives the paint continuously and lerps each
+// segment between its previous cell and current cell over the tick interval, so
+// motion looks smooth at 60fps regardless of the (slower) logical tick rate.
+// Wrap-aware lerp: when a segment straddles the board edge, we split-draw it on
+// both sides so the wrap reads as a continuous slide rather than a teleport.
 function MiniGame({ onExit }) {
-  const COLS = 24, ROWS = 16;
-  const INIT_SNAKE = [{ x: 12, y: 8 }, { x: 11, y: 8 }, { x: 10, y: 8 }];
+  const COLS = 32, ROWS = 20;
+  const PX = 16; // logical pixel size per cell — large enough to fit textured sprites (eyes, shading, apple stem)
+  const INIT_SNAKE = [{ x: 16, y: 10 }, { x: 15, y: 10 }, { x: 14, y: 10 }];
+  const TICK_BASE = 110; // ms per cell at score 0
+  const TICK_MIN  = 60;  // ms per cell at high score
 
-  const [snake, setSnake] = useState(INIT_SNAKE);
-  const [food, setFood] = useState({ x: 18, y: 8 });
+  const canvasRef = useRef(null);
+  const snakeRef    = useRef(INIT_SNAKE);
+  const prevSnakeRef = useRef(INIT_SNAKE); // snake positions *before* the current tick — used as the lerp "from"
+  const foodRef  = useRef({ x: 22, y: 10 });
+  const dirRef         = useRef({ dx: 1, dy: 0 });
+  const lastAppliedDirRef = useRef({ dx: 1, dy: 0 });
+  const scoreRef = useRef(0);
+  const runningRef = useRef(false);
+  const tickIntervalRef = useRef(TICK_BASE);
+
+  // ###### INPUT RESPONSIVENESS ######
+  // dirQueue: pending direction changes (size ≤ 2) so a quick right→down isn't
+  //   dropped when both keys land between ticks — each tick consumes one entry.
+  // lastTickAt + tickFnRef + MIN_INPUT_GAP: lets a valid turn fire a tick
+  //   immediately instead of waiting up to tick-time, capped so input spam can't
+  //   make the snake move faster than ~22 cells/sec.
+  const dirQueueRef = useRef([]);
+  const lastTickAtRef = useRef(0);
+  const tickFnRef = useRef(null);
+  const MIN_INPUT_GAP = 45;
+
   const [score, setScore] = useState(0);
+  const [length, setLength] = useState(INIT_SNAKE.length);
   const [running, setRunning] = useState(false);
   const [over, setOver] = useState(false);
 
-  // ###### REFS FOR TICK LOOP ######
-  // The tick reads direction from a ref so it always sees the latest input
-  // without restarting the loop on every key press.
-  const dirRef = useRef({ dx: 1, dy: 0 });
-  const lastAppliedDirRef = useRef({ dx: 1, dy: 0 });
-
   function spawnFood(currentSnake) {
-    // Find an empty cell. Bounded retry — board is tiny so this is fine.
     for (let i = 0; i < 200; i++) {
       const f = {
         x: Math.floor(Math.random() * COLS),
@@ -431,61 +437,220 @@ function MiniGame({ onExit }) {
     return { x: 0, y: 0 };
   }
 
+  // ###### SPRITES ######
+  // Each cell is PX×PX. Sprites use 1–2 pixel features (rim shade, highlight, eyes)
+  // for a textured pixel-art read once the canvas is upscaled. Drawn in absolute
+  // pixel coords so we can position at fractional cell offsets (for the lerp).
+  function drawBackground(ctx) {
+    ctx.fillStyle = '#0F1A07';
+    ctx.fillRect(0, 0, COLS * PX, ROWS * PX);
+    // Faint cross-hatch dots — gives the board a board feel without competing for attention.
+    ctx.fillStyle = 'rgba(122, 163, 85, 0.08)';
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        ctx.fillRect(x * PX + PX - 2, y * PX + PX - 2, 1, 1);
+      }
+    }
+  }
+
+  function drawBody(ctx, px, py) {
+    // Rim (dark), main (mid green), highlight (light dot), shadow (bottom-right).
+    ctx.fillStyle = '#2D5016';
+    ctx.fillRect(px + 1, py + 1, PX - 2, PX - 2);
+    ctx.fillStyle = '#5A8A3C';
+    ctx.fillRect(px + 2, py + 2, PX - 4, PX - 4);
+    ctx.fillStyle = '#7AA355';
+    ctx.fillRect(px + 3, py + 3, 2, 2);
+    ctx.fillStyle = '#2D5016';
+    ctx.fillRect(px + PX - 5, py + PX - 5, 2, 2);
+  }
+
+  function drawHead(ctx, px, py, dir) {
+    // Rim + brighter face so the head reads as distinct from the body.
+    ctx.fillStyle = '#2D5016';
+    ctx.fillRect(px + 1, py + 1, PX - 2, PX - 2);
+    ctx.fillStyle = '#A8CC7A';
+    ctx.fillRect(px + 2, py + 2, PX - 4, PX - 4);
+    ctx.fillStyle = '#DFEFD2';
+    ctx.fillRect(px + 3, py + 3, 3, 2);
+    // Eyes — placed on the leading edge of the head based on direction.
+    ctx.fillStyle = '#0F1A07';
+    let ax, ay, bx, by;
+    if (dir.dx === 1)       { ax = px + PX - 5; ay = py + 4;       bx = px + PX - 5; by = py + PX - 6; }
+    else if (dir.dx === -1) { ax = px + 3;      ay = py + 4;       bx = px + 3;      by = py + PX - 6; }
+    else if (dir.dy === 1)  { ax = px + 4;      ay = py + PX - 5;  bx = px + PX - 6; by = py + PX - 5; }
+    else                    { ax = px + 4;      ay = py + 3;       bx = px + PX - 6; by = py + 3; }
+    ctx.fillRect(ax, ay, 2, 2);
+    ctx.fillRect(bx, by, 2, 2);
+  }
+
+  function drawFood(ctx, px, py) {
+    // Apple silhouette: dark rim, red body, highlight dot, brown stem, leaf.
+    ctx.fillStyle = '#5A1A0A';
+    ctx.fillRect(px + 3, py + 5, PX - 6, PX - 7);
+    ctx.fillStyle = '#C24A2A';
+    ctx.fillRect(px + 4, py + 6, PX - 8, PX - 9);
+    ctx.fillStyle = '#E8B19A';
+    ctx.fillRect(px + 5, py + 7, 2, 2);
+    ctx.fillStyle = '#3A2410';
+    ctx.fillRect(px + (PX >> 1) - 1, py + 3, 2, 3);
+    ctx.fillStyle = '#7AA355';
+    ctx.fillRect(px + (PX >> 1) + 1, py + 2, 3, 2);
+  }
+
+  // ###### RAF DRAW ######
+  // Lerp each segment from prev cell to current cell using (time-since-tick / tickInterval).
+  // Wrap handling: if the segment travelled more than 1 cell in a tick (e.g. 31→0), we
+  // know it wrapped. Adjust the delta so the lerp goes the short way (off the board), then
+  // split-draw on the opposite edge so the wrap looks continuous.
+  function draw() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    drawBackground(ctx);
+    drawFood(ctx, foodRef.current.x * PX, foodRef.current.y * PX);
+
+    const snake = snakeRef.current;
+    const prev  = prevSnakeRef.current;
+    const interval = tickIntervalRef.current;
+    let t = (performance.now() - lastTickAtRef.current) / interval;
+    if (t < 0) t = 0; else if (t > 1) t = 1;
+
+    // Back-to-front so the head paints on top of the neck.
+    for (let i = snake.length - 1; i >= 0; i--) {
+      const to = snake[i];
+      // On growth, the new tail-tip has no prev — anchor it at its current cell (no motion).
+      const from = (i < prev.length) ? prev[i] : to;
+
+      let dx = to.x - from.x;
+      let dy = to.y - from.y;
+      // Wrap-aware delta: any |d| > 1 means the segment crossed the board edge.
+      if (dx >  1) dx -= COLS;
+      else if (dx < -1) dx += COLS;
+      if (dy >  1) dy -= ROWS;
+      else if (dy < -1) dy += ROWS;
+
+      const cx = (from.x + dx * t) * PX;
+      const cy = (from.y + dy * t) * PX;
+
+      const paint = (px, py) => {
+        if (i === 0) drawHead(ctx, px, py, lastAppliedDirRef.current);
+        else drawBody(ctx, px, py);
+      };
+
+      paint(cx, cy);
+      // Split-draw across wrapped edges so the segment is visible on both sides during the slide.
+      if (cx < 0)              paint(cx + COLS * PX, cy);
+      else if (cx > (COLS - 1) * PX) paint(cx - COLS * PX, cy);
+      if (cy < 0)              paint(cx, cy + ROWS * PX);
+      else if (cy > (ROWS - 1) * PX) paint(cx, cy - ROWS * PX);
+    }
+  }
+
   function begin() {
-    setSnake(INIT_SNAKE);
-    setFood(spawnFood(INIT_SNAKE));
-    setScore(0);
-    setOver(false);
-    setRunning(true);
+    snakeRef.current = INIT_SNAKE;
+    prevSnakeRef.current = INIT_SNAKE;
+    foodRef.current = spawnFood(INIT_SNAKE);
     dirRef.current = { dx: 1, dy: 0 };
     lastAppliedDirRef.current = { dx: 1, dy: 0 };
+    dirQueueRef.current = [];
+    lastTickAtRef.current = performance.now();
+    tickIntervalRef.current = TICK_BASE;
+    scoreRef.current = 0;
+    runningRef.current = true;
+    setScore(0);
+    setLength(INIT_SNAKE.length);
+    setOver(false);
+    setRunning(true);
   }
 
   // ###### TICK LOOP ######
+  // Logical step only: snapshot prev positions, compute next snake, update interval.
+  // Drawing happens in the RAF loop below, so a tick never touches the canvas directly.
   useEffect(() => {
     if (!running) return;
     let timer;
+    let cancelled = false;
+
     function tick() {
-      setSnake(prev => {
-        const d = dirRef.current;
-        const head = prev[0];
-        const newHead = { x: head.x + d.dx, y: head.y + d.dy };
+      if (cancelled || !runningRef.current) return;
+      // Cancel any scheduled tick — we might be called early from the key handler.
+      clearTimeout(timer);
 
-        // Wall collision
-        if (newHead.x < 0 || newHead.x >= COLS || newHead.y < 0 || newHead.y >= ROWS) {
-          setRunning(false); setOver(true);
-          return prev;
-        }
-        // Self collision (skip the tail tip because it moves out of the way)
-        const checkAgainst = (newHead.x === food.x && newHead.y === food.y) ? prev : prev.slice(0, -1);
-        if (checkAgainst.some(s => s.x === newHead.x && s.y === newHead.y)) {
-          setRunning(false); setOver(true);
-          return prev;
-        }
+      // Consume one queued direction. Validated at enqueue, so always safe.
+      if (dirQueueRef.current.length > 0) {
+        dirRef.current = dirQueueRef.current.shift();
+      }
 
-        lastAppliedDirRef.current = d;
+      const d = dirRef.current;
+      const snake = snakeRef.current;
+      const head = snake[0];
+      // Wall wrap — modular arithmetic, no death at the edge.
+      const newHead = {
+        x: (head.x + d.dx + COLS) % COLS,
+        y: (head.y + d.dy + ROWS) % ROWS,
+      };
 
-        if (newHead.x === food.x && newHead.y === food.y) {
-          const grown = [newHead, ...prev];
-          setScore(s => s + 1);
-          setFood(spawnFood(grown));
-          return grown;
+      const food = foodRef.current;
+      const ate = newHead.x === food.x && newHead.y === food.y;
+      // Self collision: skip tail tip if not eating (tail vacates the cell this tick).
+      const checkAgainst = ate ? snake : snake.slice(0, -1);
+      for (let i = 0; i < checkAgainst.length; i++) {
+        if (checkAgainst[i].x === newHead.x && checkAgainst[i].y === newHead.y) {
+          runningRef.current = false;
+          setRunning(false);
+          setOver(true);
+          return;
         }
-        return [newHead, ...prev.slice(0, -1)];
-      });
-      // Speed up gradually with score; floor at 70ms.
-      const speed = Math.max(70, 140 - score * 4);
-      timer = setTimeout(tick, speed);
+      }
+
+      lastAppliedDirRef.current = d;
+
+      // Snapshot pre-tick positions so the RAF lerp has a "from" anchor.
+      prevSnakeRef.current = snake;
+      if (ate) {
+        snakeRef.current = [newHead, ...snake];
+        scoreRef.current += 1;
+        foodRef.current = spawnFood(snakeRef.current);
+        setScore(scoreRef.current);
+        setLength(snakeRef.current.length);
+      } else {
+        snakeRef.current = [newHead, ...snake.slice(0, -1)];
+      }
+
+      lastTickAtRef.current = performance.now();
+      tickIntervalRef.current = Math.max(TICK_MIN, TICK_BASE - scoreRef.current * 3);
+      timer = setTimeout(tick, tickIntervalRef.current);
     }
-    timer = setTimeout(tick, 140);
-    return () => clearTimeout(timer);
-  }, [running, food, score]);
+    tickFnRef.current = tick;
+    timer = setTimeout(tick, TICK_BASE);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      tickFnRef.current = null;
+    };
+  }, [running]);
+
+  // ###### RAF RENDER LOOP ######
+  // Runs from mount until unmount. Drawing every frame is cheap (a few dozen fillRects)
+  // and keeps motion buttery at the display refresh rate while ticks fire at 9–17Hz.
+  useEffect(() => {
+    let raf;
+    function frame() {
+      draw();
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   // ###### KEYBOARD ######
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape') { onExit(); return; }
-      if (!running) {
+      if (!runningRef.current) {
         if (e.key === ' ' || e.key === 'Enter') { begin(); e.preventDefault(); }
         return;
       }
@@ -496,52 +661,56 @@ function MiniGame({ onExit }) {
       else if (e.key === 'ArrowLeft'  || k === 'a') next = { dx: -1, dy: 0 };
       else if (e.key === 'ArrowRight' || k === 'd') next = { dx: 1, dy: 0 };
       if (!next) return;
-      // Prevent a 180° turn into the snake's own neck.
-      const last = lastAppliedDirRef.current;
-      if (next.dx === -last.dx && next.dy === -last.dy) return;
-      dirRef.current = next;
       e.preventDefault();
+
+      // Validate against the last direction in the pipeline (queue tail, or
+      // the snake's current heading if the queue is empty). This way a queued
+      // turn can't be cancelled by an illegal 180° that came right after it.
+      const q = dirQueueRef.current;
+      const ref = q.length ? q[q.length - 1] : lastAppliedDirRef.current;
+      if (next.dx === -ref.dx && next.dy === -ref.dy) return; // 180° reversal
+      if (next.dx ===  ref.dx && next.dy ===  ref.dy) return; // duplicate
+
+      q.push(next);
+      if (q.length > 2) q.shift();
+
+      // Fire a tick immediately if enough time has passed — this is what makes
+      // turns feel instant. The MIN_INPUT_GAP cap stops input spam from
+      // accelerating the snake beyond ~22 cells/sec.
+      const now = performance.now();
+      if (now - lastTickAtRef.current >= MIN_INPUT_GAP && tickFnRef.current) {
+        tickFnRef.current();
+      }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [running, onExit]);
-
-  // ###### RENDER ######
-  const cells = [];
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      let kind = '';
-      if (snake[0].x === x && snake[0].y === y) kind = 'head';
-      else if (snake.some(s => s.x === x && s.y === y)) kind = 'body';
-      else if (food.x === x && food.y === y) kind = 'food';
-      cells.push(React.createElement('div', {
-        key: `${x},${y}`,
-        className: 'snake-cell' + (kind ? ' ' + kind : ''),
-      }));
-    }
-  }
+  }, [onExit]);
 
   return React.createElement('div', { className: 'mini-game snake' },
     React.createElement('div', { className: 'mg-hud' },
       React.createElement('span', null, 'SCORE: ', score),
-      React.createElement('span', null, 'LEN: ', snake.length),
+      React.createElement('span', null, 'LEN: ', length),
       React.createElement('span', { style: { cursor: 'pointer' }, onClick: onExit }, '[esc] exit'),
     ),
-    React.createElement('div', {
-      className: 'snake-board',
-      style: { gridTemplateColumns: `repeat(${COLS}, 1fr)`, gridTemplateRows: `repeat(${ROWS}, 1fr)` },
-    }, cells),
+    React.createElement('div', { className: 'snake-stage' },
+      React.createElement('canvas', {
+        ref: canvasRef,
+        className: 'snake-canvas',
+        width: COLS * PX,
+        height: ROWS * PX,
+      })
+    ),
     (!running) && React.createElement('div', { className: 'mg-overlay' },
       over
         ? React.createElement(React.Fragment, null,
             React.createElement('h4', null, 'GAME OVER'),
-            React.createElement('p', null, `Score: ${score}. Length: ${snake.length}.`),
+            React.createElement('p', null, `Score: ${score}. Length: ${length}.`),
             React.createElement('button', { className: 'mg-btn', onClick: begin }, 'play again'),
             React.createElement('button', { className: 'mg-btn', onClick: onExit, style: { marginTop: 6 } }, 'back to terminal'),
           )
         : React.createElement(React.Fragment, null,
             React.createElement('h4', null, 'SNAKE'),
-            React.createElement('p', null, 'Arrow keys or WASD to steer. Eat the red fruit. Don\'t bite yourself.'),
+            React.createElement('p', null, 'Arrows or WASD to steer. Walls wrap. Eat the fruit. Don\'t bite yourself.'),
             React.createElement('button', { className: 'mg-btn', onClick: begin }, 'start'),
           )
     )
@@ -563,6 +732,9 @@ function useSecretShortcut(sequence, onMatch) {
       resetTimer = setTimeout(() => { buf = ''; }, 1500);
       if (buf === sequence) {
         buf = '';
+        // Stop the matching keydown from also producing an input/keypress event,
+        // which would otherwise land in the terminal input that's about to mount.
+        e.preventDefault();
         onMatch();
       }
     }
@@ -592,6 +764,9 @@ function useKonamiCode(onMatch) {
         idx++;
         if (idx === KONAMI_SEQUENCE.length) {
           idx = 0;
+          // Same focus-race fix as useSecretShortcut: stop the final 'a' from
+          // being typed into the terminal input that's about to mount.
+          e.preventDefault();
           onMatch();
         }
       } else {

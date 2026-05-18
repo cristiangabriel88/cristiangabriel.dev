@@ -123,8 +123,10 @@
   opacity: 0.55;
 }
 :root[data-theme="dark"] .botanical.projects {
-  mix-blend-mode: screen;
-  opacity: 0.22;
+  /* contact2.png is a white-bg plant — keep multiply so the white drops out,
+     and lift opacity slightly so the plant still reads on dark parchment. */
+  mix-blend-mode: multiply;
+  opacity: 0.55;
 }
 
 /* terminal already uses its own dark green palette — leave it as-is.

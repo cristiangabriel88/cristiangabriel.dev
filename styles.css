@@ -123,15 +123,15 @@ body::before {
 }
 
 .botanical.projects {
-  width: 100vw;
-  max-width: none;
-  height: 100vh;
-  top: 0;
-  right: 0;
-  bottom: auto;
-  object-fit: cover;
+  width: 32vw;
+  max-width: 520px;
+  height: auto;
+  bottom: 0;
+  top: auto;
+  right: 1vw;
+  opacity: 0.92;
+  /* contact2.png has a white background — multiply drops it cleanly against parchment. */
   mix-blend-mode: multiply;
-  opacity: 0.55;
 }
 
 /* Hide broken-image affordances when the asset is missing */
@@ -352,13 +352,21 @@ img.botanical[src=""] { display: none; }
   border-radius: 50%;
   margin-right: 10px;
   vertical-align: 1px;
-  box-shadow: 0 0 0 0 rgba(122, 163, 85, 0.5);
+  box-shadow:
+    0 0 10px 2px rgba(122, 163, 85, 0.75),
+    0 0 0 0 rgba(122, 163, 85, 0.6);
   animation: pulse 2.2s ease-out infinite;
 }
 @keyframes pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(122, 163, 85, 0.6); }
-  70%  { box-shadow: 0 0 0 8px rgba(122, 163, 85, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(122, 163, 85, 0); }
+  0%   { box-shadow:
+           0 0 10px 2px rgba(122, 163, 85, 0.75),
+           0 0 0 0 rgba(122, 163, 85, 0.6); }
+  70%  { box-shadow:
+           0 0 12px 3px rgba(122, 163, 85, 0.85),
+           0 0 0 10px rgba(122, 163, 85, 0); }
+  100% { box-shadow:
+           0 0 10px 2px rgba(122, 163, 85, 0.75),
+           0 0 0 0 rgba(122, 163, 85, 0); }
 }
 .eyebrow .rule {
   flex: 0 0 56px;
@@ -468,8 +476,9 @@ img.botanical[src=""] { display: none; }
   border-color: var(--rule);
 }
 .btn.ghost:hover {
-  --bg: rgba(45, 80, 22, 0.06);
+  background: rgba(45, 80, 22, 0.06);
   border-color: var(--forest);
+  color: var(--forest);
 }
 
 /* meta strip under hero */
@@ -493,6 +502,27 @@ img.botanical[src=""] { display: none; }
   text-transform: none;
   color: var(--forest);
   margin-top: 6px;
+}
+.hero-meta .meta-link {
+  cursor: pointer;
+  outline: none;
+}
+.hero-meta .meta-link strong::after {
+  content: ' →';
+  display: inline-block;
+  margin-left: 4px;
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity 200ms, transform 200ms;
+}
+.hero-meta .meta-link:hover strong,
+.hero-meta .meta-link:focus-visible strong {
+  color: var(--forest-deep);
+}
+.hero-meta .meta-link:hover strong::after,
+.hero-meta .meta-link:focus-visible strong::after {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* ---------- Pixel divider ---------- */
@@ -621,6 +651,14 @@ img.botanical[src=""] { display: none; }
   font-weight: 300;
   font-size: 18px;
   color: var(--forest);
+}
+a.timeline-year {
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 200ms;
+}
+a.timeline-year:hover {
+  color: var(--forest-deep);
 }
 .timeline-body strong {
   display: block;
@@ -1009,37 +1047,30 @@ img.botanical[src=""] { display: none; }
   font-size: 16px;
   z-index: 2;
 }
-.snake-board {
+.snake-stage {
   flex: 1;
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 12px;
   padding: 4px;
   background: rgba(122, 163, 85, 0.05);
   border: 1px solid rgba(122, 163, 85, 0.18);
   border-radius: 4px;
+  min-height: 0;
 }
-.snake-cell {
-  background: transparent;
-  border-radius: 2px;
-}
-.snake-cell.body {
-  background: #5a8a3c;
-  box-shadow: 0 0 0 1px rgba(45, 80, 22, 0.5) inset;
-}
-.snake-cell.head {
-  background: #B5DFAA;
-  box-shadow: 0 0 4px rgba(181, 223, 170, 0.7);
-}
-.snake-cell.food {
-  background: #D69273;
-  border-radius: 50%;
-  transform: scale(0.72);
-  animation: foodPulse 1.4s ease-in-out infinite;
-}
-@keyframes foodPulse {
-  0%, 100% { transform: scale(0.72); }
-  50%      { transform: scale(0.92); }
+.snake-canvas {
+  /* Internal resolution is low (COLS*PX × ROWS*PX). CSS scales it up while
+     image-rendering keeps every pixel block hard-edged — the chunky look. */
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 .mg-overlay {
@@ -1093,6 +1124,9 @@ img.botanical[src=""] { display: none; }
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+  /* Infinite animations strobe at 0.01ms — disable them outright. */
+  .tagline .cursor { animation: none !important; opacity: 1; }
   .pixel-character { display: none; }
-  .leaf-layer { display: none; }
+  /* Availability dot keeps pulsing — intentional override. */
+  .hero-meta .status-dot { animation-duration: 2.2s !important; }
 }

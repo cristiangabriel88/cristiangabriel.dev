@@ -57,15 +57,25 @@ function useTypewriter(phrases, { speed = 70, pauseAfter = 1800, deleteSpeed = 3
 // Hero phrases live at module scope so the array reference is stable across
 // renders — keeps the typewriter effect from re-mounting on every parent re-render.
 const HERO_PHRASES = [
-  'I build things on the JVM.',
-  'Java, Spring Boot, PostgreSQL.',
-  'Practical, well-structured solutions.',
-  'Currently exploring LLM prompting.',
+  'Prompt engineer sounds fake, so I won’t say it.',
+  'Still learning how to ask better questions.',
+  'Currently debugging my prompts.',
+  'Usually fixing something.',
+  'I make things, then refine them too much.',
+  'Still becoming whoever I’m supposed to be.',
 ];
 
 // ──────────── HOME ────────────
 function HomePage({ onNav, tweaks }) {
   const tagRef = useTypewriter(HERO_PHRASES);
+
+  const goToStack = () => {
+    onNav('about');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const el = document.getElementById('tech-stack');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
+  };
 
   return React.createElement('section', { className: 'page-inner hero fade-in' },
     React.createElement('div', { className: 'eyebrow' },
@@ -105,7 +115,14 @@ function HomePage({ onNav, tweaks }) {
         'Based in',
         React.createElement('strong', null, 'Bucharest, Romania'),
       ),
-      React.createElement('div', null,
+      React.createElement('div', {
+        className: 'meta-link',
+        role: 'button',
+        tabIndex: 0,
+        onClick: goToStack,
+        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToStack(); } },
+        title: 'See full tech stack',
+      },
         'Stack',
         React.createElement('strong', null, 'Java · Spring Boot · SQL'),
       ),
@@ -123,25 +140,31 @@ function HomePage({ onNav, tweaks }) {
 // ──────────── ABOUT ────────────
 function AboutPage({ tweaks }) {
   const techStack = [
-    'Java', 'Spring', 'PostgreSQL', 'MySQL',
-    'Git', 'GitHub', 'Linux', 'Thymeleaf',
-    'HTML', 'CSS', 'JS', 'Bootstrap',
-    'SQL', 'LLM',
+    'Java', 'Spring Boot', 'JPA', 'Thymeleaf',
+    'Python', 'Flask', 'PostgreSQL', 'MySQL',
+    'SQL', 'Docker', 'Postman', 'REST APIs',
+    'HTML', 'CSS', 'JavaScript', 'Alpine.js',
+    'Bootstrap', 'Git', 'GitHub', 'Linux',
+    'Prompting', 'DaVinci Resolve',
   ];
 
   const timeline = [
-    { year: '2024 →', title: 'Server-side & data work', body: 'Application logic, data modeling, PDF report generation in Java / Spring Boot.' },
-    { year: '2023', title: 'Personal portfolio launch', body: 'Built this site from scratch. Handwritten HTML, CSS, vanilla JS.' },
+    { year: '2025', title: 'Systems, workflows & LLMs', body: 'Exploring AI-assisted workflows, prompting, automation, and quieter ways to build useful things.' },
+    { year: '2024', title: 'Server-side & data work', body: 'Application logic, PostgreSQL, PDF generation, registry systems in Java / Spring Boot.' },
+    { year: '2023', title: 'Personal portfolio launch', body: 'Built this site from scratch. Handwritten HTML, CSS, vanilla JavaScript.' },
     { year: '2022', title: 'Deeper into the JVM', body: 'Picked up Spring Boot + Thymeleaf, started shipping passion projects.' },
-    { year: '2021', title: 'First lines', body: 'HTML, CSS, JavaScript, Bootstrap. Followed the curiosity.' },
+    { year: '2021', title: 'First serious front-end work', body: 'HTML, CSS, JavaScript, Bootstrap. Started building interfaces from scratch.' },
+    { year: '2015', title: 'Recording & sound exploration', body: 'Focused on recording, mixing, sound design, and home studio experimentation. Learned patience, repetition, and attention to detail.' },
+    { year: '2010', title: 'Music & instrument years', body: 'Spent years learning instruments, music theory, practice discipline, and creative expression.' },
+    { year: '2006', title: 'First Turbo Pascal game', body: 'Built a tiny text-based game in Turbo Pascal. Realized code could create worlds.' },
   ];
 
   return React.createElement('section', { className: 'page-inner about-wrap fade-in' },
     React.createElement('div', { className: 'about-kicker' }, 'About me'),
     React.createElement('h1', null,
-      'A quiet ', React.createElement('em', null, 'engineer'),
+      'Still learning,',
       React.createElement('br'),
-      'with a soft spot for systems.'
+      'building and ', React.createElement('em', null, 'refining'), '.'
     ),
 
     React.createElement('div', { className: 'about-body', style: { marginTop: 28 } },
@@ -176,7 +199,7 @@ function AboutPage({ tweaks }) {
 
     tweaks.showPixelArt && React.createElement(PixelDivider, { width: 480 }),
 
-    React.createElement('div', { className: 'section-label' },
+    React.createElement('div', { id: 'tech-stack', className: 'section-label' },
       React.createElement('h3', null, 'Tech ', React.createElement('em', null, 'stack')),
     ),
     React.createElement('div', { className: 'tech-grid' },
@@ -194,56 +217,64 @@ function AboutPage({ tweaks }) {
       React.createElement('h3', null, 'A short ', React.createElement('em', null, 'timeline')),
     ),
     React.createElement('div', { className: 'timeline' },
-      timeline.map(t =>
-        React.createElement('div', { key: t.year, className: 'timeline-row' },
-          React.createElement('div', { className: 'timeline-year' }, t.year),
+      timeline.map(t => {
+        const yearEl = t.year === '2023'
+          ? React.createElement('a', {
+              className: 'timeline-year',
+              href: 'old%20design/index.html',
+              target: '_blank',
+              rel: 'noopener',
+            }, t.year)
+          : React.createElement('div', { className: 'timeline-year' }, t.year);
+        return React.createElement('div', { key: t.year, className: 'timeline-row' },
+          yearEl,
           React.createElement('div', { className: 'timeline-body' },
             React.createElement('strong', null, t.title),
             React.createElement('span', null, t.body),
           )
-        )
-      )
+        );
+      })
     ),
   );
 }
 
 // ──────────── PROJECTS ────────────
-function ProjectsPage({ tweaks, onCardHover }) {
+function ProjectsPage({ tweaks }) {
   const projects = [
     {
       name: 'Impostor',
       tagline: 'A mobile-first social game where players try to spot the hidden impostor among friends.',
-      tech: ['Java', 'Spring Boot', 'WebSocket'],
+      tech: ['HTML', 'CSS', 'JavaScript'],
       url: 'https://impostorgame.top/',
       cta: 'Play the game',
-      thumb: 'resources/images/Projects/impostorGame.png',
+      thumb: 'resources/images/Projects/impostorGame.webp',
       thumbLabel: 'IMPOSTOR · LIVE',
     },
     {
       name: 'Loopretto',
       tagline: 'A transcription tool for musicians. Loop, slow down, find your notes.',
-      tech: ['JavaScript', 'Web Audio API'],
+      tech: ['Python'],
       url: null,
       cta: 'In development',
-      thumb: 'resources/images/Projects/Looptube.png',
+      thumb: 'resources/images/Projects/Looptube.webp',
       thumbLabel: 'LOOPRETTO',
     },
     {
       name: 'QuickPaste',
       tagline: 'Save text clips from any website as notes in a tidy collection. A Chrome extension that lives in your toolbar.',
-      tech: ['Chrome API', 'JS', 'IndexedDB'],
+      tech: ['Chrome API', 'JavaScript'],
       url: 'https://chromewebstore.google.com/detail/quickpaste/kdlcijllofgjnpdghojpdhjjhnnffcgb',
       cta: 'Install extension',
-      thumb: 'resources/images/Projects/QuickPaste/ScreenShot2.jpg',
+      thumb: 'resources/images/Projects/QuickPaste/ScreenShot2.webp',
       thumbLabel: 'QUICKPASTE',
     },
     {
       name: 'Trendalizer',
       tagline: 'Scrapes a website for its 5 most common keywords and graphs their interest trend over time.',
-      tech: ['Java', 'Trends API', 'JFreeChart'],
+      tech: ['Python', 'Trends API'],
       url: null,
       cta: 'View on GitHub',
-      thumb: 'resources/images/Projects/Trendalizer.png',
+      thumb: 'resources/images/Projects/Trendalizer.webp',
       thumbLabel: 'TRENDALIZER',
     },
     {
@@ -252,7 +283,7 @@ function ProjectsPage({ tweaks, onCardHover }) {
       tech: ['HTML', 'CSS', 'GitHub Pages'],
       url: 'https://cristiangabriel88.github.io/furniture-boutique/',
       cta: 'Visit site',
-      thumb: null,
+      thumb: 'resources/images/Projects/furniture-boutique.bmp',
       thumbLabel: 'FURNITURE BOUTIQUE',
     },
   ];
@@ -270,30 +301,24 @@ function ProjectsPage({ tweaks, onCardHover }) {
 
     React.createElement('div', { className: 'project-grid' },
       projects.map((p, i) =>
-        React.createElement(ProjectCard, { key: p.name, project: p, index: i, onCardHover })
+        React.createElement(ProjectCard, { key: p.name, project: p, index: i })
       )
     ),
   );
 }
 
-function ProjectCard({ project, index, onCardHover }) {
-  const ref = useRef(null);
-  const handleEnter = (e) => {
-    if (onCardHover) onCardHover(ref.current);
-  };
+function ProjectCard({ project, index }) {
   return React.createElement(
     project.url ? 'a' : 'div',
     {
-      ref,
       className: 'project-card',
       href: project.url || undefined,
       target: project.url ? '_blank' : undefined,
       rel: project.url ? 'noopener noreferrer' : undefined,
-      onMouseEnter: handleEnter,
     },
     project.thumb
       ? React.createElement('div', { className: 'project-thumb' },
-          React.createElement('img', { src: project.thumb, alt: project.name, loading: 'lazy' })
+          React.createElement('img', { src: project.thumb, alt: project.name, decoding: 'async' })
         )
       : React.createElement('div', { className: 'project-thumb placeholder' }, project.thumbLabel),
     React.createElement('div', { className: 'project-body' },
