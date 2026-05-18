@@ -266,9 +266,9 @@ function ProjectsPage({ tweaks }) {
       name: 'Loopretto',
       tagline: 'A transcription tool for musicians. Loop, slow down, find your notes.',
       tech: ['Python'],
-      url: null,
-      cta: 'In development',
-      thumb: 'resources/images/Projects/Looptube.webp',
+      url: 'https://github.com/cristiangabriel88/loopretto#readme',
+      cta: 'View on GitHub',
+      thumb: 'resources/images/Projects/loopretto.png',
       thumbLabel: 'LOOPRETTO',
     },
     {

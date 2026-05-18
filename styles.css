@@ -743,21 +743,23 @@ a.timeline-year:hover {
   text-decoration: none;
   color: inherit;
   overflow: hidden;
-  /* Single curve + matching duration across every animated property so
-     the card moves as one piece — expo-out (0.16, 1, 0.3, 1) gives the
-     buttery deceleration used by Stripe/Linear. will-change promotes
-     the card to its own compositor layer so the first hover doesn't
-     pay the layer-creation tax. */
-  transition: transform 440ms cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 440ms cubic-bezier(0.16, 1, 0.3, 1),
-              background 440ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 440ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
+  /* Soft-breeze ease — a long, gentle sine-like curve so the card
+     drifts up rather than springs. Slow enter, slow settle, no
+     front-loaded snap. translateZ(0) pre-promotes the compositor
+     layer so the first hover doesn't pay the layer-creation tax. */
+  transform: translateZ(0);
+  transition: transform 900ms cubic-bezier(0.37, 0, 0.27, 1),
+              border-color 900ms cubic-bezier(0.37, 0, 0.27, 1),
+              background 900ms cubic-bezier(0.37, 0, 0.27, 1),
+              box-shadow 900ms cubic-bezier(0.37, 0, 0.27, 1);
+  will-change: transform, box-shadow;
 }
 .project-card:hover {
   border-color: var(--forest);
   background: rgba(255, 255, 255, 0.92);
-  transform: translateY(-4px);
+  /* 3px lift — small enough that the card doesn't slide out from
+     under the cursor near the bottom edge and re-trigger hover. */
+  transform: translate3d(0, -3px, 0);
   box-shadow: 0 28px 48px -28px rgba(45, 80, 22, 0.38);
 }
 
@@ -776,14 +778,6 @@ a.timeline-year:hover {
   height: 100%;
   object-fit: cover;
   display: block;
-  /* Thumbnail glides in slightly slower than the card lifts (560 vs
-     440ms) so the image looks like it's "settling into" the hover,
-     rather than locking step with the card and feeling mechanical. */
-  transition: transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-}
-.project-card:hover .project-thumb img {
-  transform: scale(1.04);
 }
 .project-thumb.placeholder {
   background:
@@ -852,7 +846,7 @@ a.timeline-year:hover {
   font-weight: 600;
 }
 .project-card:hover .project-cta .arrow { transform: translateX(5px); }
-.project-cta .arrow { transition: transform 440ms cubic-bezier(0.16, 1, 0.3, 1); }
+.project-cta .arrow { transition: transform 900ms cubic-bezier(0.37, 0, 0.27, 1); }
 
 /* corner pixel sprouts */
 .corner-sprout {
