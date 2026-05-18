@@ -57,7 +57,6 @@ function useTypewriter(phrases, { speed = 70, pauseAfter = 1800, deleteSpeed = 3
 // Hero phrases live at module scope so the array reference is stable across
 // renders — keeps the typewriter effect from re-mounting on every parent re-render.
 const HERO_PHRASES = [
-  'Prompt engineer sounds fake, so I won’t say it.',
   'Still learning how to ask better questions.',
   'Currently debugging my prompts.',
   'Usually fixing something.',

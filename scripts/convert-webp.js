@@ -16,6 +16,7 @@ const targets = [
   'resources/images/projects.png',
   'resources/images/about.png',
   'resources/images/home.png',
+  'resources/images/contact2.png',
 ];
 
 (async () => {

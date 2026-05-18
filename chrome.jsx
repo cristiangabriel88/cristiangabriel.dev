@@ -171,7 +171,7 @@ function TopNav({ page, onNav }) {
 const BOTANICAL_SRC = {
   home: 'resources/images/home.png',
   about: 'resources/images/about.png',
-  projects: 'resources/images/contact2.png',
+  projects: 'resources/images/contact2.webp',
 };
 function BotanicalAnchor({ page }) {
   return React.createElement('img', {
