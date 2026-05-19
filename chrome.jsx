@@ -174,8 +174,8 @@ function TopNav({ page, onNav }) {
 // backgrounds and render as-is; the projects anchor is a white-bg PNG that
 // uses mix-blend-multiply (see styles.css) to drop the white cleanly.
 const BOTANICAL_SRC = {
-  home: 'resources/images/home.png',
-  about: 'resources/images/about.png',
+  home: 'resources/images/home.webp',
+  about: 'resources/images/about.webp',
   projects: 'resources/images/contact2.webp',
 };
 function BotanicalAnchor({ page }) {

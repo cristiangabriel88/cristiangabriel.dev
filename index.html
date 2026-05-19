@@ -33,24 +33,26 @@
 
 	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 	<!-- Bump ?v= on every deploy to bust GitHub Pages / browser cache. -->
-	<link rel="stylesheet" href="styles.css?v=2026-05-19a" />
-	<link rel="stylesheet" href="theme-dark.css?v=2026-05-19a" />
+	<link rel="stylesheet" href="styles.css?v=2026-05-19b" />
+	<link rel="stylesheet" href="theme-dark.css?v=2026-05-19b" />
 
-	<!-- Cache-warm project thumbs at first paint so navigating to Projects is instant. -->
-	<link rel="preload" as="image" href="resources/images/Projects/impostorGame.webp" />
-	<link rel="preload" as="image" href="resources/images/Projects/Looptube.webp" />
-	<link rel="preload" as="image" href="resources/images/Projects/QuickPaste/ScreenShot2.webp" />
-	<link rel="preload" as="image" href="resources/images/Projects/Trendalizer.webp" />
+	<!-- Preload the home botanical — visible immediately on first paint. -->
+	<link rel="preload" as="image" href="resources/images/home.webp" fetchpriority="high" />
+	<!-- Prefetch the other botanicals and project thumbs — needed only after navigation. -->
+	<link rel="prefetch" as="image" href="resources/images/about.webp" />
+	<link rel="prefetch" as="image" href="resources/images/contact2.webp" />
+	<link rel="prefetch" as="image" href="resources/images/Projects/impostorGame.webp" />
+	<link rel="prefetch" as="image" href="resources/images/Projects/Looptube.webp" />
+	<link rel="prefetch" as="image" href="resources/images/Projects/QuickPaste/ScreenShot2.webp" />
+	<link rel="prefetch" as="image" href="resources/images/Projects/Trendalizer.webp" />
+	<link rel="prefetch" as="image" href="resources/images/Projects/loopretto.webp" />
 
-	<!-- React + Babel (pinned) -->
-	<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
-		integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+	<!-- React (production, pinned) — no Babel needed: JSX pre-compiled at build time. -->
+	<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+		integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
 		crossorigin="anonymous"></script>
-	<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
-		integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
-		crossorigin="anonymous"></script>
-	<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
-		integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+	<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+		integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1"
 		crossorigin="anonymous"></script>
 </head>
 
@@ -60,12 +62,12 @@
 	<!-- ###### SCRIPT LOAD ORDER ###### -->
 	<!-- pixel-art -> chrome -> pages -> easter-eggs -> tweaks-panel -> app -->
 	<!-- Bump ?v= on every deploy to bust GitHub Pages / browser cache. -->
-	<script type="text/babel" src="pixel-art.jsx?v=2026-05-19a"></script>
-	<script type="text/babel" src="chrome.jsx?v=2026-05-19a"></script>
-	<script type="text/babel" src="pages.jsx?v=2026-05-19a"></script>
-	<script type="text/babel" src="easter-eggs.jsx?v=2026-05-19a"></script>
-	<script type="text/babel" src="tweaks-panel.jsx?v=2026-05-19a"></script>
-	<script type="text/babel" src="app.jsx?v=2026-05-19a"></script>
+	<script src="pixel-art.js?v=2026-05-19b"></script>
+	<script src="chrome.js?v=2026-05-19b"></script>
+	<script src="pages.js?v=2026-05-19b"></script>
+	<script src="easter-eggs.js?v=2026-05-19b"></script>
+	<script src="tweaks-panel.compiled.js?v=2026-05-19b"></script>
+	<script src="app.js?v=2026-05-19b"></script>
 </body>
 
 </html>

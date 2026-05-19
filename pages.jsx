@@ -174,7 +174,7 @@ function AboutPage({ tweaks }) {
       ),
       React.createElement('div', { className: 'about-portrait' },
         React.createElement('img', {
-          src: 'resources/images/me.jpg',
+          src: 'resources/images/me.webp',
           alt: 'Cristian Gabriel',
           loading: 'lazy',
           decoding: 'async',
@@ -271,7 +271,7 @@ function ProjectsPage({ tweaks }) {
       tech: ['Python'],
       url: 'https://github.com/cristiangabriel88/loopretto#readme',
       cta: 'View on GitHub',
-      thumb: 'resources/images/Projects/loopretto.png',
+      thumb: 'resources/images/Projects/loopretto.webp',
       thumbLabel: 'LOOPRETTO',
     },
     {
@@ -280,7 +280,7 @@ function ProjectsPage({ tweaks }) {
       tech: ['Chrome API', 'JavaScript'],
       url: 'Quickpaste/quickpaste.html',
       cta: 'See the project',
-      thumb: 'resources/images/Projects/QuickPaste/small-promo-title.png',
+      thumb: 'resources/images/Projects/QuickPaste/small-promo-title.webp',
       thumbLabel: 'QUICKPASTE',
     },
     {
@@ -298,7 +298,7 @@ function ProjectsPage({ tweaks }) {
       tech: ['HTML', 'CSS', 'GitHub Pages'],
       url: 'https://cristiangabriel88.github.io/furniture-boutique/',
       cta: 'Visit site',
-      thumb: 'resources/images/Projects/furniture-boutique.bmp',
+      thumb: 'resources/images/Projects/furniture-boutique.webp',
       thumbLabel: 'FURNITURE BOUTIQUE',
     },
   ];
