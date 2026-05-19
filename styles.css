@@ -963,8 +963,8 @@ a.timeline-year:hover {
 
 .terminal {
   width: 100%;
-  max-width: 720px;
-  height: 480px;
+  max-width: 880px;
+  height: 580px;
   background: #0F1A07;
   border: 1px solid #2D5016;
   border-radius: 10px;
@@ -974,6 +974,12 @@ a.timeline-year:hover {
   overflow: hidden;
   font-family: var(--pixel);
   color: #B5DFAA;
+  /* VT323 is a pixel font — disable anti-aliasing so glyphs stay crisp pixel-perfect
+     instead of inheriting the global antialiased rendering. */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: auto;
+  font-smooth: never;
+  text-rendering: geometricPrecision;
 }
 .terminal-bar {
   display: flex;
@@ -1031,11 +1037,12 @@ a.timeline-year:hover {
 .terminal-body {
   flex: 1;
   padding: 18px 22px;
-  overflow-y: auto;
+  overflow: auto;
   font-size: 18px;
   line-height: 1.35;
 }
 .terminal-body p { margin: 0 0 2px; white-space: pre-wrap; }
+.terminal-body p.art { white-space: pre; line-height: 1.05; letter-spacing: 0; color: #B5DFAA; }
 .terminal-prompt {
   display: flex;
   gap: 6px;
@@ -1062,6 +1069,22 @@ a.timeline-year:hover {
 .terminal .ok { color: #B5DFAA; }
 .terminal .dim { color: #5A7838; }
 .terminal .err { color: #D69273; }
+/* Forest Wanderer line kinds. */
+.terminal .room { color: #E8F5D5; }
+.terminal .npc  { color: #DFEFD2; font-style: italic; }
+.terminal .game { color: #B5DFAA; }
+/* Blinking pixel-block caret shown after the currently typing line. */
+.terminal-body p.typing::after {
+  content: '▌';
+  display: inline-block;
+  margin-left: 2px;
+  color: #B5DFAA;
+  animation: termCaret 0.75s steps(1, start) infinite;
+}
+@keyframes termCaret {
+  0%, 50%       { opacity: 1; }
+  50.01%, 100%  { opacity: 0; }
+}
 
 /* ---------- Terminal: maximized (green button) ---------- */
 .terminal-backdrop.maximized { padding: 0; }
@@ -1181,6 +1204,24 @@ a.timeline-year:hover {
   cursor: pointer;
 }
 .mg-btn:hover { background: #3A6A1D; }
+
+/* ---------- Scrollbars — app (light) ---------- */
+/* Webkit */
+::-webkit-scrollbar               { width: 8px; height: 8px; }
+::-webkit-scrollbar-track         { background: var(--parchment-2); border-radius: 999px; }
+::-webkit-scrollbar-thumb         { background: var(--moss); border-radius: 999px; border: 2px solid var(--parchment-2); }
+::-webkit-scrollbar-thumb:hover   { background: var(--forest); }
+::-webkit-scrollbar-corner        { background: var(--parchment-2); }
+/* Firefox */
+* { scrollbar-color: var(--moss) var(--parchment-2); scrollbar-width: thin; }
+
+/* ---------- Scrollbars — terminal (dark) ---------- */
+.terminal-body::-webkit-scrollbar               { width: 6px; }
+.terminal-body::-webkit-scrollbar-track         { background: #0F1A07; border-radius: 999px; }
+.terminal-body::-webkit-scrollbar-thumb         { background: #2D5016; border-radius: 999px; border: 1px solid #0F1A07; }
+.terminal-body::-webkit-scrollbar-thumb:hover   { background: #7AA355; }
+/* Firefox — scoped override on terminal-body */
+.terminal-body { scrollbar-color: #2D5016 #0F1A07; scrollbar-width: thin; }
 
 /* ---------- Tweaks-panel tweaks (light brand) ---------- */
 .cg-tweak-section { border-color: var(--rule) !important; }

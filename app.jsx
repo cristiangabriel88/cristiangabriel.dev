@@ -104,7 +104,7 @@ function App() {
     // intact — return visits to Projects don't refetch or re-decode anything.
     React.createElement('main', { className: 'page' },
       React.createElement('div', { className: 'page-slot', hidden: page !== 'home' },
-        React.createElement(HomePage, { onNav: setPage, tweaks: t })),
+        React.createElement(HomePage, { onNav: setPage, tweaks: t, paused: termOpen })),
       React.createElement('div', { className: 'page-slot', hidden: page !== 'about' },
         React.createElement(AboutPage, { tweaks: t })),
       React.createElement('div', { className: 'page-slot', hidden: page !== 'projects' },

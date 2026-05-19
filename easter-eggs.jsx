@@ -7,7 +7,7 @@
 //  4. Mini-game (catch falling leaves) — launched from terminal
 // ─────────────────────────────────────────────────────────────
 
-const { useState, useEffect, useRef, useCallback } = React;
+const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
 
 // ─────────── 1. Leaf particles ───────────
 function LeafParticles({ enabled = true }) {
@@ -189,6 +189,26 @@ function PixelCharacter({ enabled = true }) {
 }
 
 // ─────────── 3. Terminal + 4. Mini-game ───────────
+
+// Lazy loader for the Forest Wanderer adventure module. The game's data + parser
+// is ~1000 LOC; we don't want to parse it on initial page load just to support a
+// rarely-typed command. The script is injected on demand the first time `forest`
+// is invoked; subsequent invocations resolve instantly (browser cache).
+let forestLoaderPromise = null;
+function loadForestAdventure() {
+  if (window.ForestAdventure) return Promise.resolve(window.ForestAdventure);
+  if (forestLoaderPromise) return forestLoaderPromise;
+  forestLoaderPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'forest-adventure.js';
+    s.async = true;
+    s.onload  = () => resolve(window.ForestAdventure);
+    s.onerror = () => { forestLoaderPromise = null; reject(new Error('load failed')); };
+    document.head.appendChild(s);
+  });
+  return forestLoaderPromise;
+}
+
 const TERMINAL_BANNER = [
   ' ___  ___  _ _ ',
   '|  _|/ __|| | |',
@@ -201,23 +221,761 @@ const TERMINAL_BANNER = [
   '',
 ];
 
+// 8-row figlet-style "Big" font for the `ascii` command. Each glyph is an
+// array of 8 strings, all the same width within a glyph. Letters are
+// concatenated row-by-row to form the rendered art.
+const BIG_FONT = {
+  ' ': ['    ','    ','    ','    ','    ','    ','    ','    '],
+  '.': ['   ','   ','   ','   ',' _ ','(_)','   ','   '],
+  ',': ['   ','   ','   ','   ','   ',' _ ','( )','|/ '],
+  '!': [' _ ','| |','| |','| |','|_|','(_)','   ','   '],
+  '?': [' ___  ','|__ \\ ','   ) |','  / / ',' |_|  ',' (_)  ','      ','      '],
+  '-': ['      ','      ','      ',' ____ ','|____|','      ','      ','      '],
+  '_': ['        ','        ','        ','        ','        ','        ','        ',' ______ '],
+  ':': ['   ','   ',' _ ','(_)',' _ ','(_)','   ','   '],
+  "'": [' _ ','( )','|/ ','   ','   ','   ','   ','   '],
+
+  'A': [
+    '     _    ',
+    '    / \\   ',
+    '   / _ \\  ',
+    '  / ___ \\ ',
+    ' /_/   \\_\\',
+    '          ',
+    '          ',
+    '          ',
+  ],
+  'B': [
+    ' ____  ',
+    '|  _ \\ ',
+    '| |_) |',
+    '|  _ < ',
+    '| |_) |',
+    '|____/ ',
+    '       ',
+    '       ',
+  ],
+  'C': [
+    '  _____ ',
+    ' / ____|',
+    '| |     ',
+    '| |     ',
+    '| |____ ',
+    ' \\_____|',
+    '        ',
+    '        ',
+  ],
+  'D': [
+    ' _____  ',
+    '|  __ \\ ',
+    '| |  | |',
+    '| |  | |',
+    '| |__| |',
+    '|_____/ ',
+    '        ',
+    '        ',
+  ],
+  'E': [
+    ' ______ ',
+    '|  ____|',
+    '| |__   ',
+    '|  __|  ',
+    '| |____ ',
+    '|______|',
+    '        ',
+    '        ',
+  ],
+  'F': [
+    ' ______ ',
+    '|  ____|',
+    '| |__   ',
+    '|  __|  ',
+    '| |     ',
+    '|_|     ',
+    '        ',
+    '        ',
+  ],
+  'G': [
+    '  _____ ',
+    ' / ____|',
+    '| |  __ ',
+    '| | |_ |',
+    '| |__| |',
+    ' \\_____|',
+    '        ',
+    '        ',
+  ],
+  'H': [
+    ' _    _ ',
+    '| |  | |',
+    '| |__| |',
+    '|  __  |',
+    '| |  | |',
+    '|_|  |_|',
+    '        ',
+    '        ',
+  ],
+  'I': [
+    ' _____ ',
+    '|_   _|',
+    '  | |  ',
+    '  | |  ',
+    ' _| |_ ',
+    '|_____|',
+    '       ',
+    '       ',
+  ],
+  'J': [
+    '       _ ',
+    '      | |',
+    '      | |',
+    '  _   | |',
+    ' | |__| |',
+    '  \\____/ ',
+    '         ',
+    '         ',
+  ],
+  'K': [
+    ' _  __ ',
+    '| |/ / ',
+    '| \' /  ',
+    '|  <   ',
+    '| . \\  ',
+    '|_|\\_\\ ',
+    '       ',
+    '       ',
+  ],
+  'L': [
+    ' _      ',
+    '| |     ',
+    '| |     ',
+    '| |     ',
+    '| |____ ',
+    '|______|',
+    '        ',
+    '        ',
+  ],
+  'M': [
+    ' __  __ ',
+    '|  \\/  |',
+    '| \\  / |',
+    '| |\\/| |',
+    '| |  | |',
+    '|_|  |_|',
+    '        ',
+    '        ',
+  ],
+  'N': [
+    ' _   _ ',
+    '| \\ | |',
+    '|  \\| |',
+    '| . ` |',
+    '| |\\  |',
+    '|_| \\_|',
+    '       ',
+    '       ',
+  ],
+  'O': [
+    '  ____  ',
+    ' / __ \\ ',
+    '| |  | |',
+    '| |  | |',
+    '| |__| |',
+    ' \\____/ ',
+    '        ',
+    '        ',
+  ],
+  'P': [
+    ' _____  ',
+    '|  __ \\ ',
+    '| |__) |',
+    '|  ___/ ',
+    '| |     ',
+    '|_|     ',
+    '        ',
+    '        ',
+  ],
+  'Q': [
+    '  ____   ',
+    ' / __ \\  ',
+    '| |  | | ',
+    '| |  | | ',
+    '| |__| | ',
+    ' \\___\\_\\ ',
+    '         ',
+    '         ',
+  ],
+  'R': [
+    ' _____  ',
+    '|  __ \\ ',
+    '| |__) |',
+    '|  _  / ',
+    '| | \\ \\ ',
+    '|_|  \\_\\',
+    '        ',
+    '        ',
+  ],
+  'S': [
+    '  _____ ',
+    ' / ____|',
+    '| (___  ',
+    ' \\___ \\ ',
+    ' ____) |',
+    '|_____/ ',
+    '        ',
+    '        ',
+  ],
+  'T': [
+    ' _______ ',
+    '|__   __|',
+    '   | |   ',
+    '   | |   ',
+    '   | |   ',
+    '   |_|   ',
+    '         ',
+    '         ',
+  ],
+  'U': [
+    ' _    _ ',
+    '| |  | |',
+    '| |  | |',
+    '| |  | |',
+    '| |__| |',
+    ' \\____/ ',
+    '        ',
+    '        ',
+  ],
+  'V': [
+    '__      __',
+    '\\ \\    / /',
+    ' \\ \\  / / ',
+    '  \\ \\/ /  ',
+    '   \\  /   ',
+    '    \\/    ',
+    '          ',
+    '          ',
+  ],
+  'W': [
+    '__          __',
+    '\\ \\        / /',
+    ' \\ \\  /\\  / / ',
+    '  \\ \\/  \\/ /  ',
+    '   \\  /\\  /   ',
+    '    \\/  \\/    ',
+    '              ',
+    '              ',
+  ],
+  'X': [
+    '__   __',
+    '\\ \\ / /',
+    ' \\ V / ',
+    '  > <  ',
+    ' / . \\ ',
+    '/_/ \\_\\',
+    '       ',
+    '       ',
+  ],
+  'Y': [
+    '__     __',
+    '\\ \\   / /',
+    ' \\ \\_/ / ',
+    '  \\   /  ',
+    '   | |   ',
+    '   |_|   ',
+    '         ',
+    '         ',
+  ],
+  'Z': [
+    ' ______ ',
+    '|___  / ',
+    '   / /  ',
+    '  / /   ',
+    ' / /__  ',
+    '/_____| ',
+    '        ',
+    '        ',
+  ],
+
+  'a': [
+    '        ',
+    '        ',
+    '   __ _ ',
+    '  / _` |',
+    ' | (_| |',
+    '  \\__,_|',
+    '        ',
+    '        ',
+  ],
+  'b': [
+    ' _      ',
+    '| |     ',
+    '| |__   ',
+    '| \'_ \\  ',
+    '| |_) | ',
+    '|_.__/  ',
+    '        ',
+    '        ',
+  ],
+  'c': [
+    '       ',
+    '       ',
+    '  ___  ',
+    ' / __| ',
+    '| (__  ',
+    ' \\___| ',
+    '       ',
+    '       ',
+  ],
+  'd': [
+    '      _ ',
+    '     | |',
+    '   __| |',
+    '  / _` |',
+    ' | (_| |',
+    '  \\__,_|',
+    '        ',
+    '        ',
+  ],
+  'e': [
+    '       ',
+    '       ',
+    '  ___  ',
+    ' / _ \\ ',
+    '|  __/ ',
+    ' \\___| ',
+    '       ',
+    '       ',
+  ],
+  'f': [
+    '   __ ',
+    '  / _|',
+    ' | |_ ',
+    ' |  _|',
+    ' | |  ',
+    ' |_|  ',
+    '      ',
+    '      ',
+  ],
+  'g': [
+    '        ',
+    '        ',
+    '   __ _ ',
+    '  / _` |',
+    ' | (_| |',
+    '  \\__, |',
+    '   __/ |',
+    '  |___/ ',
+  ],
+  'h': [
+    ' _      ',
+    '| |     ',
+    '| |__   ',
+    '| \'_ \\  ',
+    '| | | | ',
+    '|_| |_| ',
+    '        ',
+    '        ',
+  ],
+  'i': [
+    ' _ ',
+    '(_)',
+    ' _ ',
+    '| |',
+    '| |',
+    '|_|',
+    '   ',
+    '   ',
+  ],
+  'j': [
+    '    _ ',
+    '   (_)',
+    '    _ ',
+    '   | |',
+    '   | |',
+    '   | |',
+    ' _ | |',
+    '|__/  ',
+  ],
+  'k': [
+    ' _    ',
+    '| |   ',
+    '| | __',
+    '| |/ /',
+    '|   < ',
+    '|_|\\_\\',
+    '      ',
+    '      ',
+  ],
+  'l': [
+    ' _ ',
+    '| |',
+    '| |',
+    '| |',
+    '| |',
+    '|_|',
+    '   ',
+    '   ',
+  ],
+  'm': [
+    '            ',
+    '            ',
+    ' _ __ ___   ',
+    '| \'_ ` _ \\  ',
+    '| | | | | | ',
+    '|_| |_| |_| ',
+    '            ',
+    '            ',
+  ],
+  'n': [
+    '        ',
+    '        ',
+    ' _ __   ',
+    '| \'_ \\  ',
+    '| | | | ',
+    '|_| |_| ',
+    '        ',
+    '        ',
+  ],
+  'o': [
+    '        ',
+    '        ',
+    '  ___   ',
+    ' / _ \\  ',
+    '| (_) | ',
+    ' \\___/  ',
+    '        ',
+    '        ',
+  ],
+  'p': [
+    '        ',
+    '        ',
+    ' _ __   ',
+    '| \'_ \\  ',
+    '| |_) | ',
+    '| .__/  ',
+    '| |     ',
+    '|_|     ',
+  ],
+  'q': [
+    '        ',
+    '        ',
+    '   __ _ ',
+    '  / _` |',
+    ' | (_| |',
+    '  \\__, |',
+    '     | |',
+    '     |_|',
+  ],
+  'r': [
+    '       ',
+    '       ',
+    ' _ __  ',
+    '| \'__| ',
+    '| |    ',
+    '|_|    ',
+    '       ',
+    '       ',
+  ],
+  's': [
+    '       ',
+    '       ',
+    '  ___  ',
+    ' / __| ',
+    ' \\__ \\ ',
+    ' |___/ ',
+    '       ',
+    '       ',
+  ],
+  't': [
+    ' _    ',
+    '| |   ',
+    '| |_  ',
+    '| __| ',
+    '| |_  ',
+    ' \\__| ',
+    '      ',
+    '      ',
+  ],
+  'u': [
+    '        ',
+    '        ',
+    ' _   _  ',
+    '| | | | ',
+    '| |_| | ',
+    ' \\__,_| ',
+    '        ',
+    '        ',
+  ],
+  'v': [
+    '        ',
+    '        ',
+    '__   __ ',
+    '\\ \\ / / ',
+    ' \\ V /  ',
+    '  \\_/   ',
+    '        ',
+    '        ',
+  ],
+  'w': [
+    '           ',
+    '           ',
+    '__      __ ',
+    '\\ \\ /\\ / / ',
+    ' \\ V  V /  ',
+    '  \\_/\\_/   ',
+    '           ',
+    '           ',
+  ],
+  'x': [
+    '        ',
+    '        ',
+    '__   __ ',
+    '\\ \\ / / ',
+    ' >   <  ',
+    '/_/\\_\\  ',
+    '        ',
+    '        ',
+  ],
+  'y': [
+    '        ',
+    '        ',
+    ' _   _  ',
+    '| | | | ',
+    '| |_| | ',
+    ' \\__, | ',
+    '  __/ | ',
+    ' |___/  ',
+  ],
+  'z': [
+    '       ',
+    '       ',
+    ' ____  ',
+    '|_  / ',
+    ' / /   ',
+    '/___|  ',
+    '       ',
+    '       ',
+  ],
+
+  '0': [
+    '  ___  ',
+    ' / _ \\ ',
+    '| | | |',
+    '| | | |',
+    '| |_| |',
+    ' \\___/ ',
+    '       ',
+    '       ',
+  ],
+  '1': [
+    ' __ ',
+    '/_ |',
+    ' | |',
+    ' | |',
+    ' | |',
+    ' |_|',
+    '    ',
+    '    ',
+  ],
+  '2': [
+    ' ___  ',
+    '|__ \\ ',
+    '   ) |',
+    '  / / ',
+    ' / /_ ',
+    '|____|',
+    '      ',
+    '      ',
+  ],
+  '3': [
+    ' ____  ',
+    '|___ \\ ',
+    '  __) |',
+    ' |__ < ',
+    ' ___) |',
+    '|____/ ',
+    '       ',
+    '       ',
+  ],
+  '4': [
+    ' _  _   ',
+    '| || |  ',
+    '| || |_ ',
+    '|__   _|',
+    '   | |  ',
+    '   |_|  ',
+    '        ',
+    '        ',
+  ],
+  '5': [
+    ' _____ ',
+    '| ____|',
+    '| |__  ',
+    '|___ \\ ',
+    ' ___) |',
+    '|____/ ',
+    '       ',
+    '       ',
+  ],
+  '6': [
+    '   __  ',
+    '  / /  ',
+    ' / /_  ',
+    '|  _ \\ ',
+    '| (_) |',
+    ' \\___/ ',
+    '       ',
+    '       ',
+  ],
+  '7': [
+    ' ______ ',
+    '|____  |',
+    '    / / ',
+    '   / /  ',
+    '  / /   ',
+    ' /_/    ',
+    '        ',
+    '        ',
+  ],
+  '8': [
+    '  ___  ',
+    ' / _ \\ ',
+    '| (_) |',
+    ' > _ < ',
+    '| (_) |',
+    ' \\___/ ',
+    '       ',
+    '       ',
+  ],
+  '9': [
+    '  ___  ',
+    ' / _ \\ ',
+    '| (_) |',
+    ' \\__, |',
+    '   / / ',
+    '  /_/  ',
+    '       ',
+    '       ',
+  ],
+};
+
+function renderBigText(text) {
+  const glyphs = [];
+  for (const ch of text) {
+    glyphs.push(BIG_FONT[ch] || BIG_FONT[ch.toUpperCase()] || BIG_FONT['?'] || BIG_FONT[' ']);
+  }
+  if (!glyphs.length) return [];
+  const lines = [];
+  for (let r = 0; r < 8; r++) {
+    let line = '';
+    for (const g of glyphs) line += g[r] || '';
+    lines.push(line.replace(/\s+$/, ''));
+  }
+  // Trim leading/trailing all-empty rows so words without descenders or
+  // ascenders render compactly.
+  while (lines.length && !lines[0].trim()) lines.shift();
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  return lines;
+}
+
 function Terminal({ open, onClose, autoLaunchGame = false }) {
   const [history, setHistory] = useState([]);
-  const [input, setInput] = useState('');
   const [gameOpen, setGameOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
+  const [asciiMode, setAsciiMode] = useState(null); // null | 'text'
+  const [gameMode, setGameMode] = useState(null);   // null | 'forest' | 'forest-resume-prompt'
   const wasKonamiRef = useRef(false);
   const inputRef = useRef(null);
   const bodyRef = useRef(null);
+  // Live forest-adventure state — ref'd (not state) so the per-turn updates
+  // don't trigger React re-renders of the history list.
+  const gameStateRef = useRef(null);
+  // Typewriter controller: a queue of lines to type out, plus the current
+  // skip function and intervalId so we can fast-forward or cancel cleanly.
+  const typewriterCtrl = useRef({ queue: [], busy: false, skipFn: null, started: null });
+  // Track which history indices have already kicked off their reveal so the
+  // callback ref doesn't restart the animation on every re-render.
+  const revealStartedRef = useRef(new Set());
+
+  // Uncontrolled input: the <input> owns its value via the DOM. We only read
+  // it on submit (via inputRef.current.value) and clear it the same way.
+  // This avoids re-rendering the entire history list on every keystroke,
+  // which is what causes the typing to feel sluggish.
+  function clearInput() {
+    if (inputRef.current) inputRef.current.value = '';
+  }
+
+  // Cancel any in-flight typewriter (e.g. on `clear` or terminal close).
+  function cancelAllTypewriters() {
+    if (typewriterCtrl.current.skipFn) typewriterCtrl.current.skipFn();
+    typewriterCtrl.current.queue.length = 0;
+    typewriterCtrl.current.busy = false;
+    typewriterCtrl.current.skipFn = null;
+  }
+
+  // Append a batch of game-emitted lines to history all at once. The
+  // forest adventure prints instantly — no typewriter reveal — so the
+  // ASCII tables and room descriptions land legibly in one go.
+  function enqueueGameLines(lines) {
+    if (!lines || !lines.length) return;
+    setHistory(h => {
+      const next = h.slice();
+      for (const ln of lines) {
+        next.push({ kind: ln.kind || 'ok', text: ln.text || '' });
+      }
+      return next;
+    });
+  }
+
+  // Reveal `text` character-by-character on the given DOM element. Calls
+  // onDone() when finished (either organically or via skipFn).
+  function revealOnElement(el, text, lineIdx, onDone) {
+    typewriterCtrl.current.busy = true;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      el.textContent = text.slice(0, i);
+      if (i >= text.length) finalize();
+    }, 25);
+
+    function finalize() {
+      clearInterval(id);
+      el.textContent = text;
+      typewriterCtrl.current.skipFn = null;
+      typewriterCtrl.current.busy = false;
+      // Mark the history line as no longer typing so the ref doesn't re-fire.
+      setHistory(h => h.map((l, i2) => i2 === lineIdx ? { ...l, text, isTyping: false, fullText: undefined } : l));
+      // Process next queued reveal.
+      const next = typewriterCtrl.current.queue.shift();
+      if (next) revealOnElement(next.el, next.text, next.lineIdx, next.onDone);
+      else if (onDone) onDone();
+    }
+
+    typewriterCtrl.current.skipFn = finalize;
+  }
+
+  // Start (or queue) a reveal for a freshly-mounted typing line.
+  function startReveal(el, text, lineIdx) {
+    if (typewriterCtrl.current.busy) {
+      typewriterCtrl.current.queue.push({ el, text, lineIdx });
+      return;
+    }
+    revealOnElement(el, text, lineIdx);
+  }
 
   // Reset on open. If autoLaunchGame is true (Konami code path), jump straight into the game.
   useEffect(() => {
     if (open) {
+      cancelAllTypewriters();
+      revealStartedRef.current = new Set();
       setHistory(TERMINAL_BANNER.map(l => ({ kind: 'ok', text: l })));
-      setInput('');
+      clearInput();
       setMinimized(false);
       setMaximized(false);
+      setAsciiMode(null);
+      setGameMode(null);
+      gameStateRef.current = null;
       if (autoLaunchGame) {
         setGameOpen(true);
         wasKonamiRef.current = true;
@@ -229,8 +987,9 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
     }
   }, [open, autoLaunchGame]);
 
-  // Auto-scroll
-  useEffect(() => {
+  // Auto-scroll — runs synchronously after DOM mutation so new lines and the
+  // scroll-to-bottom happen in the same paint (no visible jump).
+  useLayoutEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [history]);
 
@@ -253,14 +1012,49 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
     if (cmd === 'help') {
       print('Available commands:');
       print('  about     · quick bio');
-      print('  projects  · list of projects');
-      print('  stack     · tech stack');
-      print('  contact   · how to reach me');
-      print('  snake     · play snake');
-      print('  whoami    · guess');
-      print('  date      · current date');
+      print('  ascii     · ASCII art generator');
       print('  clear     · clear the screen');
+      print('  contact   · how to reach me');
+      print('  date      · current date');
       print('  exit      · close terminal');
+      print('  forest    · explore the woods');
+      print('  projects  · list of projects');
+      print('  snake     · play snake');
+      print('  stack     · tech stack');
+      print('  whoami    · guess');
+    } else if (cmd === 'forest') {
+      // Lazy-load + start. If a save exists, prompt to resume.
+      const onReady = (F) => {
+        const existing = F.load();
+        if (existing) {
+          print('saved game found in these woods. type `yes` to resume, `no` to start fresh.', 'dim');
+          setGameMode('forest-resume-prompt');
+        } else {
+          gameStateRef.current = null;
+          const result = F.start();
+          gameStateRef.current = result.state;
+          setGameMode('forest');
+          enqueueGameLines(result.lines);
+        }
+      };
+      if (window.ForestAdventure) {
+        onReady(window.ForestAdventure);
+      } else {
+        print('loading the woods…', 'dim');
+        loadForestAdventure().then(onReady).catch(() => {
+          print('failed to load the woods. try again?', 'err');
+        });
+      }
+    } else if (cmd === 'ascii' || cmd.startsWith('ascii ')) {
+      const inline = raw.trim().slice(5).trim();
+      if (inline) {
+        print('');
+        renderBigText(inline).forEach(line => print(line, 'art'));
+        print('');
+      } else {
+        print('what should I render? (or `cancel`)');
+        setAsciiMode('text');
+      }
     } else if (cmd === 'about') {
       print('Cristian Gabriel. Software engineer, Bucharest, RO.');
       print('Works mostly with Java + Spring Boot. Likes plants.');
@@ -285,6 +1079,8 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
       print('Launching snake... arrow keys / WASD to steer. Esc to exit.', 'dim');
       setTimeout(() => setGameOpen(true), 300);
     } else if (cmd === 'clear') {
+      cancelAllTypewriters();
+      revealStartedRef.current = new Set();
       setHistory([]);
     } else if (cmd === 'exit' || cmd === 'close' || cmd === 'q') {
       onClose();
@@ -302,8 +1098,93 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
 
   function onSubmit(e) {
     e.preventDefault();
-    run(input);
-    setInput('');
+
+    // While the typewriter is mid-reveal, Enter skips the current paragraph
+    // instead of submitting. The input value is left alone so the user can
+    // keep typing through the reveal.
+    if (typewriterCtrl.current.busy && typewriterCtrl.current.skipFn) {
+      typewriterCtrl.current.skipFn();
+      return;
+    }
+
+    const raw = inputRef.current ? inputRef.current.value : '';
+    clearInput();
+
+    // Forest adventure — resume prompt (yes/no after a save was detected).
+    if (gameMode === 'forest-resume-prompt') {
+      print('>> ' + raw, 'cmd');
+      const ans = raw.trim().toLowerCase();
+      const F = window.ForestAdventure;
+      if (ans === 'yes' || ans === 'y') {
+        const loaded = F && F.load();
+        if (loaded) {
+          gameStateRef.current = loaded;
+          setGameMode('forest');
+          // Re-emit the current location so the player is reoriented.
+          const ok = F.parse('look', gameStateRef.current);
+          gameStateRef.current = ok.state;
+          enqueueGameLines([{ text: '(resumed.)', kind: 'dim', instant: true }].concat(ok.lines));
+        } else {
+          print('save was empty or corrupt. starting fresh.', 'err');
+          const result = F.start();
+          gameStateRef.current = result.state;
+          setGameMode('forest');
+          enqueueGameLines(result.lines);
+        }
+      } else if (ans === 'no' || ans === 'n') {
+        F.clearSave();
+        const result = F.start();
+        gameStateRef.current = result.state;
+        setGameMode('forest');
+        enqueueGameLines(result.lines);
+      } else {
+        print('please type `yes` or `no`.', 'dim');
+      }
+      return;
+    }
+
+    // Forest adventure — main game loop.
+    if (gameMode === 'forest') {
+      const F = window.ForestAdventure;
+      print('>> ' + raw, 'cmd');
+      const result = F.parse(raw, gameStateRef.current);
+      gameStateRef.current = result.state;
+      enqueueGameLines(result.lines);
+
+      // Auto-save after each substantive turn (skip pure quit).
+      if (!result.done) F.save(gameStateRef.current);
+
+      // Handle game-end flows.
+      if (result.ended) {
+        // Story ending reached — clear save so the next `forest` starts fresh.
+        F.clearSave();
+        setGameMode(null);
+        gameStateRef.current = null;
+      } else if (result.done) {
+        // Player quit cleanly.
+        setGameMode(null);
+        gameStateRef.current = null;
+      }
+      return;
+    }
+
+    // Interactive ASCII flow — collect text, then render.
+    if (asciiMode === 'text') {
+      print('> ' + raw, 'cmd');
+      const value = raw.trim();
+      if (!value || value.toLowerCase() === 'cancel') {
+        print('cancelled.', 'dim');
+        setAsciiMode(null);
+        return;
+      }
+      print('');
+      renderBigText(value).forEach(line => print(line, 'art'));
+      print('');
+      setAsciiMode(null);
+      return;
+    }
+
+    run(raw);
   }
 
   if (!open) return null;
@@ -367,18 +1248,34 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
         : React.createElement(React.Fragment, null,
             React.createElement('div', { ref: bodyRef, className: 'terminal-body' },
               history.map((line, i) =>
-                React.createElement('p', { key: i, className: line.kind }, line.text)
+                React.createElement('p', {
+                  key: i,
+                  className: line.kind + (line.isTyping ? ' typing' : ''),
+                  ref: line.isTyping
+                    ? (el => {
+                        if (el && !revealStartedRef.current.has(i)) {
+                          revealStartedRef.current.add(i);
+                          startReveal(el, line.fullText, i);
+                        }
+                      })
+                    : null,
+                }, line.text)
               )
             ),
             React.createElement('form', { className: 'terminal-prompt', onSubmit },
-              React.createElement('span', { className: 'ps' }, '~ $'),
+              React.createElement('span', { className: 'ps' },
+                gameMode ? (window.ForestAdventure ? window.ForestAdventure.PROMPT.trim() : '>>')
+                : asciiMode ? '>'
+                : '~ $'
+              ),
               React.createElement('input', {
                 ref: inputRef,
-                value: input,
-                onChange: e => setInput(e.target.value),
+                defaultValue: '',
                 autoFocus: true,
                 spellCheck: false,
                 autoComplete: 'off',
+                autoCorrect: 'off',
+                autoCapitalize: 'off',
               })
             )
           )

@@ -11,8 +11,10 @@ const { useState, useEffect, useRef } = React;
 // work blocked the main thread and made the leaf-trail RAF skip frames in
 // sync with the typing cadence. This version writes textContent directly to
 // a DOM node via a ref — React is at rest during typing.
-function useTypewriter(phrases, { speed = 70, pauseAfter = 1800, deleteSpeed = 35 } = {}) {
+function useTypewriter(phrases, { speed = 70, pauseAfter = 1800, deleteSpeed = 35, paused = false } = {}) {
   const ref = useRef(null);
+  const pausedRef = useRef(paused);
+  useEffect(() => { pausedRef.current = paused; }, [paused]);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -31,6 +33,7 @@ function useTypewriter(phrases, { speed = 70, pauseAfter = 1800, deleteSpeed = 3
 
     function step() {
       if (cancelled) return;
+      if (pausedRef.current) { timer = setTimeout(step, 150); return; }
       const current = phrases[phraseIdx % phrases.length];
       if (!deleting && text === current) {
         timer = setTimeout(() => { deleting = true; step(); }, pauseAfter);
@@ -66,8 +69,8 @@ const HERO_PHRASES = [
 ];
 
 // ──────────── HOME ────────────
-function HomePage({ onNav, tweaks }) {
-  const tagRef = useTypewriter(HERO_PHRASES);
+function HomePage({ onNav, tweaks, paused = false }) {
+  const tagRef = useTypewriter(HERO_PHRASES, { paused });
 
   const goToStack = () => {
     onNav('about');
