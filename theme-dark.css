@@ -129,5 +129,27 @@
   opacity: 0.55;
 }
 
+/* theme toggle — keep the light-green pill recognisable on dark, but tone it
+   down so it sits with the page rather than glowing through. */
+:root[data-theme="dark"] .theme-toggle {
+  background: rgba(213, 240, 176, 0.18);
+  border-color: rgba(213, 240, 176, 0.45);
+  color: var(--forest);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.45);
+}
+:root[data-theme="dark"] .theme-toggle:hover {
+  background: rgba(213, 240, 176, 0.32);
+  border-color: var(--forest);
+  color: var(--forest-deep);
+}
+
+/* ssh easter-egg pill — in dark mode the default forest-deep text on moss-soft
+   bg collapses to invisible (both ~#F0FADE). Flip to a deep mossy pill so the
+   light text reads cleanly. */
+:root[data-theme="dark"] .ssh-word {
+  background: var(--btn-bg);
+  color: var(--forest-deep);
+}
+
 /* terminal already uses its own dark green palette — leave it as-is.
    The terminal-minimized-pill stays legible against either theme. */

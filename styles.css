@@ -268,23 +268,40 @@ img.botanical[src=""] { display: none; }
    reveals on hover — discoverable but not advertised. */
 .theme-toggle {
   appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 4px;
+  border: 1px solid rgba(122, 163, 85, 0.4);
+  background: var(--moss-soft);
+  padding: 6px;
   border-radius: 999px;
-  color: var(--ink-mute);
-  opacity: 0.5;
+  color: var(--forest);
+  opacity: 1;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 180ms ease, color 180ms ease, background 180ms ease, transform 180ms ease;
+  box-shadow: 0 2px 6px -2px rgba(45, 80, 22, 0.22);
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  animation: theme-toggle-jiggle 5s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform;
 }
 .theme-toggle:hover {
-  opacity: 1;
-  color: var(--forest);
-  background: rgba(45, 80, 22, 0.06);
-  transform: rotate(-12deg);
+  color: var(--forest-deep);
+  background: var(--moss);
+  border-color: var(--forest);
+  transform: rotate(-12deg) scale(1.06);
+  box-shadow: 0 4px 12px -2px rgba(45, 80, 22, 0.32);
+}
+@keyframes theme-toggle-jiggle {
+  0%, 86%, 100% { transform: rotate(0deg); }
+  88%  { transform: rotate(-9deg); }
+  90%  { transform: rotate(8deg); }
+  92%  { transform: rotate(-6deg); }
+  94%  { transform: rotate(5deg); }
+  96%  { transform: rotate(-3deg); }
+  98%  { transform: rotate(1deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle { animation: none; }
 }
 
 /* ---------- Top-right nav ---------- */
