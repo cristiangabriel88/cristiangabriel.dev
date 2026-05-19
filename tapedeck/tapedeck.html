@@ -1,0 +1,1495 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>tapedeck.local, local YouTube audio capture</title>
+	<meta name="description"
+		content="A local-first web app that pulls audio from YouTube as MP3, M4A, Opus, WAV, or FLAC. Runs entirely on your machine. Nothing leaves your computer." />
+
+	<link rel="icon" type="image/svg+xml" href="static/favicon.svg" />
+
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600;700&display=swap"
+		rel="stylesheet" />
+
+	<style>
+		/* ===== tokens ===== */
+		:root {
+			--accent: oklch(0.70 0.16 55);
+			--accent-ink: oklch(0.20 0.04 60);
+			--accent-2: oklch(0.78 0.13 60);
+
+			--bg: oklch(0.985 0.004 80);
+			--bg-2: oklch(0.965 0.006 80);
+			--bg-3: oklch(0.945 0.008 80);
+			--surface: oklch(0.99 0.003 80);
+			--line: oklch(0.90 0.006 80);
+			--line-2: oklch(0.94 0.005 80);
+			--ink: oklch(0.20 0.01 60);
+			--ink-2: oklch(0.40 0.01 60);
+			--ink-3: oklch(0.58 0.008 60);
+			--ink-4: oklch(0.72 0.006 60);
+
+			--radius: 10px;
+			--radius-sm: 6px;
+			--radius-lg: 16px;
+			--max: 1120px;
+		}
+
+		:root[data-theme="dark"] {
+			--bg: oklch(0.16 0.006 80);
+			--bg-2: oklch(0.19 0.006 80);
+			--bg-3: oklch(0.22 0.006 80);
+			--surface: oklch(0.21 0.006 80);
+			--line: oklch(0.30 0.008 80);
+			--line-2: oklch(0.26 0.008 80);
+			--ink: oklch(0.96 0.005 80);
+			--ink-2: oklch(0.78 0.005 80);
+			--ink-3: oklch(0.62 0.006 80);
+			--ink-4: oklch(0.48 0.006 80);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html {
+			scroll-behavior: smooth;
+		}
+
+		body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--ink);
+			font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+			font-feature-settings: "ss01", "cv11";
+			-webkit-font-smoothing: antialiased;
+			font-size: 15.5px;
+			line-height: 1.55;
+			transition: background-color .25s ease, color .25s ease;
+		}
+
+		.mono {
+			font-family: "Geist Mono", ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+			font-variant-ligatures: none;
+		}
+
+		a {
+			color: inherit;
+		}
+
+		::selection {
+			background: color-mix(in oklab, var(--accent) 40%, transparent);
+			color: var(--ink);
+		}
+
+		/* grain texture (subtle) */
+		body::after {
+			content: "";
+			position: fixed;
+			inset: 0;
+			z-index: 0;
+			pointer-events: none;
+			opacity: 0.045;
+			mix-blend-mode: overlay;
+			background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+		}
+
+		:root[data-theme="dark"] body::after {
+			opacity: 0.06;
+		}
+
+		/* glow blobs */
+		.glow {
+			position: fixed;
+			pointer-events: none;
+			z-index: 0;
+			width: 720px;
+			height: 720px;
+			border-radius: 50%;
+			filter: blur(120px);
+			opacity: 0.32;
+		}
+
+		.glow-1 {
+			top: -260px;
+			left: -160px;
+			background: radial-gradient(circle, color-mix(in oklab, var(--accent) 65%, transparent), transparent 70%);
+		}
+
+		.glow-2 {
+			top: 540px;
+			right: -260px;
+			background: radial-gradient(circle, color-mix(in oklab, var(--accent-2) 55%, transparent), transparent 70%);
+			opacity: 0.22;
+		}
+
+		:root[data-theme="dark"] .glow-1 {
+			opacity: 0.22;
+		}
+
+		:root[data-theme="dark"] .glow-2 {
+			opacity: 0.16;
+		}
+
+		/* ===== topbar ===== */
+		.topbar {
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 12px 28px;
+			border-bottom: 1px solid var(--line-2);
+			background: color-mix(in oklab, var(--bg) 80%, transparent);
+			backdrop-filter: saturate(140%) blur(10px);
+			-webkit-backdrop-filter: saturate(140%) blur(10px);
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.brand-mark {
+			width: 30px;
+			height: 30px;
+			border-radius: var(--radius-sm);
+			background: var(--ink);
+			color: var(--bg);
+			display: grid;
+			place-items: center;
+		}
+
+		:root[data-theme="dark"] .brand-mark {
+			background: var(--accent);
+			color: var(--accent-ink);
+		}
+
+		.brand-name {
+			font-weight: 600;
+			letter-spacing: -0.01em;
+			font-size: 15px;
+		}
+
+		.brand-dot {
+			color: var(--accent);
+		}
+
+		.brand-sub {
+			font-size: 11px;
+			color: var(--ink-3);
+			margin-top: 1px;
+		}
+
+		.topbar-right {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+		}
+
+		.iconbtn {
+			display: inline-grid;
+			place-items: center;
+			width: 34px;
+			height: 34px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: var(--surface);
+			color: var(--ink-2);
+			cursor: pointer;
+			transition: border-color .12s, color .12s, background .12s;
+		}
+
+		.iconbtn:hover {
+			border-color: var(--ink-3);
+			color: var(--ink);
+		}
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 9px 16px;
+			border-radius: 999px;
+			font-size: 13px;
+			text-decoration: none;
+			cursor: pointer;
+			border: 1px solid var(--line);
+			background: var(--surface);
+			color: var(--ink-2);
+			transition: border-color .12s, color .12s, background .12s, transform .08s;
+			white-space: nowrap;
+		}
+
+		.btn:hover {
+			border-color: var(--ink-3);
+			color: var(--ink);
+		}
+
+		.btn:active {
+			transform: translateY(1px);
+		}
+
+		.btn-primary {
+			background: var(--accent);
+			color: var(--accent-ink);
+			border-color: transparent;
+			font-weight: 500;
+		}
+
+		.btn-primary:hover {
+			filter: brightness(.96);
+			color: var(--accent-ink);
+		}
+
+		.btn-coffee {
+			color: oklch(0.45 0.08 50);
+			border-color: color-mix(in oklab, oklch(0.55 0.10 50) 45%, var(--line));
+			font-weight: 500;
+		}
+
+		.btn-coffee:hover {
+			color: oklch(0.34 0.09 45);
+			border-color: oklch(0.55 0.10 50);
+			background: color-mix(in oklab, oklch(0.55 0.10 50) 6%, var(--surface));
+		}
+
+		:root[data-theme="dark"] .btn-coffee {
+			color: oklch(0.80 0.08 55);
+			border-color: color-mix(in oklab, oklch(0.70 0.10 55) 45%, var(--line));
+		}
+
+		:root[data-theme="dark"] .btn-coffee:hover {
+			color: oklch(0.90 0.08 55);
+			border-color: oklch(0.70 0.10 55);
+			background: color-mix(in oklab, oklch(0.70 0.10 55) 10%, var(--surface));
+		}
+
+		.btn-ghost {
+			background: transparent;
+		}
+
+		.btn svg {
+			display: block;
+		}
+
+		/* ===== sections ===== */
+		section {
+			position: relative;
+			z-index: 1;
+		}
+
+		.wrap {
+			max-width: var(--max);
+			margin: 0 auto;
+			padding: 0 28px;
+		}
+
+		/* ===== hero ===== */
+		.hero {
+			padding: 88px 0 60px;
+			text-align: center;
+		}
+
+		.eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 5px 12px;
+			border-radius: 999px;
+			background: color-mix(in oklab, var(--accent) 12%, var(--surface));
+			border: 1px solid color-mix(in oklab, var(--accent) 30%, var(--line));
+			color: var(--ink);
+			font-size: 12px;
+		}
+
+		.eyebrow .dot {
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--accent);
+			box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 18%, transparent);
+		}
+
+		.hero h1 {
+			margin: 22px auto 16px;
+			font-size: clamp(40px, 6.4vw, 76px);
+			line-height: 1.02;
+			letter-spacing: -0.035em;
+			font-weight: 600;
+			max-width: 18ch;
+		}
+
+		.hero h1 em {
+			font-style: normal;
+			background: linear-gradient(180deg, var(--accent) 0%, color-mix(in oklab, var(--accent) 60%, var(--ink)) 100%);
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+		}
+
+		.hero p.lede {
+			margin: 0 auto;
+			max-width: 60ch;
+			color: var(--ink-2);
+			font-size: clamp(16px, 1.6vw, 18px);
+		}
+
+		.cta-row {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 12px;
+			justify-content: center;
+			margin-top: 32px;
+		}
+
+		.btn-lg {
+			padding: 12px 22px;
+			font-size: 14px;
+			border-radius: 999px;
+		}
+
+		.hero-meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px 18px;
+			justify-content: center;
+			margin-top: 26px;
+			color: var(--ink-3);
+			font-size: 12.5px;
+		}
+
+		.hero-meta span {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.hero-meta .sep {
+			color: var(--ink-4);
+		}
+
+		.hero-meta .pill {
+			padding: 3px 9px;
+			border-radius: 999px;
+			border: 1px solid var(--line-2);
+			background: var(--surface);
+			font-size: 11px;
+		}
+
+		/* ===== screenshot frame ===== */
+		.shot {
+			position: relative;
+			border-radius: var(--radius-lg);
+			background: var(--surface);
+			border: 1px solid var(--line);
+			box-shadow:
+				0 1px 0 color-mix(in oklab, var(--ink) 4%, transparent) inset,
+				0 30px 80px -30px color-mix(in oklab, var(--ink) 18%, transparent),
+				0 8px 24px -10px color-mix(in oklab, var(--ink) 8%, transparent);
+			overflow: hidden;
+		}
+
+		.shot-bar {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			padding: 11px 14px;
+			border-bottom: 1px solid var(--line-2);
+			background: var(--bg-2);
+		}
+
+		.shot-bar .tl-dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: color-mix(in oklab, var(--ink) 18%, var(--bg-3));
+		}
+
+		.shot-bar .tl-dot:nth-child(1) {
+			background: oklch(0.72 0.16 25);
+		}
+
+		.shot-bar .tl-dot:nth-child(2) {
+			background: oklch(0.80 0.14 80);
+		}
+
+		.shot-bar .tl-dot:nth-child(3) {
+			background: oklch(0.70 0.12 155);
+		}
+
+		.shot-bar .tl-addr {
+			margin-left: 10px;
+			font-family: "Geist Mono", ui-monospace, monospace;
+			font-size: 11.5px;
+			color: var(--ink-3);
+			padding: 3px 10px;
+			border-radius: 999px;
+			border: 1px solid var(--line-2);
+			background: var(--surface);
+		}
+
+		.shot-body {
+			position: relative;
+			aspect-ratio: 16 / 10;
+			background:
+				radial-gradient(800px 400px at 50% -20%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 60%),
+				repeating-linear-gradient(0deg, color-mix(in oklab, var(--ink) 4%, transparent) 0 1px, transparent 1px 32px),
+				repeating-linear-gradient(90deg, color-mix(in oklab, var(--ink) 4%, transparent) 0 1px, transparent 1px 32px),
+				var(--bg);
+			display: grid;
+			place-items: center;
+			color: var(--ink-3);
+		}
+
+		.shot-body::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(circle at 50% 50%, transparent 30%, color-mix(in oklab, var(--bg) 50%, transparent) 100%);
+			pointer-events: none;
+		}
+
+		.shot-tag {
+			position: absolute;
+			top: 12px;
+			left: 12px;
+			z-index: 2;
+			font-family: "Geist Mono", ui-monospace, monospace;
+			font-size: 11px;
+			color: var(--ink);
+			padding: 4px 10px;
+			border-radius: 999px;
+			background: color-mix(in oklab, var(--surface) 88%, transparent);
+			border: 1px solid var(--line);
+			backdrop-filter: blur(4px);
+		}
+
+		.shot-tag::before {
+			content: "📸 ";
+			opacity: .65;
+		}
+
+		.shot-placeholder {
+			position: relative;
+			z-index: 1;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 14px;
+			max-width: 80%;
+			text-align: center;
+		}
+
+		.shot-placeholder svg {
+			opacity: .35;
+		}
+
+		.shot-placeholder-title {
+			font-size: 14px;
+			font-weight: 500;
+			color: var(--ink-2);
+			letter-spacing: -0.01em;
+		}
+
+		.shot-placeholder-sub {
+			font-size: 12.5px;
+			color: var(--ink-3);
+			max-width: 50ch;
+		}
+
+		.shot-body.has-image {
+			aspect-ratio: auto;
+			background: var(--bg-2);
+			display: block;
+			padding: 0;
+		}
+
+		.shot-body.has-image::before {
+			display: none;
+		}
+
+		.shot-body.has-image>img {
+			display: block;
+			width: 100%;
+			height: auto;
+		}
+
+		.shot-caption {
+			margin-top: 14px;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px 14px;
+			align-items: baseline;
+		}
+
+		.shot-caption .file {
+			font-family: "Geist Mono", ui-monospace, monospace;
+			font-size: 11.5px;
+			color: var(--ink);
+			padding: 3px 10px;
+			border-radius: 5px;
+			background: color-mix(in oklab, var(--accent) 11%, var(--surface));
+			border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--line));
+			white-space: nowrap;
+		}
+
+		.shot-caption .desc {
+			color: var(--ink-3);
+			font-size: 13.5px;
+			line-height: 1.5;
+		}
+
+		.hero-shot-wrap {
+			max-width: 980px;
+			margin: 56px auto 0;
+			padding: 0 28px;
+		}
+
+		/* ===== section header ===== */
+		.sec-head {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			margin-bottom: 36px;
+		}
+
+		.sec-eyebrow {
+			font-family: "Geist Mono", ui-monospace, monospace;
+			font-size: 11px;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--accent);
+		}
+
+		.sec-title {
+			margin: 0;
+			font-size: clamp(28px, 3.6vw, 40px);
+			letter-spacing: -0.025em;
+			line-height: 1.05;
+			font-weight: 600;
+			max-width: 22ch;
+		}
+
+		.sec-sub {
+			margin: 0;
+			color: var(--ink-2);
+			max-width: 60ch;
+			font-size: 15.5px;
+		}
+
+		/* ===== feature grid ===== */
+		.features {
+			display: grid;
+			gap: 16px;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+
+		.feature {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			padding: 22px;
+			background: var(--surface);
+			border: 1px solid var(--line-2);
+			border-radius: var(--radius);
+			transition: border-color .15s, transform .15s;
+		}
+
+		.feature:hover {
+			border-color: color-mix(in oklab, var(--accent) 35%, var(--line));
+			transform: translateY(-2px);
+		}
+
+		.feature-icon {
+			width: 36px;
+			height: 36px;
+			border-radius: var(--radius-sm);
+			background: color-mix(in oklab, var(--accent) 14%, var(--surface));
+			color: var(--accent);
+			display: grid;
+			place-items: center;
+			border: 1px solid color-mix(in oklab, var(--accent) 25%, var(--line));
+		}
+
+		.feature h3 {
+			margin: 4px 0 0;
+			font-size: 15.5px;
+			font-weight: 600;
+			letter-spacing: -0.01em;
+		}
+
+		.feature p {
+			margin: 0;
+			color: var(--ink-2);
+			font-size: 13.5px;
+			line-height: 1.55;
+		}
+
+		@media (max-width: 1024px) {
+			.features {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
+
+		@media (max-width: 560px) {
+			.features {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		/* ===== alternating screenshot blocks ===== */
+		.split {
+			display: grid;
+			gap: 48px;
+			grid-template-columns: 0.9fr 1.1fr;
+			align-items: center;
+		}
+
+		.split.reverse {
+			grid-template-columns: 1.1fr 0.9fr;
+		}
+
+		.split.reverse .split-text {
+			order: 2;
+		}
+
+		.split-text h2 {
+			margin: 0 0 12px;
+			font-size: clamp(24px, 2.8vw, 32px);
+			letter-spacing: -0.02em;
+			font-weight: 600;
+		}
+
+		.split-text p {
+			margin: 0;
+			color: var(--ink-2);
+			font-size: 15px;
+			line-height: 1.6;
+		}
+
+		.split-text ul {
+			list-style: none;
+			padding: 0;
+			margin: 18px 0 0;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+
+		.split-text li {
+			display: flex;
+			gap: 10px;
+			align-items: flex-start;
+			font-size: 13.5px;
+			color: var(--ink-2);
+		}
+
+		.split-text li::before {
+			content: "";
+			flex: 0 0 auto;
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--accent);
+			margin-top: 8px;
+		}
+
+		@media (max-width: 880px) {
+
+			.split,
+			.split.reverse {
+				grid-template-columns: 1fr;
+				gap: 24px;
+			}
+
+			.split.reverse .split-text {
+				order: 0;
+			}
+		}
+
+		/* ===== formats strip ===== */
+		.formats {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			justify-content: center;
+			margin-top: 22px;
+		}
+
+		.format-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 7px 13px;
+			border-radius: 999px;
+			background: var(--surface);
+			border: 1px solid var(--line);
+			font-family: "Geist Mono", ui-monospace, monospace;
+			font-size: 12px;
+			color: var(--ink-2);
+		}
+
+		.format-chip .kbps {
+			color: var(--ink-4);
+			font-size: 11px;
+			padding-left: 8px;
+			margin-left: 4px;
+			border-left: 1px solid var(--line-2);
+		}
+
+		/* ===== how it works ===== */
+		.stack {
+			display: grid;
+			gap: 12px;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+
+		.stack-card {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			padding: 18px;
+			background: var(--surface);
+			border: 1px solid var(--line-2);
+			border-radius: var(--radius);
+		}
+
+		.stack-card .role {
+			font-family: "Geist Mono", ui-monospace, monospace;
+			font-size: 10.5px;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--ink-3);
+		}
+
+		.stack-card .name {
+			font-size: 16px;
+			font-weight: 600;
+			letter-spacing: -0.01em;
+		}
+
+		.stack-card .desc {
+			color: var(--ink-3);
+			font-size: 12.5px;
+			line-height: 1.55;
+		}
+
+		@media (max-width: 880px) {
+			.stack {
+				grid-template-columns: 1fr 1fr;
+			}
+		}
+
+		/* ===== CTA card ===== */
+		.cta-card {
+			position: relative;
+			margin: 80px 0 60px;
+			padding: 48px 36px;
+			border-radius: var(--radius-lg);
+			background:
+				radial-gradient(800px 280px at 100% 0%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 60%),
+				radial-gradient(600px 240px at 0% 100%, color-mix(in oklab, var(--accent-2) 20%, transparent), transparent 60%),
+				var(--surface);
+			border: 1px solid var(--line);
+			overflow: hidden;
+			text-align: center;
+		}
+
+		.cta-card::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background:
+				repeating-linear-gradient(0deg, color-mix(in oklab, var(--ink) 3%, transparent) 0 1px, transparent 1px 24px),
+				repeating-linear-gradient(90deg, color-mix(in oklab, var(--ink) 3%, transparent) 0 1px, transparent 1px 24px);
+			pointer-events: none;
+			mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 75%);
+		}
+
+		.cta-card>* {
+			position: relative;
+			z-index: 1;
+		}
+
+		.cta-card h2 {
+			margin: 0 0 12px;
+			font-size: clamp(28px, 3.4vw, 38px);
+			letter-spacing: -0.025em;
+			font-weight: 600;
+		}
+
+		.cta-card p {
+			margin: 0 auto 26px;
+			max-width: 56ch;
+			color: var(--ink-2);
+			font-size: 15.5px;
+		}
+
+		/* ===== footer ===== */
+		.footer {
+			position: relative;
+			border-top: 1px solid var(--line-2);
+			margin-top: 0;
+			background: var(--bg);
+		}
+
+		.footer-accent {
+			position: absolute;
+			top: -1px;
+			left: 0;
+			right: 0;
+			height: 2px;
+			background: linear-gradient(90deg,
+					transparent 0%,
+					color-mix(in oklab, var(--accent) 60%, transparent) 18%,
+					color-mix(in oklab, var(--accent) 60%, transparent) 82%,
+					transparent 100%);
+			opacity: 0.55;
+			pointer-events: none;
+		}
+
+		.footer-inner {
+			max-width: var(--max);
+			margin: 0 auto;
+			padding: 22px 28px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 28px;
+			flex-wrap: wrap;
+		}
+
+		.footer-left {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.footer-mark {
+			width: 28px;
+			height: 28px;
+			border-radius: var(--radius-sm);
+			background: var(--ink);
+			color: var(--bg);
+			display: inline-grid;
+			place-items: center;
+		}
+
+		:root[data-theme="dark"] .footer-mark {
+			background: var(--accent);
+			color: var(--accent-ink);
+		}
+
+		.footer-brand {
+			font-weight: 600;
+			font-size: 14px;
+			letter-spacing: -0.01em;
+		}
+
+		.footer-version {
+			font-size: 11px;
+			color: var(--ink-3);
+			padding: 2px 9px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: var(--surface);
+		}
+
+		.footer-right {
+			display: flex;
+			align-items: center;
+			gap: 24px;
+			flex-wrap: wrap;
+		}
+
+		.footer-link {
+			color: var(--ink-3);
+			text-decoration: none;
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			font-size: 13px;
+			padding: 2px 0;
+			border-bottom: 1px dotted transparent;
+			transition: color .12s, border-color .12s;
+		}
+
+		.footer-link:hover {
+			color: var(--ink);
+			border-bottom-color: var(--ink-3);
+		}
+
+		.footer-arrow {
+			font-size: 12px;
+			opacity: 0.65;
+			margin-left: 2px;
+		}
+
+		/* ===== reel motif (decorative section divider) ===== */
+		.divider {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+			margin: 60px auto;
+			max-width: 360px;
+			color: var(--ink-4);
+		}
+
+		.divider .line {
+			flex: 1;
+			height: 1px;
+			background: var(--line);
+		}
+
+		.reel-mini {
+			width: 22px;
+			height: 22px;
+			animation: reel-spin 4s linear infinite;
+			transform-box: fill-box;
+			transform-origin: center;
+		}
+
+		@keyframes reel-spin {
+			to {
+				transform: rotate(360deg);
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.reel-mini {
+				animation: none;
+			}
+		}
+
+		.section-pad {
+			padding: 64px 0;
+		}
+
+		.section-pad-sm {
+			padding: 44px 0;
+		}
+
+		/* fade-in on scroll */
+		.reveal {
+			opacity: 0;
+			transform: translateY(14px);
+			transition: opacity .7s ease, transform .7s ease;
+		}
+
+		.reveal.in {
+			opacity: 1;
+			transform: none;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.reveal {
+				opacity: 1;
+				transform: none;
+				transition: none;
+			}
+		}
+
+		@media (max-width: 560px) {
+			.topbar {
+				padding: 10px 16px;
+			}
+
+			.wrap,
+			.hero-shot-wrap {
+				padding: 0 16px;
+			}
+
+			.topbar-right .btn span:not(.kbd) {
+				display: none;
+			}
+
+			.topbar-right .btn {
+				padding: 9px 11px;
+			}
+
+			.cta-card {
+				padding: 36px 20px;
+			}
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="glow glow-1" aria-hidden></div>
+	<div class="glow glow-2" aria-hidden></div>
+
+	<!-- ===== topbar ===== -->
+	<header class="topbar">
+		<div class="brand">
+			<div class="brand-mark" aria-hidden>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+					width="16" height="16">
+					<path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h.01" />
+				</svg>
+			</div>
+			<div>
+				<div class="brand-name">tapedeck<span class="brand-dot">.</span>local</div>
+				<div class="brand-sub mono">v1.1 · runs on your machine</div>
+			</div>
+		</div>
+		<div class="topbar-right">
+			<button id="themeToggle" class="iconbtn" aria-label="toggle theme" title="toggle theme">
+				<svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+					stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+					<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+				</svg>
+			</button>
+			<a class="btn btn-primary" href="https://github.com/cristiangabriel88/localYoutubeToMp3#readme" target="_blank"
+				rel="noopener">
+				<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" aria-hidden>
+					<path
+						d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.11.78-.25.78-.55v-1.93c-3.2.7-3.87-1.54-3.87-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.72 1.27 3.38.97.11-.75.41-1.27.74-1.56-2.55-.29-5.24-1.28-5.24-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.07 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.6.23 2.78.11 3.07.74.81 1.19 1.84 1.19 3.1 0 4.44-2.69 5.41-5.26 5.7.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z" />
+				</svg>
+				<span>Get it on GitHub</span>
+			</a>
+			<a class="btn btn-coffee" href="https://ko-fi.com/s/1bd08ce885" target="_blank" rel="noopener">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+					stroke-linejoin="round" width="15" height="15" aria-hidden>
+					<path d="M4 9h13v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9z" />
+					<path d="M17 11h2a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2" />
+					<path d="M7 3v3M10 3v3M13 3v3" />
+				</svg>
+				<span>Buy me a coffee</span>
+			</a>
+		</div>
+	</header>
+
+	<!-- ===== hero ===== -->
+	<section class="hero">
+		<div class="wrap">
+			<div class="eyebrow"><span class="dot"></span><span>Local-first audio capture · open source</span></div>
+			<h1>Web audio, extracted <em>locally and privately.</em></h1>
+			<p class="lede">
+				<span class="mono">tapedeck.local</span> pulls audio from YouTube and 1000+ other sites as MP3, M4A,
+				Opus, WAV, or FLAC,
+				entirely on your machine. No cloud. No browser save dialog. Just files where you wanted them.
+			</p>
+			<div class="cta-row">
+				<a class="btn btn-primary btn-lg" href="https://github.com/cristiangabriel88/localYoutubeToMp3#readme"
+					target="_blank" rel="noopener">
+					<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden>
+						<path
+							d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.11.78-.25.78-.55v-1.93c-3.2.7-3.87-1.54-3.87-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.72 1.27 3.38.97.11-.75.41-1.27.74-1.56-2.55-.29-5.24-1.28-5.24-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.07 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.6.23 2.78.11 3.07.74.81 1.19 1.84 1.19 3.1 0 4.44-2.69 5.41-5.26 5.7.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z" />
+					</svg>
+					Get it on GitHub
+				</a>
+				<a class="btn btn-lg" href="#how">See how it works</a>
+			</div>
+			<div class="hero-meta">
+				<span class="pill mono">Python 3.8+</span>
+				<span class="sep">·</span>
+				<span>FFmpeg-powered</span>
+				<span class="sep">·</span>
+				<span>Single-exe build</span>
+				<span class="sep">·</span>
+				<span>Light + dark</span>
+			</div>
+		</div>
+
+		<!-- hero screenshot -->
+		<div class="hero-shot-wrap reveal">
+			<div class="shot">
+				<div class="shot-bar">
+					<span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span>
+					<span class="tl-addr">http://127.0.0.1:5050 · tapedeck.local</span>
+				</div>
+				<div class="shot-body has-image">
+					<img src="screenshots/01-main-view.png"
+						alt="Main view: paste, watch reels spin, file lands on disk." />
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<div class="wrap">
+		<div class="divider" aria-hidden>
+			<span class="line"></span>
+			<svg viewBox="-10 -10 20 20" class="reel-mini" fill="none" stroke="currentColor" stroke-width="1.2">
+				<circle cx="0" cy="0" r="6.5" />
+				<circle cx="0" cy="0" r="1.4" fill="currentColor" />
+				<line x1="0" y1="-5" x2="0" y2="5" />
+				<line x1="-5" y1="0" x2="5" y2="0" />
+			</svg>
+			<span class="line"></span>
+		</div>
+	</div>
+
+	<!-- ===== why three ===== -->
+	<section class="section-pad">
+		<div class="wrap">
+			<div class="sec-head reveal">
+				<span class="sec-eyebrow">Why tapedeck</span>
+				<h2 class="sec-title">Four opinions web downloaders missed.</h2>
+				<p class="sec-sub">Built for the small frictions: where files go, what they're named, what the page is
+					trying to push on you, and whether the web app feels like an app or a script in disguise.</p>
+			</div>
+			<div class="features reveal">
+				<div class="feature">
+					<div class="feature-icon">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+							stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+							<rect x="2" y="6" width="20" height="14" rx="2" />
+							<path d="M2 10h20" />
+							<circle cx="6" cy="15" r="1.4" fill="currentColor" />
+						</svg>
+					</div>
+					<h3>Disk-save, not browser-save</h3>
+					<p>Files land directly in your configured folder, no <span class="mono">~/Downloads</span> detour,
+						no save dialog, no mystery filename.</p>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+							stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+							<path d="M3 12a9 9 0 0 1 18 0v3a3 3 0 0 1-3 3h-1v-6h4" />
+							<path d="M3 12v3a3 3 0 0 0 3 3h1v-6H3" />
+						</svg>
+					</div>
+					<h3>Local, period.</h3>
+					<p>Flask + yt-dlp + FFmpeg, all on <span class="mono">127.0.0.1</span>. Nothing leaves your
+						computer. No accounts. No telemetry. No API.</p>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+							stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+							<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
+							<path d="M9 12l2 2 4-4" />
+						</svg>
+					</div>
+					<h3>No ads. No scams. No malware.</h3>
+					<p>The usual "YouTube to MP3" sites are a minefield of pop-ups, fake download buttons, sketchy
+						installers, and trackers. This is a static page on <span class="mono">localhost</span>, with
+						zero
+						ads, zero redirects, zero third parties watching.</p>
+				</div>
+				<div class="feature">
+					<div class="feature-icon">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+							stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+							<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+							<path d="M9 14l2 2 4-4" />
+						</svg>
+					</div>
+					<h3>File-manager native</h3>
+					<p>Reveal-in-folder pops Explorer / Finder / your file manager focused on the exact file.
+						Collision-safe names. Zero hunt-and-peck.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== split: queue / phase progress ===== -->
+	<section class="section-pad">
+		<div class="wrap">
+			<div class="split">
+				<div class="split-text reveal">
+					<span class="sec-eyebrow">The queue</span>
+					<h2>Phase-aware progress, in plain words.</h2>
+					<p>Each row narrates its own state: <span class="mono">resolving… → queued → downloading 47% →
+							converting… → ✓ saved</span>, backed by a slim accent-coloured fill bar tied to real
+						yt-dlp progress hooks. No spinners pretending to be busy, no localhost transfer theatre.</p>
+					<ul>
+						<li>Up to 4 parallel downloads, configurable</li>
+						<li>Click a queued row to promote it to front of line</li>
+						<li>Retry failed, clear ✓, clear all: one click each</li>
+						<li>Queue survives reloads &amp; re-attaches to live workers</li>
+					</ul>
+				</div>
+				<div class="reveal">
+					<div class="shot">
+						<div class="shot-bar">
+							<span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span>
+							<span class="tl-addr">http://127.0.0.1:5050 · tapedeck.local</span>
+						</div>
+						<div class="shot-body has-image">
+							<img src="screenshots/02-queue-working.png" alt="Active queue with two rows mid-download" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== formats strip ===== -->
+	<section class="section-pad-sm">
+		<div class="wrap">
+			<div class="sec-head reveal" style="text-align:center; align-items:center;">
+				<span class="sec-eyebrow">Formats</span>
+				<h2 class="sec-title" style="margin: 0 auto;">Five formats. Four bitrates. Persisted preferences.</h2>
+			</div>
+			<div class="formats reveal">
+				<span class="format-chip">mp3 <span class="kbps">128 · 192 · 256 · 320</span></span>
+				<span class="format-chip">m4a <span class="kbps">aac</span></span>
+				<span class="format-chip">opus <span class="kbps">webm</span></span>
+				<span class="format-chip">wav <span class="kbps">lossless</span></span>
+				<span class="format-chip">flac <span class="kbps">lossless</span></span>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== split: filename builder ===== -->
+	<section class="section-pad">
+		<div class="wrap">
+			<div class="split reverse">
+				<div class="split-text reveal">
+					<span class="sec-eyebrow">Filename template</span>
+					<h2>Drag pills. Name files. Move on.</h2>
+					<p>The filename builder is a drag-and-drop pill canvas: drop a token (<span
+							class="mono">{title}</span>, <span class="mono">{channel}</span>, <span
+							class="mono">{uploader}</span>, <span class="mono">{id}</span>), drop a separator (<span
+							class="mono">–</span>, <span class="mono">·</span>, <span class="mono">_</span>, space),
+						reorder by dragging, click × to remove. A live preview shows the rendered filename.</p>
+					<ul>
+						<li>Drop anywhere, pills snap into place</li>
+						<li>Live preview using sample metadata</li>
+						<li>Persists in <span class="mono">config.json</span> alongside output folder</li>
+					</ul>
+				</div>
+				<div class="reveal">
+					<div class="shot">
+						<div class="shot-bar">
+							<span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span>
+							<span class="tl-addr">http://127.0.0.1:5050 · tapedeck.local</span>
+						</div>
+						<div class="shot-body has-image">
+							<img src="screenshots/03-settings.png"
+								alt="Settings modal, filename template builder open" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== split: dark mode ===== -->
+	<section class="section-pad">
+		<div class="wrap">
+			<div class="split">
+				<div class="split-text reveal">
+					<span class="sec-eyebrow">Themes</span>
+					<h2>Light by day. Dark by night. Amber either way.</h2>
+					<p>The whole palette runs on OKLCH tokens, so light and dark match in perceived contrast, and the
+						amber accent stays itself in both. A grain texture sits on top of everything for the cassette
+						feel without the cassette weight.</p>
+					<ul>
+						<li>Light · dark · accent &amp; density tweaks</li>
+						<li>Geist + Geist Mono, with ligatures off in mono for clarity</li>
+						<li>Reduced-motion friendly: reels stop, shimmers pause</li>
+					</ul>
+				</div>
+				<div class="reveal">
+					<div class="shot">
+						<div class="shot-bar">
+							<span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span>
+							<span class="tl-addr">http://127.0.0.1:5050 · tapedeck.local</span>
+						</div>
+						<div class="shot-body has-image">
+							<img src="screenshots/04-dark-mode.png"
+								alt="Dark-mode hero: same deck, amber accent shifted to brand mark." />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== split: multi-paste / clipboard ===== -->
+	<section class="section-pad">
+		<div class="wrap">
+			<div class="split reverse">
+				<div class="split-text reveal">
+					<span class="sec-eyebrow">Input</span>
+					<h2>Paste anything. We&rsquo;ll figure it out.</h2>
+					<p>Drop a browser tab on the page. Paste five URLs separated by spaces, commas, or newlines, and
+						each
+						becomes its own row. The app even peeks at your clipboard on focus and offers an "add" pill when
+						it spots a YouTube link. Press Enter on a duplicate and the existing row shakes so you
+						don&rsquo;t doubt you hit the key.</p>
+					<ul>
+						<li>Multi-paste, drag-drop, clipboard detect</li>
+						<li>Playlist expansion: one URL becomes N rows</li>
+						<li><span class="mono">Ctrl/Cmd+K</span> or <span class="mono">/</span> focuses input from
+							anywhere</li>
+					</ul>
+				</div>
+				<div class="reveal">
+					<div class="shot">
+						<div class="shot-bar">
+							<span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span>
+							<span class="tl-addr">http://127.0.0.1:5050 · tapedeck.local</span>
+						</div>
+						<div class="shot-body has-image">
+							<img src="screenshots/05-multi-paste.png" alt="Clipboard hint and expanded playlist" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== how it works ===== -->
+	<section id="how" class="section-pad">
+		<div class="wrap">
+			<div class="sec-head reveal">
+				<span class="sec-eyebrow">How it works</span>
+				<h2 class="sec-title">Four complex pieces. One nice surface.</h2>
+				<p class="sec-sub">No build step, no framework lock-in. React 18 via UMD, Babel-standalone for JSX, and
+					a tiny Flask app gluing yt-dlp and FFmpeg together.</p>
+			</div>
+			<div class="stack reveal">
+				<div class="stack-card">
+					<span class="role">Web server</span>
+					<span class="name">Flask + Waitress</span>
+					<span class="desc">Localhost-only WSGI, threaded jobs, polling progress endpoint.</span>
+				</div>
+				<div class="stack-card">
+					<span class="role">Audio download</span>
+					<span class="name">yt-dlp</span>
+					<span class="desc">YouTube + 1000+ sites, progress hooks streamed to the client.</span>
+				</div>
+				<div class="stack-card">
+					<span class="role">Conversion</span>
+					<span class="name">FFmpeg</span>
+					<span class="desc">External binary, auto-detected from PATH or common install dirs.</span>
+				</div>
+				<div class="stack-card">
+					<span class="role">Frontend</span>
+					<span class="name">React 18 (UMD)</span>
+					<span class="desc">JSX via Babel-standalone, no bundler, no node_modules, no build.</span>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== CTA ===== -->
+	<section>
+		<div class="wrap">
+			<div class="cta-card reveal">
+				<h2>Local audio. Yours to keep.</h2>
+				<p>Download the zip file from GitHub, uncompress, double-click, done. Your browser opens it
+					automatically.<br> If
+					it saves you an afternoon of fighting browser save dialogs and ads, coffee is appreciated.</p>
+				<div class="cta-row" style="margin-top: 0;">
+					<a class="btn btn-primary btn-lg"
+						href="https://github.com/cristiangabriel88/localYoutubeToMp3#readme" target="_blank"
+						rel="noopener">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+							stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden>
+							<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+							<polyline points="7 10 12 15 17 10" />
+							<line x1="12" y1="15" x2="12" y2="3" />
+						</svg>
+						Get tapedeck
+					</a>
+					<a class="btn btn-coffee btn-lg" href="https://ko-fi.com/s/1bd08ce885" target="_blank"
+						rel="noopener">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+							stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden>
+							<path d="M4 9h13v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9z" />
+							<path d="M17 11h2a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2" />
+							<path d="M7 3v3M10 3v3M13 3v3" />
+						</svg>
+						Buy me a coffee
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== footer ===== -->
+	<footer class="footer">
+		<div class="footer-accent" aria-hidden></div>
+		<div class="footer-inner">
+			<div class="footer-left">
+				<span class="footer-mark" aria-hidden>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+						width="14" height="14">
+						<path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2M21 12h.01" />
+					</svg>
+				</span>
+				<span class="footer-brand">tapedeck<span class="brand-dot">.</span>local</span>
+				<span class="footer-version mono">v1.1</span>
+			</div>
+			<div class="footer-right">
+				<a class="footer-link" href="https://github.com/cristiangabriel88/localYoutubeToMp3" target="_blank"
+					rel="noopener">
+					<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden>
+						<path
+							d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.11.78-.25.78-.55v-1.93c-3.2.7-3.87-1.54-3.87-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.72 1.27 3.38.97.11-.75.41-1.27.74-1.56-2.55-.29-5.24-1.28-5.24-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.07 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.6.23 2.78.11 3.07.74.81 1.19 1.84 1.19 3.1 0 4.44-2.69 5.41-5.26 5.7.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z" />
+					</svg>
+					<span>GitHub</span>
+				</a>
+				<a class="footer-link" href="https://ko-fi.com/s/1bd08ce885" target="_blank" rel="noopener">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+						stroke-linejoin="round" width="13" height="13" aria-hidden>
+						<path d="M4 9h13v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9z" />
+						<path d="M17 11h2a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-2" />
+						<path d="M7 3v3M10 3v3M13 3v3" />
+					</svg>
+					<span>Coffee</span>
+				</a>
+				<a class="footer-link" href="mailto:me@cristiangabriel.dev">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+						stroke-linejoin="round" width="13" height="13" aria-hidden>
+						<rect x="3" y="5" width="18" height="14" rx="2" />
+						<path d="M3 7l9 6 9-6" />
+					</svg>
+					<span>Contact</span>
+				</a>
+				<a class="footer-link mono" href="https://cristiangabriel.dev" target="_blank" rel="noopener">
+					<span>cristiangabriel.dev</span>
+					<span class="footer-arrow" aria-hidden>↗</span>
+				</a>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		// --- theme toggle ---
+		const root = document.documentElement;
+		const btn = document.getElementById("themeToggle");
+		const icon = document.getElementById("themeIcon");
+		const SUN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`;
+		const MOON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+		const apply = (mode) => {
+			root.dataset.theme = mode;
+			btn.innerHTML = mode === "dark" ? SUN : MOON;
+			try { localStorage.setItem("tapedeck.presentation.theme", mode); } catch { }
+		};
+		const initial = (() => {
+			try { return localStorage.getItem("tapedeck.presentation.theme"); } catch { return null; }
+		})() || "light";
+		apply(initial);
+		btn.addEventListener("click", () => apply(root.dataset.theme === "dark" ? "light" : "dark"));
+
+		// --- reveal on scroll ---
+		if ("IntersectionObserver" in window) {
+			const io = new IntersectionObserver((entries) => {
+				for (const e of entries) {
+					if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+				}
+			}, { rootMargin: "0px 0px -10% 0px", threshold: 0.05 });
+			document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+		} else {
+			document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in"));
+		}
+	</script>
+
+</body>
+
+</html>
