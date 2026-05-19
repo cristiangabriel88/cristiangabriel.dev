@@ -1,0 +1,3347 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>QuickPaste — Save the good parts.</title>
+	<meta name="description"
+		content="QuickPaste is a fast, local-first Chrome extension for saving text and image clips from any page. Right-click to save, or turn on Ctrl+C auto-capture. No account. No servers. Everything stays on your device.">
+
+	<link rel="icon" type="image/png" sizes="32x32" href="icons/logo32x32.png">
+	<link rel="icon" type="image/png" sizes="128x128" href="icons/logo128x128.png">
+	<link rel="apple-touch-icon" href="icons/logo128x128.png">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600&display=swap"
+		rel="stylesheet">
+
+	<style>
+		/* ------------------------------------------------------------------
+		   Design tokens — pulled directly from popup.css / options.css
+		   ------------------------------------------------------------------ */
+		:root {
+			--font-display: "Fraunces", ui-serif, Georgia, serif;
+			--font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+			--font-button: "Sora", -apple-system, BlinkMacSystemFont, sans-serif;
+			--font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+			--bg: #fbfbf8;
+			--bg-elevated: #ffffff;
+			--text: #1a1a1a;
+			--text-muted: #6a6a6a;
+			--text-faint: #9a9a9a;
+			--surface: #f5f5f0;
+			--surface-strong: #ebebe4;
+			--border: #e4e2da;
+			--border-strong: #d6d3c8;
+
+			--accent: #5b943e;
+			--accent-soft: #b4db6a;
+			--accent-deep: #46792c;
+			--accent-bar: #7ab362;
+			--accent-haze: rgba(108, 201, 94, 0.12);
+
+			--footer-tint: #d8edc5;
+			--footer-tint-soft: #f1f7e6;
+
+			--radius-sm: 6px;
+			--radius-md: 10px;
+			--radius-lg: 16px;
+			--radius-xl: 24px;
+
+			--shadow-soft: 0 1px 2px rgba(30, 50, 20, 0.06), 0 8px 24px rgba(30, 50, 20, 0.07);
+			--shadow-card: 0 1px 2px rgba(30, 50, 20, 0.05), 0 18px 40px rgba(30, 50, 20, 0.09);
+			--shadow-pop: 0 2px 4px rgba(30, 50, 20, 0.08), 0 28px 60px rgba(30, 50, 20, 0.16);
+		}
+
+		[data-theme="dark"] {
+			--bg: #18181a;
+			--bg-elevated: #1f1f22;
+			--text: #ececec;
+			--text-muted: #a0a0a0;
+			--text-faint: #6d6d6d;
+			--surface: #25252a;
+			--surface-strong: #2f2f35;
+			--border: #34343a;
+			--border-strong: #44444c;
+
+			--accent: #6cc95e;
+			--accent-soft: #7ab362;
+			--accent-deep: #4a8a3a;
+			--accent-bar: #4a7a3a;
+			--accent-haze: rgba(108, 201, 94, 0.16);
+
+			--footer-tint: #2a3a23;
+			--footer-tint-soft: #1d271a;
+
+			--shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+			--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.45), 0 18px 40px rgba(0, 0, 0, 0.45);
+			--shadow-pop: 0 2px 4px rgba(0, 0, 0, 0.5), 0 28px 60px rgba(0, 0, 0, 0.55);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html {
+			scroll-behavior: smooth;
+			scroll-padding-top: 80px;
+		}
+
+		body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--text);
+			font-family: var(--font-sans);
+			font-weight: 400;
+			font-size: 16px;
+			line-height: 1.55;
+			letter-spacing: -0.005em;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			font-feature-settings: "cv11", "ss03", "kern";
+			text-rendering: optimizeLegibility;
+			transition: background-color 0.25s ease, color 0.25s ease;
+			overflow-x: hidden;
+		}
+
+		::selection {
+			background: var(--accent-haze);
+			color: var(--text);
+		}
+
+		/* Subtle paper texture using a radial mesh — avoids the flat "AI page" feel */
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			pointer-events: none;
+			z-index: 0;
+			background:
+				radial-gradient(900px 600px at 8% -10%, rgba(122, 179, 98, 0.08), transparent 60%),
+				radial-gradient(800px 500px at 100% 10%, rgba(180, 219, 106, 0.07), transparent 65%),
+				radial-gradient(700px 500px at 50% 110%, rgba(91, 148, 62, 0.05), transparent 70%);
+		}
+
+		[data-theme="dark"] body::before {
+			background:
+				radial-gradient(900px 600px at 8% -10%, rgba(122, 179, 98, 0.05), transparent 60%),
+				radial-gradient(800px 500px at 100% 10%, rgba(180, 219, 106, 0.03), transparent 65%),
+				radial-gradient(700px 500px at 50% 110%, rgba(91, 148, 62, 0.04), transparent 70%);
+		}
+
+		main,
+		header,
+		footer {
+			position: relative;
+			z-index: 1;
+		}
+
+		/* ------------------------------------------------------------------
+		   Layout primitives
+		   ------------------------------------------------------------------ */
+		.wrap {
+			width: 100%;
+			max-width: 1120px;
+			margin: 0 auto;
+			padding: 0 28px;
+		}
+
+		section {
+			padding: 96px 0;
+		}
+
+		section+section {
+			border-top: 1px solid var(--border);
+		}
+
+		@media (max-width: 720px) {
+			section {
+				padding: 64px 0;
+			}
+
+			.wrap {
+				padding: 0 20px;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Typography
+		   ------------------------------------------------------------------ */
+		.eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			font-family: var(--font-button);
+			font-size: 0.72rem;
+			font-weight: 500;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--accent-deep);
+			padding: 5px 11px 6px;
+			border-radius: 999px;
+			background: var(--accent-haze);
+			border: 1px solid rgba(108, 201, 94, 0.28);
+		}
+
+		[data-theme="dark"] .eyebrow {
+			color: var(--accent);
+		}
+
+		.eyebrow--new {
+			background: linear-gradient(135deg, var(--accent-soft) 0%, var(--accent) 100%);
+			color: #1a3812;
+			border-color: rgba(70, 121, 44, 0.5);
+			box-shadow: 0 4px 14px rgba(91, 148, 62, 0.28);
+			padding-left: 8px;
+		}
+
+		.eyebrow--new .eyebrow__dot {
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: #1a3812;
+			box-shadow: 0 0 0 0 rgba(26, 56, 18, 0.5);
+			animation: qpPulse 2.2s ease-out infinite;
+		}
+
+		[data-theme="dark"] .eyebrow--new {
+			color: #f3fbe9;
+			border-color: rgba(122, 179, 98, 0.55);
+		}
+
+		[data-theme="dark"] .eyebrow--new .eyebrow__dot {
+			background: #f3fbe9;
+		}
+
+		h1,
+		h2,
+		h3 {
+			font-family: var(--font-display);
+			font-weight: 600;
+			letter-spacing: -0.02em;
+			color: var(--text);
+			margin: 0;
+		}
+
+		h1 {
+			font-size: clamp(2.4rem, 5.5vw, 4.4rem);
+			line-height: 1.02;
+			font-weight: 500;
+			font-variation-settings: "opsz" 144, "SOFT" 60;
+		}
+
+		h1 em {
+			font-style: italic;
+			font-weight: 500;
+			color: var(--accent);
+			font-variation-settings: "opsz" 144, "SOFT" 100;
+		}
+
+		h2 {
+			font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+			line-height: 1.08;
+			font-variation-settings: "opsz" 100;
+		}
+
+		h2 em {
+			font-style: italic;
+			color: var(--accent);
+		}
+
+		h3 {
+			font-family: var(--font-sans);
+			font-size: 1.05rem;
+			font-weight: 600;
+			letter-spacing: -0.01em;
+			line-height: 1.3;
+		}
+
+		p {
+			margin: 0;
+			color: var(--text-muted);
+		}
+
+		p strong {
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		.lede {
+			font-size: clamp(1.05rem, 1.6vw, 1.22rem);
+			line-height: 1.55;
+			color: var(--text-muted);
+			max-width: 56ch;
+		}
+
+		.kicker {
+			font-family: var(--font-button);
+			font-size: 0.78rem;
+			font-weight: 500;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: var(--accent-deep);
+		}
+
+		[data-theme="dark"] .kicker {
+			color: var(--accent);
+		}
+
+		.muted {
+			color: var(--text-muted);
+		}
+
+		code,
+		kbd {
+			font-family: var(--font-mono);
+			font-size: 0.86em;
+		}
+
+		kbd {
+			display: inline-flex;
+			align-items: center;
+			padding: 1px 6px 2px;
+			margin: 0 1px;
+			background: var(--surface);
+			border: 1px solid var(--border-strong);
+			border-bottom-width: 2px;
+			border-radius: 5px;
+			color: var(--text);
+			font-size: 0.78em;
+			font-family: var(--font-button);
+			font-weight: 500;
+		}
+
+		.kbd--xl {
+			padding: 4px 12px 6px;
+			border-bottom-width: 3px;
+			border-radius: 8px;
+			font-size: 0.7em;
+			letter-spacing: 0.04em;
+			background: var(--bg-elevated);
+		}
+
+		h2 em .kbd--xl {
+			font-style: normal;
+			color: var(--text);
+		}
+
+		.kbd--hero {
+			display: inline-grid;
+			place-items: center;
+			min-width: 78px;
+			height: 78px;
+			padding: 0 22px;
+			background: linear-gradient(180deg, var(--bg-elevated) 0%, color-mix(in srgb, var(--surface) 60%, var(--bg-elevated)) 100%);
+			border: 1px solid var(--border-strong);
+			border-bottom-width: 5px;
+			border-radius: 14px;
+			color: var(--text);
+			font-family: var(--font-button);
+			font-size: 1.45rem;
+			font-weight: 600;
+			letter-spacing: 0.01em;
+			box-shadow:
+				0 1px 0 rgba(255, 255, 255, 0.6) inset,
+				0 12px 28px rgba(30, 50, 20, 0.12);
+		}
+
+		[data-theme="dark"] .kbd--hero {
+			background: linear-gradient(180deg, #2a2a30 0%, #1f1f24 100%);
+			box-shadow:
+				0 1px 0 rgba(255, 255, 255, 0.06) inset,
+				0 12px 28px rgba(0, 0, 0, 0.45);
+		}
+
+		/* ------------------------------------------------------------------
+		   Top navigation
+		   ------------------------------------------------------------------ */
+		.topnav {
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			backdrop-filter: saturate(140%) blur(14px);
+			-webkit-backdrop-filter: saturate(140%) blur(14px);
+			background: color-mix(in srgb, var(--bg) 78%, transparent);
+			border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+		}
+
+		.topnav__inner {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 14px 28px;
+			max-width: 1120px;
+			margin: 0 auto;
+		}
+
+		.brand {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			text-decoration: none;
+			color: var(--text);
+		}
+
+		.brand__mark {
+			width: 32px;
+			height: 32px;
+			display: inline-grid;
+			place-items: center;
+			flex-shrink: 0;
+		}
+
+		.brand__mark img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			display: block;
+			filter: drop-shadow(0 1px 2px rgba(30, 50, 20, 0.18));
+		}
+
+		.brand__name {
+			font-family: var(--font-display);
+			font-size: 1.05rem;
+			font-weight: 600;
+			letter-spacing: -0.01em;
+		}
+
+		.nav-links {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.nav-links a {
+			font-family: var(--font-button);
+			font-size: 0.82rem;
+			font-weight: 500;
+			color: var(--text-muted);
+			text-decoration: none;
+			padding: 7px 12px;
+			border-radius: 999px;
+			transition: color 0.15s ease, background-color 0.15s ease;
+		}
+
+		.nav-links a:hover {
+			color: var(--text);
+			background: var(--surface);
+		}
+
+		.theme-toggle {
+			width: 36px;
+			height: 36px;
+			border: 1px solid var(--border);
+			border-radius: 50%;
+			background: var(--bg-elevated);
+			color: var(--text-muted);
+			cursor: pointer;
+			display: inline-grid;
+			place-items: center;
+			transition: color 0.15s ease, border-color 0.15s ease, transform 0.2s ease;
+		}
+
+		.theme-toggle:hover {
+			color: var(--accent);
+			border-color: var(--accent);
+			transform: rotate(-15deg);
+		}
+
+		.theme-toggle svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		.theme-toggle .icon-moon {
+			display: none;
+		}
+
+		[data-theme="dark"] .theme-toggle .icon-sun {
+			display: none;
+		}
+
+		[data-theme="dark"] .theme-toggle .icon-moon {
+			display: block;
+		}
+
+		@media (max-width: 720px) {
+			.nav-links a:not(.nav-links__cta) {
+				display: none;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Buttons (the app's neumorphic-ish primary + a ghost variant)
+		   ------------------------------------------------------------------ */
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			font-family: var(--font-button);
+			font-size: 0.86rem;
+			font-weight: 500;
+			letter-spacing: 0.005em;
+			padding: 12px 22px;
+			border-radius: 12px;
+			cursor: pointer;
+			text-decoration: none;
+			border: 1px solid transparent;
+			transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.15s ease;
+		}
+
+		.btn--primary {
+			color: #1a1a1a;
+			background: linear-gradient(180deg, #c5e090 0%, #b4db6a 100%);
+			border-color: rgba(91, 148, 62, 0.4);
+			box-shadow:
+				0 1px 0 rgba(255, 255, 255, 0.5) inset,
+				0 2px 4px rgba(79, 85, 54, 0.25),
+				0 8px 18px rgba(91, 148, 62, 0.18);
+		}
+
+		.btn--primary:hover {
+			transform: translateY(-1px);
+			box-shadow:
+				0 1px 0 rgba(255, 255, 255, 0.6) inset,
+				0 3px 6px rgba(79, 85, 54, 0.3),
+				0 12px 24px rgba(91, 148, 62, 0.25);
+		}
+
+		.btn--primary:active {
+			transform: translateY(0);
+		}
+
+		.btn--ghost {
+			color: var(--text);
+			background: var(--bg-elevated);
+			border-color: var(--border);
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+		}
+
+		.btn--ghost:hover {
+			border-color: var(--accent);
+			color: var(--accent-deep);
+		}
+
+		[data-theme="dark"] .btn--ghost:hover {
+			color: var(--accent);
+		}
+
+		.btn svg {
+			width: 16px;
+			height: 16px;
+		}
+
+		/* ------------------------------------------------------------------
+		   Hero
+		   ------------------------------------------------------------------ */
+		.hero {
+			padding-top: 120px;
+			padding-bottom: 80px;
+		}
+
+		.hero__inner {
+			display: grid;
+			grid-template-columns: 1.05fr 0.95fr;
+			gap: 64px;
+			align-items: center;
+		}
+
+		@media (max-width: 960px) {
+			.hero__inner {
+				grid-template-columns: 1fr;
+				gap: 48px;
+			}
+		}
+
+		.hero h1 {
+			margin-top: 22px;
+		}
+
+		.hero .lede {
+			margin-top: 22px;
+		}
+
+		.hero__meta {
+			display: flex;
+			gap: 14px;
+			margin-top: 32px;
+			flex-wrap: wrap;
+		}
+
+		.hero__newchip {
+			display: inline-flex;
+			align-items: center;
+			gap: 12px;
+			margin-top: 24px;
+			padding: 9px 16px 9px 12px;
+			border-radius: 999px;
+			background: linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 32%, var(--bg-elevated)) 0%, var(--bg-elevated) 100%);
+			border: 1px solid rgba(108, 201, 94, 0.34);
+			box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 6px 18px rgba(91, 148, 62, 0.12);
+			text-decoration: none;
+			color: var(--text);
+			font-size: 0.9rem;
+			line-height: 1.3;
+			transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.15s ease;
+			max-width: 100%;
+		}
+
+		.hero__newchip:hover {
+			transform: translateY(-1px);
+			border-color: rgba(91, 148, 62, 0.6);
+			box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 10px 26px rgba(91, 148, 62, 0.2);
+		}
+
+		.hero__newchip-pulse {
+			position: relative;
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--accent);
+			box-shadow: 0 0 0 0 rgba(108, 201, 94, 0.55);
+			animation: qpPulse 2.2s ease-out infinite;
+			flex-shrink: 0;
+		}
+
+		@keyframes qpPulse {
+			0% {
+				box-shadow: 0 0 0 0 rgba(108, 201, 94, 0.55);
+			}
+
+			70% {
+				box-shadow: 0 0 0 12px rgba(108, 201, 94, 0);
+			}
+
+			100% {
+				box-shadow: 0 0 0 0 rgba(108, 201, 94, 0);
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.hero__newchip-pulse {
+				animation: none;
+			}
+		}
+
+		.hero__newchip-label {
+			font-family: var(--font-button);
+			font-size: 0.7rem;
+			font-weight: 600;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--accent-deep);
+			padding: 2px 8px;
+			border-radius: 999px;
+			background: var(--accent-haze);
+			border: 1px solid rgba(108, 201, 94, 0.3);
+		}
+
+		[data-theme="dark"] .hero__newchip-label {
+			color: var(--accent);
+		}
+
+		.hero__newchip-text {
+			color: var(--text);
+			font-weight: 500;
+		}
+
+		.hero__newchip-text kbd {
+			margin: 0 1px;
+		}
+
+		.hero__newchip svg {
+			width: 16px;
+			height: 16px;
+			color: var(--accent-deep);
+			flex-shrink: 0;
+		}
+
+		[data-theme="dark"] .hero__newchip svg {
+			color: var(--accent);
+		}
+
+		@media (max-width: 720px) {
+			.hero__newchip {
+				flex-wrap: wrap;
+				gap: 8px 10px;
+				padding: 10px 14px;
+			}
+		}
+
+		.hero__factstrip {
+			display: flex;
+			gap: 28px;
+			flex-wrap: wrap;
+			margin-top: 40px;
+			padding-top: 28px;
+			border-top: 1px dashed var(--border);
+		}
+
+		.fact {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		.fact__num {
+			font-family: var(--font-display);
+			font-size: 1.55rem;
+			font-weight: 600;
+			color: var(--text);
+			letter-spacing: -0.02em;
+			line-height: 1;
+		}
+
+		.fact__num em {
+			font-style: italic;
+			color: var(--accent);
+			font-weight: 500;
+		}
+
+		.fact__label {
+			font-family: var(--font-button);
+			font-size: 0.72rem;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: var(--text-faint);
+		}
+
+		/* ------------------------------------------------------------------
+		   Hero device frame
+		   ------------------------------------------------------------------ */
+		.device {
+			position: relative;
+		}
+
+		.device__halo {
+			position: absolute;
+			inset: -40px;
+			border-radius: 50%;
+			background:
+				radial-gradient(50% 50% at 50% 50%, rgba(180, 219, 106, 0.25), transparent 65%);
+			filter: blur(28px);
+			z-index: 0;
+		}
+
+		.browser {
+			position: relative;
+			z-index: 1;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: 18px;
+			overflow: hidden;
+			box-shadow: var(--shadow-card);
+		}
+
+		.browser__chrome {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 14px;
+			background: var(--surface);
+			border-bottom: 1px solid var(--border);
+		}
+
+		.browser__dots {
+			display: flex;
+			gap: 6px;
+		}
+
+		.browser__dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--border-strong);
+		}
+
+		.browser__dot:nth-child(1) {
+			background: #ff6058;
+		}
+
+		.browser__dot:nth-child(2) {
+			background: #ffbd2e;
+		}
+
+		.browser__dot:nth-child(3) {
+			background: #28c940;
+		}
+
+		.browser__url {
+			flex: 1;
+			padding: 6px 12px;
+			font-family: var(--font-mono);
+			font-size: 0.74rem;
+			color: var(--text-muted);
+			background: var(--bg);
+			border: 1px solid var(--border);
+			border-radius: 999px;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.browser__action {
+			display: inline-grid;
+			place-items: center;
+			width: 28px;
+			height: 28px;
+			border-radius: 50%;
+			background: var(--accent-bar);
+			color: #fff;
+			box-shadow: rgba(79, 85, 54, 0.3) 0 2px 4px 0;
+		}
+
+		.browser__action svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		.browser__body {
+			position: relative;
+			min-height: 360px;
+			padding: 28px;
+			background:
+				linear-gradient(180deg, var(--bg-elevated), color-mix(in srgb, var(--bg-elevated) 90%, var(--surface)));
+		}
+
+		/* Mock article behind the popup, to suggest "saving from a page" */
+		.mock-article {
+			color: var(--text-muted);
+			font-family: var(--font-display);
+			font-size: 0.92rem;
+			line-height: 1.7;
+			max-width: 480px;
+		}
+
+		.mock-article h4 {
+			font-family: var(--font-display);
+			font-size: 1.5rem;
+			font-weight: 600;
+			color: var(--text);
+			margin: 0 0 12px;
+			letter-spacing: -0.015em;
+		}
+
+		.mock-article .highlighted {
+			background: linear-gradient(180deg, transparent 55%, rgba(180, 219, 106, 0.55) 55%, rgba(180, 219, 106, 0.55) 92%, transparent 92%);
+			color: var(--text);
+			padding: 0 1px;
+		}
+
+		/* Floating popup mock */
+		.popup-mock {
+			position: absolute;
+			right: 22px;
+			top: 38px;
+			width: 280px;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: 14px;
+			box-shadow: var(--shadow-pop);
+			overflow: hidden;
+			transform: rotate(0.4deg);
+		}
+
+		[data-theme="dark"] .popup-mock {
+			background: #232328;
+		}
+
+		.popup-mock__bar {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 6px 10px;
+			background: var(--accent-bar);
+			margin: 8px;
+			border-radius: 10px;
+			min-height: 36px;
+		}
+
+		.popup-mock__logo {
+			width: 28px;
+			height: 28px;
+			display: grid;
+			place-items: center;
+			flex-shrink: 0;
+		}
+
+		.popup-mock__logo img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			display: block;
+			filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+		}
+
+		.popup-mock__title {
+			flex: 1;
+			text-align: center;
+			color: #1a1a1a;
+			background: #b4db6a;
+			font-family: var(--font-button);
+			font-size: 0.72rem;
+			font-weight: 500;
+			padding: 5px 10px;
+			border-radius: 14px;
+			box-shadow: rgba(79, 85, 54, 0.5) 0 2px 4px 0;
+		}
+
+		.popup-mock__pill {
+			width: 22px;
+			height: 22px;
+			border-radius: 50%;
+			background: #b4db6a;
+			display: grid;
+			place-items: center;
+			color: #1a1a1a;
+			box-shadow: rgba(79, 85, 54, 0.5) 0 2px 4px 0;
+		}
+
+		.popup-mock__pill svg {
+			width: 12px;
+			height: 12px;
+		}
+
+		.popup-mock__tabs {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			border-bottom: 1px solid var(--border);
+			padding: 0 8px;
+		}
+
+		.popup-mock__tab {
+			padding: 8px 0;
+			text-align: center;
+			font-family: var(--font-button);
+			font-size: 0.72rem;
+			font-weight: 500;
+			color: var(--text-muted);
+			border-bottom: 2px solid transparent;
+			margin-bottom: -1px;
+		}
+
+		.popup-mock__tab.is-active {
+			color: var(--accent);
+			border-bottom-color: var(--accent);
+		}
+
+		.popup-mock__clips {
+			padding: 10px 12px 14px;
+		}
+
+		.popup-mock__clip {
+			padding: 8px 0;
+			border-left: 2px solid transparent;
+			padding-left: 8px;
+		}
+
+		.popup-mock__clip+.popup-mock__clip {
+			border-top: 1px solid var(--border);
+			margin-top: 4px;
+			padding-top: 12px;
+		}
+
+		.popup-mock__clip--pin {
+			border-left-color: var(--accent);
+			background: rgba(108, 201, 94, 0.06);
+			border-radius: 4px;
+		}
+
+		.popup-mock__meta {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 0.68rem;
+			color: var(--text-faint);
+			margin-bottom: 4px;
+		}
+
+		.popup-mock__meta svg {
+			width: 11px;
+			height: 11px;
+			color: var(--accent);
+		}
+
+		.popup-mock__text {
+			font-size: 0.82rem;
+			line-height: 1.45;
+			color: var(--text);
+			margin: 0;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
+		.popup-mock__tagrow {
+			display: flex;
+			gap: 5px;
+			margin-top: 6px;
+		}
+
+		.popup-mock__tag {
+			font-family: var(--font-sans);
+			font-size: 0.62rem;
+			font-weight: 500;
+			padding: 1px 7px;
+			border-radius: 999px;
+			background: rgba(108, 201, 94, 0.14);
+			color: var(--accent-deep);
+			border: 1px solid rgba(108, 201, 94, 0.3);
+		}
+
+		[data-theme="dark"] .popup-mock__tag {
+			color: var(--accent);
+		}
+
+		/* ------------------------------------------------------------------
+		   Section heading block
+		   ------------------------------------------------------------------ */
+		.section-head {
+			max-width: 720px;
+			margin-bottom: 56px;
+		}
+
+		.section-head h2 {
+			margin-top: 16px;
+		}
+
+		.section-head p {
+			margin-top: 18px;
+			font-size: 1.06rem;
+		}
+
+		/* ------------------------------------------------------------------
+		   Feature row (image + copy, alternating)
+		   ------------------------------------------------------------------ */
+		.feature-row {
+			display: grid;
+			grid-template-columns: 1.05fr 1fr;
+			gap: 72px;
+			align-items: center;
+		}
+
+		.feature-row+.feature-row {
+			margin-top: 120px;
+		}
+
+		.feature-row--flip {
+			grid-template-columns: 1fr 1.05fr;
+		}
+
+		.feature-row--flip .feature-row__copy {
+			order: 2;
+		}
+
+		.feature-row--flip .feature-row__media {
+			order: 1;
+		}
+
+		/* Stacked variant — copy on top, media full-width below. Good for
+		   wide landscape screenshots that would feel cramped at half-width. */
+		.feature-row--stacked {
+			display: block;
+		}
+
+		.feature-row--stacked .feature-row__copy {
+			max-width: 760px;
+			margin-bottom: 56px;
+		}
+
+		.feature-row--stacked .feature-row__media {
+			width: 100%;
+		}
+
+		@media (max-width: 880px) {
+
+			.feature-row,
+			.feature-row--flip {
+				grid-template-columns: 1fr;
+				gap: 40px;
+			}
+
+			.feature-row+.feature-row {
+				margin-top: 80px;
+			}
+
+			.feature-row--flip .feature-row__copy,
+			.feature-row--flip .feature-row__media {
+				order: initial;
+			}
+		}
+
+		.feature-row__copy .kicker {
+			display: inline-block;
+			margin-bottom: 14px;
+		}
+
+		.feature-row__copy h2 {
+			margin-bottom: 18px;
+		}
+
+		.feature-row__copy p {
+			font-size: 1.02rem;
+			line-height: 1.62;
+		}
+
+		.feature-row__copy p+p {
+			margin-top: 14px;
+		}
+
+		.bulletlist {
+			list-style: none;
+			padding: 0;
+			margin: 22px 0 0;
+			display: grid;
+			gap: 12px;
+		}
+
+		.bulletlist li {
+			display: grid;
+			grid-template-columns: 22px 1fr;
+			gap: 12px;
+			align-items: start;
+			font-size: 0.96rem;
+			color: var(--text-muted);
+		}
+
+		.bulletlist li strong {
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		.bulletlist__bullet {
+			width: 22px;
+			height: 22px;
+			margin-top: 1px;
+			display: grid;
+			place-items: center;
+			border-radius: 50%;
+			background: var(--accent-haze);
+			color: var(--accent-deep);
+		}
+
+		.bulletlist__bullet svg {
+			width: 12px;
+			height: 12px;
+		}
+
+		[data-theme="dark"] .bulletlist__bullet {
+			color: var(--accent);
+		}
+
+		/* ------------------------------------------------------------------
+		   Image / screenshot
+		   ------------------------------------------------------------------ */
+		.shot {
+			position: relative;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: var(--radius-lg);
+			padding: 14px;
+			box-shadow: var(--shadow-card);
+			overflow: hidden;
+		}
+
+		.shot::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background:
+				radial-gradient(600px 200px at 50% 0%, rgba(180, 219, 106, 0.18), transparent 60%);
+			pointer-events: none;
+		}
+
+		.shot__image {
+			position: relative;
+			z-index: 1;
+			border-radius: 12px;
+			overflow: hidden;
+			border: 1px solid var(--border);
+			background: var(--bg-elevated);
+			display: block;
+		}
+
+		.shot__image>img {
+			display: block;
+			width: 100%;
+			height: auto;
+			cursor: zoom-in;
+			transition: filter 0.25s ease;
+		}
+
+		.shot__image:hover>img {
+			filter: brightness(1.02) saturate(1.04);
+		}
+
+		/* Matted variant — for portrait / small screenshots that would look
+		   uncomfortable scaled up to full column width. The image floats at
+		   (or near) its natural size on a soft canvas. */
+		.shot__image--matted {
+			padding: clamp(28px, 5vw, 64px);
+			display: grid;
+			place-items: center;
+			background:
+				radial-gradient(closest-side at 50% 0%, rgba(180, 219, 106, 0.18), transparent 70%),
+				linear-gradient(180deg, var(--bg-elevated), var(--surface));
+		}
+
+		.shot__image--matted>img {
+			width: auto;
+			max-width: 100%;
+			height: auto;
+			border-radius: 10px;
+			box-shadow:
+				0 14px 32px rgba(30, 50, 20, 0.16),
+				0 2px 6px rgba(30, 50, 20, 0.06);
+		}
+
+		[data-theme="dark"] .shot__image--matted>img {
+			box-shadow:
+				0 14px 32px rgba(0, 0, 0, 0.55),
+				0 2px 6px rgba(0, 0, 0, 0.4);
+		}
+
+		/* Tiny screenshot (the send-to dropdown) needs extra breathing room
+		   so it doesn't read as a stretched thumbnail. */
+		.shot__image--tiny {
+			padding: clamp(48px, 8vw, 96px);
+		}
+
+		.shot__image--tiny>img {
+			max-width: min(420px, 100%);
+		}
+
+		/* Two screenshots side-by-side in a single shot card. */
+		.shot__pair {
+			position: relative;
+			z-index: 1;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px;
+		}
+
+		.shot__pair .shot__image {
+			margin: 0;
+		}
+
+		@media (max-width: 720px) {
+			.shot__pair {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Lightbox — click any screenshot to view it full-size
+		   ------------------------------------------------------------------ */
+		.lightbox {
+			position: fixed;
+			inset: 0;
+			z-index: 100;
+			display: grid;
+			place-items: center;
+			padding: clamp(20px, 4vw, 64px);
+			background: rgba(14, 22, 12, 0.78);
+			-webkit-backdrop-filter: blur(10px);
+			backdrop-filter: blur(10px);
+			opacity: 0;
+			visibility: hidden;
+			cursor: zoom-out;
+			transition: opacity 0.24s ease, visibility 0s linear 0.24s;
+		}
+
+		.lightbox.is-open {
+			opacity: 1;
+			visibility: visible;
+			transition: opacity 0.24s ease, visibility 0s linear 0s;
+		}
+
+		.lightbox__img {
+			max-width: 100%;
+			max-height: 100%;
+			width: auto;
+			height: auto;
+			border-radius: 12px;
+			box-shadow:
+				0 24px 64px rgba(0, 0, 0, 0.55),
+				0 4px 14px rgba(0, 0, 0, 0.35),
+				0 0 0 1px rgba(255, 255, 255, 0.06);
+			transform: scale(0.96);
+			transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+		}
+
+		.lightbox.is-open .lightbox__img {
+			transform: scale(1);
+		}
+
+		.lightbox__close {
+			position: absolute;
+			top: clamp(16px, 2.4vw, 28px);
+			right: clamp(16px, 2.4vw, 28px);
+			width: 44px;
+			height: 44px;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.12);
+			-webkit-backdrop-filter: blur(6px);
+			backdrop-filter: blur(6px);
+			border: 1px solid rgba(255, 255, 255, 0.18);
+			color: #fff;
+			cursor: pointer;
+			display: grid;
+			place-items: center;
+			padding: 0;
+			transition: background 0.18s ease, transform 0.18s ease;
+		}
+
+		.lightbox__close:hover {
+			background: rgba(255, 255, 255, 0.22);
+			transform: scale(1.05);
+		}
+
+		.lightbox__close:focus-visible {
+			outline: 2px solid var(--accent-soft);
+			outline-offset: 3px;
+		}
+
+		.lightbox__close svg {
+			width: 20px;
+			height: 20px;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+
+			.lightbox,
+			.lightbox__img {
+				transition: none;
+			}
+
+			.lightbox.is-open .lightbox__img {
+				transform: none;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   The flow strip ("how it works in three steps")
+		   ------------------------------------------------------------------ */
+		.steps {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 24px;
+			counter-reset: step;
+		}
+
+		@media (max-width: 880px) {
+			.steps {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		.step {
+			position: relative;
+			padding: 28px 24px 26px;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: var(--radius-lg);
+			box-shadow: var(--shadow-soft);
+		}
+
+		.step__num {
+			font-family: var(--font-display);
+			font-style: italic;
+			font-weight: 500;
+			font-size: 2.4rem;
+			color: var(--accent);
+			line-height: 1;
+			margin-bottom: 12px;
+			display: block;
+		}
+
+		.step h3 {
+			font-family: var(--font-display);
+			font-size: 1.2rem;
+			font-weight: 600;
+		}
+
+		.step p {
+			margin-top: 8px;
+			font-size: 0.94rem;
+		}
+
+		.step__kbd {
+			margin-top: 14px;
+		}
+
+		.step__alt {
+			margin-top: 14px;
+			padding-top: 12px;
+			border-top: 1px dashed var(--border);
+			font-size: 0.86rem;
+			color: var(--text-muted);
+		}
+
+		.step__alt strong {
+			color: var(--accent-deep);
+			font-weight: 600;
+		}
+
+		[data-theme="dark"] .step__alt strong {
+			color: var(--accent);
+		}
+
+		.step__alt a {
+			color: var(--accent-deep);
+			text-decoration: none;
+			font-weight: 600;
+		}
+
+		.step__alt a:hover {
+			text-decoration: underline;
+		}
+
+		[data-theme="dark"] .step__alt a {
+			color: var(--accent);
+		}
+
+		/* ------------------------------------------------------------------
+		   Auto-capture spotlight (Ctrl+C feature)
+		   ------------------------------------------------------------------ */
+		.autocap__card {
+			position: relative;
+			display: grid;
+			grid-template-columns: 1.1fr 0.9fr;
+			gap: 56px;
+			align-items: center;
+			padding: 60px 56px;
+			background:
+				radial-gradient(700px 300px at 90% 0%, rgba(180, 219, 106, 0.16), transparent 65%),
+				radial-gradient(500px 360px at 0% 100%, rgba(108, 201, 94, 0.10), transparent 65%),
+				var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: var(--radius-xl);
+			box-shadow: var(--shadow-card);
+			overflow: hidden;
+		}
+
+		.autocap__card::before {
+			content: "";
+			position: absolute;
+			top: -1px;
+			left: 0;
+			right: 0;
+			height: 3px;
+			background: linear-gradient(90deg, transparent 0%, var(--accent-soft) 30%, var(--accent) 50%, var(--accent-soft) 70%, transparent 100%);
+		}
+
+		@media (max-width: 960px) {
+			.autocap__card {
+				grid-template-columns: 1fr;
+				gap: 44px;
+				padding: 44px 28px;
+			}
+		}
+
+		@media (max-width: 720px) {
+			.autocap__card {
+				padding: 36px 22px;
+			}
+		}
+
+		.autocap__copy h2 {
+			margin-top: 18px;
+			font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+		}
+
+		.autocap__copy h2 em {
+			display: inline-flex;
+			align-items: baseline;
+			gap: 6px;
+			flex-wrap: wrap;
+		}
+
+		.autocap__visual {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 22px;
+			padding: 32px 20px;
+			border-radius: var(--radius-lg);
+			background:
+				radial-gradient(circle at 50% 0%, rgba(180, 219, 106, 0.18), transparent 65%),
+				color-mix(in srgb, var(--surface) 75%, var(--bg-elevated));
+			border: 1px dashed var(--border-strong);
+		}
+
+		.autocap__keys {
+			display: inline-flex;
+			align-items: center;
+			gap: 14px;
+			padding: 14px 18px;
+			border-radius: 16px;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			box-shadow: var(--shadow-soft);
+		}
+
+		.autocap__plus {
+			font-family: var(--font-display);
+			font-size: 1.4rem;
+			font-weight: 500;
+			color: var(--text-muted);
+		}
+
+		.autocap__arrow {
+			width: 38px;
+			height: 38px;
+			display: grid;
+			place-items: center;
+			border-radius: 50%;
+			background: var(--accent-haze);
+			color: var(--accent-deep);
+			border: 1px solid rgba(108, 201, 94, 0.32);
+			animation: qpArrowBob 2.6s ease-in-out infinite;
+		}
+
+		[data-theme="dark"] .autocap__arrow {
+			color: var(--accent);
+		}
+
+		.autocap__arrow svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		@keyframes qpArrowBob {
+
+			0%,
+			100% {
+				transform: translateY(0);
+			}
+
+			50% {
+				transform: translateY(4px);
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.autocap__arrow {
+				animation: none;
+			}
+		}
+
+		.autocap__chip {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			padding: 14px 16px 16px;
+			border-radius: 14px;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			box-shadow: var(--shadow-pop);
+			min-width: 280px;
+			max-width: 360px;
+			width: 100%;
+		}
+
+		.autocap__chip-bar {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding-bottom: 8px;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.autocap__chip-title {
+			font-family: var(--font-button);
+			font-size: 0.78rem;
+			font-weight: 600;
+			color: var(--accent-deep);
+			letter-spacing: 0.02em;
+		}
+
+		[data-theme="dark"] .autocap__chip-title {
+			color: var(--accent);
+		}
+
+		.autocap__chip-text {
+			font-family: var(--font-display);
+			font-size: 0.95rem;
+			color: var(--text);
+			line-height: 1.4;
+			padding-top: 4px;
+		}
+
+		.autocap__chip-meta {
+			font-family: var(--font-button);
+			font-size: 0.7rem;
+			letter-spacing: 0.04em;
+			color: var(--text-faint);
+		}
+
+		.autocap__setting {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 14px;
+			width: 100%;
+			max-width: 360px;
+			padding: 12px 14px;
+			border-radius: 12px;
+			background: color-mix(in srgb, var(--surface) 65%, var(--bg-elevated));
+			border: 1px solid var(--border);
+			font-size: 0.85rem;
+			color: var(--text);
+			flex-wrap: wrap;
+		}
+
+		.autocap__setting-row {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			font-weight: 500;
+		}
+
+		.autocap__setting-check {
+			width: 20px;
+			height: 20px;
+			display: grid;
+			place-items: center;
+			border-radius: 6px;
+			background: var(--accent);
+			color: #fff;
+			box-shadow: 0 1px 2px rgba(91, 148, 62, 0.35);
+		}
+
+		.autocap__setting-check svg {
+			width: 12px;
+			height: 12px;
+		}
+
+		.autocap__setting-note {
+			font-family: var(--font-button);
+			font-size: 0.7rem;
+			letter-spacing: 0.04em;
+			color: var(--text-faint);
+		}
+
+		/* ------------------------------------------------------------------
+		   Two-column "everything" feature grid
+		   ------------------------------------------------------------------ */
+		.feature-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 18px;
+		}
+
+		@media (max-width: 880px) {
+			.feature-grid {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
+
+		@media (max-width: 560px) {
+			.feature-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		.feature-card {
+			padding: 22px 22px 24px;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: var(--radius-md);
+			transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+		}
+
+		.feature-card:hover {
+			transform: translateY(-2px);
+			border-color: rgba(108, 201, 94, 0.45);
+			box-shadow: 0 12px 28px rgba(91, 148, 62, 0.1);
+		}
+
+		.feature-card__icon {
+			width: 38px;
+			height: 38px;
+			border-radius: 10px;
+			display: grid;
+			place-items: center;
+			background: var(--accent-haze);
+			color: var(--accent-deep);
+			margin-bottom: 14px;
+		}
+
+		[data-theme="dark"] .feature-card__icon {
+			color: var(--accent);
+		}
+
+		.feature-card__icon svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		.feature-card h3 {
+			font-size: 1rem;
+			margin-bottom: 6px;
+		}
+
+		.feature-card p {
+			font-size: 0.9rem;
+			line-height: 1.55;
+		}
+
+		.feature-card p a {
+			color: var(--accent-deep);
+			text-decoration: none;
+			font-weight: 600;
+		}
+
+		.feature-card p a:hover {
+			text-decoration: underline;
+		}
+
+		[data-theme="dark"] .feature-card p a {
+			color: var(--accent);
+		}
+
+		.feature-card h3 kbd {
+			font-size: 0.6em;
+			margin: 0 1px;
+			vertical-align: 2px;
+		}
+
+		.feature-card--accent {
+			position: relative;
+			background:
+				radial-gradient(420px 220px at 100% 0%, rgba(180, 219, 106, 0.20), transparent 60%),
+				var(--bg-elevated);
+			border-color: rgba(108, 201, 94, 0.4);
+		}
+
+		.feature-card--accent:hover {
+			border-color: rgba(91, 148, 62, 0.7);
+			box-shadow: 0 16px 36px rgba(91, 148, 62, 0.18);
+		}
+
+		.feature-card__link {
+			position: absolute;
+			inset: 0;
+			border-radius: inherit;
+			z-index: 1;
+			text-decoration: none;
+		}
+
+		.feature-card--accent>*:not(.feature-card__link) {
+			position: relative;
+			z-index: 2;
+		}
+
+		.feature-card__badge {
+			position: absolute;
+			top: 14px;
+			right: 14px;
+			padding: 3px 9px;
+			border-radius: 999px;
+			font-family: var(--font-button);
+			font-size: 0.62rem;
+			font-weight: 600;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+			color: #1a3812;
+			box-shadow: 0 2px 6px rgba(91, 148, 62, 0.3);
+			z-index: 3;
+		}
+
+		[data-theme="dark"] .feature-card__badge {
+			color: #f3fbe9;
+		}
+
+		/* ------------------------------------------------------------------
+		   Send-to grid (logos + descriptions)
+		   ------------------------------------------------------------------ */
+		.sendto-grid {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 18px;
+			max-width: 760px;
+			margin: 0 auto;
+		}
+
+		@media (max-width: 720px) {
+			.sendto-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		/* Horizontal layout for the Send-to section: copy + cards on the
+		   left, the small dropdown screenshot on the right. */
+		.sendto-layout {
+			display: grid;
+			grid-template-columns: 1.15fr 1fr;
+			gap: 56px;
+			align-items: center;
+		}
+
+		.sendto-layout__copy {
+			display: grid;
+			gap: 32px;
+		}
+
+		.sendto-layout .section-head {
+			text-align: left;
+			margin: 0;
+		}
+
+		.sendto-layout .sendto-grid {
+			max-width: none;
+			margin: 0;
+		}
+
+		@media (max-width: 880px) {
+			.sendto-layout {
+				grid-template-columns: 1fr;
+				gap: 40px;
+			}
+		}
+
+		.sendto {
+			padding: 26px 24px;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: var(--radius-md);
+			text-align: left;
+		}
+
+		.sendto__head {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+
+		.sendto__mark {
+			width: 38px;
+			height: 38px;
+			border-radius: 10px;
+			background: var(--surface);
+			display: grid;
+			place-items: center;
+			color: var(--text);
+			font-family: var(--font-display);
+			font-weight: 700;
+			font-size: 1rem;
+			border: 1px solid var(--border);
+		}
+
+		.sendto__mark--notion {
+			background: #fff;
+			color: #1a1a1a;
+		}
+
+		.sendto__mark--gdocs {
+			background: #1a73e8;
+			color: #fff;
+			border-color: transparent;
+		}
+
+		.sendto h3 {
+			font-size: 1rem;
+		}
+
+		.sendto p {
+			font-size: 0.9rem;
+		}
+
+		/* ------------------------------------------------------------------
+		   Privacy callout (large quote-card)
+		   ------------------------------------------------------------------ */
+		.privacy {
+			padding: 56px 48px;
+			background: var(--bg-elevated);
+			border: 1px solid var(--border);
+			border-radius: var(--radius-xl);
+			box-shadow: var(--shadow-card);
+			display: grid;
+			grid-template-columns: auto 1fr;
+			gap: 32px;
+			align-items: center;
+		}
+
+		@media (max-width: 720px) {
+			.privacy {
+				grid-template-columns: 1fr;
+				padding: 36px 28px;
+				gap: 22px;
+			}
+		}
+
+		.privacy__seal {
+			width: 88px;
+			height: 88px;
+			border-radius: 50%;
+			display: grid;
+			place-items: center;
+			background: radial-gradient(circle at 30% 30%, #d6eeb1, #7ab362 75%);
+			color: #fff;
+			box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+		}
+
+		.privacy__seal svg {
+			width: 38px;
+			height: 38px;
+		}
+
+		.privacy h2 {
+			font-size: clamp(1.5rem, 2.6vw, 2rem);
+			margin-bottom: 10px;
+		}
+
+		.privacy p {
+			font-size: 1.02rem;
+			line-height: 1.6;
+		}
+
+		.privacy ul {
+			list-style: none;
+			padding: 0;
+			margin: 18px 0 0;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px 18px;
+			font-family: var(--font-button);
+			font-size: 0.82rem;
+			color: var(--text-muted);
+		}
+
+		.privacy ul li::before {
+			content: "✓";
+			color: var(--accent);
+			margin-right: 6px;
+			font-weight: 600;
+		}
+
+		.privacy__more {
+			margin: 18px 0 0;
+		}
+
+		.privacy__more-link {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			font-family: var(--font-button);
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: var(--accent-deep);
+			text-decoration: none;
+			padding: 2px 0;
+			border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+			transition: color 0.2s ease, gap 0.25s ease, border-color 0.2s ease;
+		}
+
+		.privacy__more-link:hover,
+		.privacy__more-link:focus-visible {
+			color: var(--accent);
+			gap: 10px;
+			border-color: var(--accent);
+		}
+
+		[data-theme="dark"] .privacy__more-link {
+			color: var(--accent);
+		}
+
+		[data-theme="dark"] .privacy__more-link:hover,
+		[data-theme="dark"] .privacy__more-link:focus-visible {
+			color: var(--accent-soft);
+		}
+
+		.privacy__more-link .arrow {
+			transition: transform 0.25s ease;
+		}
+
+		.privacy__more-link:hover .arrow,
+		.privacy__more-link:focus-visible .arrow {
+			transform: translateX(2px);
+		}
+
+		/* ------------------------------------------------------------------
+		   Origin story / closing
+		   ------------------------------------------------------------------ */
+		.origin {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 64px;
+			align-items: center;
+		}
+
+		@media (max-width: 880px) {
+			.origin {
+				grid-template-columns: 1fr;
+				gap: 36px;
+			}
+		}
+
+		.origin blockquote {
+			margin: 0;
+			padding: 0;
+			font-family: var(--font-display);
+			font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+			line-height: 1.35;
+			letter-spacing: -0.015em;
+			color: var(--text);
+			font-weight: 500;
+			font-style: italic;
+		}
+
+		.origin blockquote::before {
+			content: "“";
+			display: block;
+			font-family: var(--font-display);
+			font-size: 4rem;
+			line-height: 0.6;
+			color: var(--accent);
+			margin-bottom: 14px;
+		}
+
+		.origin cite {
+			display: block;
+			margin-top: 22px;
+			font-style: normal;
+			font-family: var(--font-button);
+			font-size: 0.82rem;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: var(--text-muted);
+		}
+
+		/* ------------------------------------------------------------------
+		   CTA strip
+		   ------------------------------------------------------------------ */
+		.cta {
+			text-align: center;
+			padding: 110px 0 120px;
+		}
+
+		.cta h2 {
+			font-size: clamp(2rem, 4vw, 3.2rem);
+			max-width: 18ch;
+			margin: 14px auto 0;
+		}
+
+		.cta p {
+			max-width: 52ch;
+			margin: 22px auto 0;
+			font-size: 1.05rem;
+		}
+
+		.cta__buttons {
+			margin-top: 36px;
+			display: flex;
+			justify-content: center;
+			gap: 14px;
+			flex-wrap: wrap;
+		}
+
+		/* ------------------------------------------------------------------
+		   Footer wave divider (ported from options.css)
+		   ------------------------------------------------------------------ */
+		.custom-shape-divider-bottom-1676369133 {
+			position: relative;
+			width: 100%;
+			overflow: hidden;
+			line-height: 0;
+			pointer-events: none;
+			margin-top: 6rem;
+			transform: rotate(180deg);
+		}
+
+		.custom-shape-divider-bottom-1676369133 svg {
+			position: relative;
+			display: block;
+			width: 120%;
+			margin-left: -10%;
+			height: 56px;
+		}
+
+		.custom-shape-divider-bottom-1676369133 .shape-fill {
+			fill: var(--footer-tint);
+			transition: fill 0.2s ease;
+			will-change: transform;
+		}
+
+		.custom-shape-divider-bottom-1676369133 .shape-fill:nth-of-type(1) {
+			animation: qp-wave-drift-back 13s ease-in-out infinite alternate;
+		}
+
+		.custom-shape-divider-bottom-1676369133 .shape-fill:nth-of-type(2) {
+			animation: qp-wave-drift-mid 10s ease-in-out infinite alternate;
+			animation-delay: -2s;
+		}
+
+		.custom-shape-divider-bottom-1676369133 .shape-fill:nth-of-type(3) {
+			animation: qp-wave-drift-front 7s ease-in-out infinite alternate;
+			animation-delay: -4s;
+		}
+
+		@keyframes qp-wave-drift-back {
+			from {
+				transform: translateX(-30px);
+			}
+
+			to {
+				transform: translateX(30px);
+			}
+		}
+
+		@keyframes qp-wave-drift-mid {
+			from {
+				transform: translateX(35px);
+			}
+
+			to {
+				transform: translateX(-35px);
+			}
+		}
+
+		@keyframes qp-wave-drift-front {
+			from {
+				transform: translateX(-25px);
+			}
+
+			to {
+				transform: translateX(25px);
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.custom-shape-divider-bottom-1676369133 .shape-fill {
+				animation: none;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Footer
+		   ------------------------------------------------------------------ */
+		footer {
+			position: relative;
+			overflow: hidden;
+			background: linear-gradient(180deg, var(--footer-tint) 0%, var(--footer-tint-soft) 100%);
+			margin-top: -1px;
+			/* seal the seam with the wave above */
+			padding: 56px 0 40px;
+			color: var(--text-muted);
+		}
+
+		footer::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			background:
+				radial-gradient(620px 300px at 10% 0%, rgba(122, 179, 98, 0.18), transparent 70%),
+				radial-gradient(520px 260px at 92% 100%, rgba(180, 219, 106, 0.14), transparent 75%);
+		}
+
+		[data-theme="dark"] footer::before {
+			background:
+				radial-gradient(620px 300px at 10% 0%, rgba(122, 179, 98, 0.10), transparent 70%),
+				radial-gradient(520px 260px at 92% 100%, rgba(180, 219, 106, 0.07), transparent 75%);
+		}
+
+		footer .wrap {
+			position: relative;
+		}
+
+		.footer__top {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 28px;
+			flex-wrap: wrap;
+		}
+
+		.footer__brand {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+		}
+
+		.footer__brand .brand__mark {
+			width: 40px;
+			height: 40px;
+		}
+
+		.footer__brand-text {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		footer .brand__name {
+			font-size: 1.02rem;
+			color: var(--text);
+		}
+
+		.footer__byline {
+			margin: 0;
+			font-size: 0.8rem;
+			line-height: 1.5;
+			color: var(--text-muted);
+		}
+
+		.footer__byline .dot {
+			margin: 0 8px;
+			color: var(--text-faint);
+		}
+
+		.footer__author {
+			color: var(--text);
+			font-weight: 600;
+			text-decoration: none;
+			background-image: linear-gradient(currentColor, currentColor);
+			background-repeat: no-repeat;
+			background-position: 0 100%;
+			background-size: 100% 1px;
+			padding-bottom: 1px;
+			transition: color 0.2s ease, background-size 0.3s ease;
+		}
+
+		.footer__author:hover,
+		.footer__author:focus-visible {
+			color: var(--accent-deep);
+			background-image: linear-gradient(var(--accent), var(--accent));
+			background-size: 100% 2px;
+		}
+
+		[data-theme="dark"] .footer__author:hover,
+		[data-theme="dark"] .footer__author:focus-visible {
+			color: var(--accent-soft);
+		}
+
+		.footer__links {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.footer__links a {
+			color: var(--text-muted);
+			text-decoration: none;
+			font-family: var(--font-button);
+			font-size: 0.78rem;
+			padding: 8px 14px;
+			border-radius: 999px;
+			border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+			background: color-mix(in srgb, var(--bg-elevated) 55%, transparent);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.2s ease;
+		}
+
+		.footer__links a:hover {
+			color: var(--accent-deep);
+			border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+			background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+			transform: translateY(-1px);
+		}
+
+		[data-theme="dark"] .footer__links a:hover {
+			color: var(--accent-soft);
+		}
+
+		.footer__rule {
+			height: 1px;
+			margin: 28px 0 18px;
+			background: linear-gradient(90deg,
+				transparent,
+				color-mix(in srgb, var(--border-strong) 70%, transparent) 18%,
+				color-mix(in srgb, var(--border-strong) 70%, transparent) 82%,
+				transparent);
+		}
+
+		.footer__bottom {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+
+		.footer__bottom p {
+			margin: 0;
+			font-size: 0.76rem;
+			color: var(--text-faint);
+		}
+
+		@media (max-width: 640px) {
+			.footer__top {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.footer__bottom {
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 4px;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Animation: fade-in on scroll
+		   ------------------------------------------------------------------ */
+		.reveal {
+			opacity: 0;
+			transform: translateY(18px);
+			transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+		}
+
+		.reveal.is-visible {
+			opacity: 1;
+			transform: none;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.reveal {
+				opacity: 1;
+				transform: none;
+				transition: none;
+			}
+
+			html {
+				scroll-behavior: auto;
+			}
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- =================== TOP NAV =================== -->
+	<header class="topnav">
+		<div class="topnav__inner">
+			<a href="#top" class="brand">
+				<span class="brand__mark" aria-hidden="true">
+					<img src="icons/logo-no-text.png" alt="">
+				</span>
+				<span class="brand__name">QuickPaste</span>
+			</a>
+
+			<nav class="nav-links" aria-label="Primary">
+				<a href="#how">How it works</a>
+				<a href="#autocapture">Ctrl+C capture</a>
+				<a href="#organize">Organize</a>
+				<a href="#search">Search</a>
+				<a href="#sendto">Send to</a>
+				<a href="#privacy">Privacy</a>
+				<a class="btn btn--primary nav-links__cta"
+					href="https://chromewebstore.google.com/detail/kdlcijllofgjnpdghojpdhjjhnnffcgb">
+					Add to Chrome
+				</a>
+			</nav>
+
+			<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
+				<svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+					stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="4" />
+					<path
+						d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+				</svg>
+				<svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+					stroke-linecap="round" stroke-linejoin="round">
+					<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+				</svg>
+			</button>
+		</div>
+	</header>
+
+	<main id="top">
+
+		<!-- =================== HERO =================== -->
+		<section class="hero">
+			<div class="wrap hero__inner">
+				<div>
+					<span class="eyebrow">Chrome extension · Local-first · v2.0</span>
+					<h1>Save the <em>good</em> parts.</h1>
+					<p class="lede">
+						QuickPaste turns any selected text or image into a saved clip with a single right-click — or
+						flip on the <strong>Ctrl+C auto-capture</strong> toggle and every copy you make is quietly
+						mirrored into your Collection. Pin what matters, label the rest, and find anything in a search
+						box that forgives your typos. No account. No servers. Everything stays on your device.
+					</p>
+
+					<a href="#autocapture" class="hero__newchip">
+						<span class="hero__newchip-text">Turn on auto-capture and
+							<kbd>Ctrl</kbd><kbd>C</kbd> will save for you</span>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+							stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<line x1="5" y1="12" x2="19" y2="12" />
+							<polyline points="12 5 19 12 12 19" />
+						</svg>
+					</a>
+					<div class="hero__meta">
+						<a class="btn btn--primary"
+							href="https://chromewebstore.google.com/detail/kdlcijllofgjnpdghojpdhjjhnnffcgb">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<circle cx="12" cy="12" r="10" />
+								<circle cx="12" cy="12" r="4" />
+								<line x1="21.17" y1="8" x2="12" y2="8" />
+								<line x1="3.95" y1="6.06" x2="8.54" y2="14" />
+								<line x1="10.88" y1="21.94" x2="15.46" y2="14" />
+							</svg>
+							Add to Chrome — Free
+						</a>
+						<a class="btn btn--ghost" href="#how">
+							See how it works
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<line x1="5" y1="12" x2="19" y2="12" />
+								<polyline points="12 5 19 12 12 19" />
+							</svg>
+						</a>
+					</div>
+
+					<div class="hero__factstrip">
+						<div class="fact">
+							<span class="fact__num"><em>0</em> servers</span>
+							<span class="fact__label">Local only</span>
+						</div>
+						<div class="fact">
+							<span class="fact__num"><em>1</em> right-click</span>
+							<span class="fact__label">To save anything</span>
+						</div>
+						<div class="fact">
+							<span class="fact__num"><em>100%</em> yours</span>
+							<span class="fact__label">Yours to keep</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Hero device: a browser frame with a mock page and the popup floating over it -->
+				<div class="device">
+					<div class="device__halo" aria-hidden="true"></div>
+					<div class="browser" aria-hidden="true">
+						<div class="browser__chrome">
+							<div class="browser__dots">
+								<span class="browser__dot"></span>
+								<span class="browser__dot"></span>
+								<span class="browser__dot"></span>
+							</div>
+							<span class="browser__url">https://en.wikipedia.org/wiki/Walden</span>
+							<span class="browser__action" title="QuickPaste">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+									stroke-linecap="round" stroke-linejoin="round">
+									<path d="M4 14c0-6 5-10 16-10 0 11-4 16-10 16-3 0-6-3-6-6z" />
+								</svg>
+							</span>
+						</div>
+
+						<div class="browser__body">
+							<div class="mock-article">
+								<h4>Walden, or Life in the Woods</h4>
+								<p>I went to the woods because <span class="highlighted">I wished to live
+										deliberately</span>, to front only the essential facts of life, and see if I
+									could not learn what it had to teach.</p>
+								<p>Time is but the stream I go a-fishing in. I drink at it; but while I drink I see the
+									sandy bottom and detect how shallow it is.</p>
+							</div>
+
+							<!-- Floating popup mock -->
+							<aside class="popup-mock">
+								<div class="popup-mock__bar">
+									<span class="popup-mock__logo">
+										<img src="icons/logo-no-text.png" alt="">
+									</span>
+									<span class="popup-mock__title">QuickPaste Collection</span>
+									<span class="popup-mock__pill">
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+											stroke-linecap="round" stroke-linejoin="round">
+											<circle cx="11" cy="11" r="7" />
+											<line x1="21" y1="21" x2="16.65" y2="16.65" />
+										</svg>
+									</span>
+									<span class="popup-mock__pill">
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+											stroke-linecap="round" stroke-linejoin="round">
+											<line x1="12" y1="5" x2="12" y2="19" />
+											<line x1="5" y1="12" x2="19" y2="12" />
+										</svg>
+									</span>
+								</div>
+								<div class="popup-mock__tabs">
+									<span class="popup-mock__tab is-active">All</span>
+									<span class="popup-mock__tab">★</span>
+									<span class="popup-mock__tab">⌗</span>
+									<span class="popup-mock__tab">↗</span>
+								</div>
+								<div class="popup-mock__clips">
+									<div class="popup-mock__clip popup-mock__clip--pin">
+										<div class="popup-mock__meta">
+											<svg viewBox="0 0 24 24" fill="currentColor">
+												<polygon points="12 2 15 9 22 9 16 14 18 21 12 17 6 21 8 14 2 9 9 9" />
+											</svg>
+											<span>Pinned · just now</span>
+										</div>
+										<p class="popup-mock__text">I wished to live deliberately, to front only the
+											essential facts of life…</p>
+										<div class="popup-mock__tagrow">
+											<span class="popup-mock__tag">research</span>
+											<span class="popup-mock__tag">essay</span>
+										</div>
+									</div>
+									<div class="popup-mock__clip">
+										<div class="popup-mock__meta"><span>en.wikipedia.org · 2 min ago</span></div>
+										<p class="popup-mock__text">Time is but the stream I go a-fishing in. I drink at
+											it; but while I drink I see the sandy bottom…</p>
+									</div>
+									<div class="popup-mock__clip">
+										<div class="popup-mock__meta"><span>github.com · 14 min ago</span></div>
+										<p class="popup-mock__text">git rebase --onto main feature/quickpaste-2.0 deploy
+										</p>
+									</div>
+								</div>
+							</aside>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== HOW IT WORKS =================== -->
+		<section id="how">
+			<div class="wrap">
+				<div class="section-head reveal">
+					<span class="kicker">How it works</span>
+					<h2>Three steps. <em>That's the whole product.</em></h2>
+					<p>QuickPaste was designed to disappear. The first time you use it should feel like nothing happened
+						— which is the point.</p>
+				</div>
+
+				<div class="steps reveal">
+					<article class="step">
+						<span class="step__num">01</span>
+						<h3>Select on any page</h3>
+						<p>Highlight a sentence, a paragraph, a code block, or right-click an image. QuickPaste doesn't
+							read your pages — only what you tell it to save.</p>
+					</article>
+					<article class="step">
+						<span class="step__num">02</span>
+						<h3>Right-click → Save to QuickPaste</h3>
+						<p>One menu item, two words. Multi-paragraph selections keep their structure. A subtle
+							notification confirms the save (you can turn it off).</p>
+						<p class="step__alt"><strong>Or</strong> turn on auto-capture and <kbd>Ctrl</kbd>+<kbd>C</kbd>
+							saves the clip for you — no menu needed. <a href="#autocapture">More →</a></p>
+					</article>
+					<article class="step">
+						<span class="step__num">03</span>
+						<h3>Open the popup whenever</h3>
+						<p>Click the toolbar icon or press <kbd>Alt</kbd><kbd>Shift</kbd><kbd>Q</kbd>. Your latest clips
+							are there, copy-ready, in chronological order.</p>
+					</article>
+				</div>
+
+				<!-- Screenshot row: the right-click flow -->
+				<div class="reveal" style="margin-top: 80px;">
+					<div class="shot">
+						<div class="shot__image shot__image--matted">
+							<img src="PresentationImages/01-right-click-save.png"
+								alt="A web page with text selected and the browser's right-click menu open, hovering the 'Save text to QuickPaste' command.">
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== AUTO-CAPTURE (NEW in 2.0) =================== -->
+		<section id="autocapture" class="autocap">
+			<div class="wrap">
+				<div class="autocap__card reveal">
+					<div class="autocap__copy">
+						<span class="eyebrow eyebrow--new">
+							<span class="eyebrow__dot" aria-hidden="true"></span>
+							New in 2.0
+						</span>
+						<h2>Or skip the right-click entirely. <em>Just press <kbd class="kbd--xl">Ctrl</kbd><kbd
+									class="kbd--xl">C</kbd>.</em></h2>
+						<p class="lede" style="margin-top: 18px;">
+							Flip the <strong>Auto-capture</strong> toggle in Settings and QuickPaste starts saving every
+							copy you make, automatically — across every tab, on every site, with the source URL
+							attached. It's the same clipboard you already use; QuickPaste just remembers what was on it.
+						</p>
+
+						<ul class="bulletlist" style="margin-top: 26px;">
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Off by default.</strong> One checkbox in Settings turns it on. One
+									unchecks it.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Per-domain blocklist.</strong> Add <code>mail.google.com</code>, your
+									bank, your password manager — copies on those sites are ignored.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Smart dedupe.</strong> Mash <kbd>Ctrl</kbd>+<kbd>C</kbd> three times on
+									the same selection? Still one clip.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Never leaves your device.</strong> The capture script writes through the
+									same local storage as everything else — no upload, no telemetry.</span>
+							</li>
+						</ul>
+
+						<div style="margin-top: 26px;">
+							<a href="https://chromewebstore.google.com/detail/kdlcijllofgjnpdghojpdhjjhnnffcgb"
+								class="btn btn--primary">
+								Try it — Add to Chrome
+							</a>
+						</div>
+					</div>
+
+					<div class="autocap__visual" aria-hidden="true">
+						<div class="autocap__keys">
+							<kbd class="kbd--hero">Ctrl</kbd>
+							<span class="autocap__plus">+</span>
+							<kbd class="kbd--hero">C</kbd>
+						</div>
+						<div class="autocap__arrow">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<line x1="12" y1="5" x2="12" y2="19" />
+								<polyline points="19 12 12 19 5 12" />
+							</svg>
+						</div>
+						<div class="autocap__chip">
+							<span class="autocap__chip-bar">
+								<span class="popup-mock__logo" style="width: 22px; height: 22px;">
+									<img src="icons/logo-no-text.png" alt="">
+								</span>
+								<span class="autocap__chip-title">Saved to QuickPaste</span>
+							</span>
+							<span class="autocap__chip-text">"…essential facts of life…"</span>
+							<span class="autocap__chip-meta">en.wikipedia.org · just now</span>
+						</div>
+
+						<div class="autocap__setting">
+							<span class="autocap__setting-row">
+								<span class="autocap__setting-check">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span>Auto-save Ctrl+C copies</span>
+							</span>
+							<span class="autocap__setting-note">Off by default · blocklist supported</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== POPUP & COLLECTION =================== -->
+		<section id="organize">
+			<div class="wrap">
+				<div class="section-head reveal">
+					<span class="kicker">Two views, one collection</span>
+					<h2>The <em>popup</em> for now. The <em>Collection</em> for everything.</h2>
+					<p>The toolbar popup is for the clip you saved twenty seconds ago. The Collection page is for the
+						one you saved last March. They share the same storage — so anything you save is in both,
+						instantly.</p>
+				</div>
+
+				<!-- FEATURE ROW 1: Popup -->
+				<div class="feature-row reveal">
+					<div class="feature-row__copy">
+						<span class="kicker">The popup</span>
+						<h2>Glance. Copy. Carry on.</h2>
+						<p>Open it with <kbd>Alt</kbd><kbd>Shift</kbd><kbd>Q</kbd> or the toolbar icon. Your most recent
+							clips are at the top, with one-click copy, pin, edit, label, and send-to actions tucked into
+							each card.</p>
+						<ul class="bulletlist">
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Filter tabs</strong> — All, Pinned, Labeled, or clips with a source
+									URL.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Quick save</strong> — Tap the <kbd>+</kbd> to type or paste a clip
+									directly into the popup.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Inline edit</strong> — Fix a typo without ever leaving the popup.</span>
+							</li>
+						</ul>
+					</div>
+
+					<div class="feature-row__media">
+						<div class="shot shot--compact">
+							<div class="shot__image shot__image--matted">
+								<img src="PresentationImages/02-popup.png"
+									alt="The QuickPaste toolbar popup, showing recent clips with pin, label, and copy actions.">
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- FEATURE ROW 2: Collection -->
+				<div class="feature-row feature-row--stacked reveal">
+					<div class="feature-row__copy">
+						<span class="kicker">The collection</span>
+						<h2>Where the rest of your library lives.</h2>
+						<p>The Collection page opens in its own tab — a calmer, fuller view that adds bulk selection,
+							advanced filters, drag-and-drop reorder, saved searches, settings, and import/export. Same
+							clips, more room.</p>
+						<ul class="bulletlist">
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Bulk select & act</strong> — Per-clip checkboxes plus Select All. Delete
+									with a 6-second Undo toast.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Drag-and-drop reorder</strong> in manual sort mode, or sort by newest,
+									oldest, or A–Z.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Bulk copy with format</strong> — plain, with source URLs, with timestamps,
+									or as Markdown.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>JSON / Markdown</strong> export of the whole collection, and import to
+									bring it back.</span>
+							</li>
+						</ul>
+					</div>
+
+					<div class="feature-row__media">
+						<div class="shot">
+							<div class="shot__image">
+								<img src="PresentationImages/03-collection.png"
+									alt="The QuickPaste Collection page, with filter, search, bulk-action controls, and a vertical list of saved clips.">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== ORGANIZE: pin / label / sort =================== -->
+		<section>
+			<div class="wrap">
+				<div class="section-head reveal">
+					<span class="kicker">Organize</span>
+					<h2>Built for clipboards that <em>actually grow</em>.</h2>
+					<p>Pins for the clips you reuse weekly. Labels for the ones you only need during one project.
+						Drag-to-reorder for everything else. Three lightweight ideas that compose into a system you can
+						keep up with.</p>
+				</div>
+
+				<div class="feature-grid reveal">
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<polygon
+									points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+							</svg>
+						</div>
+						<h3>Pin the essentials</h3>
+						<p>Pinned clips sit at the top with a soft green border. They survive auto-prune and ride along
+							with optional sync.</p>
+					</article>
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<path
+									d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+								<line x1="7" y1="7" x2="7.01" y2="7" />
+							</svg>
+						</div>
+						<h3>Label per clip</h3>
+						<p>Add free-form labels via the tag-icon button. A "Pick from existing" row suggests labels
+							you've already used, so you stay consistent.</p>
+					</article>
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="3 6 9 12 3 18" />
+								<polyline points="21 6 15 12 21 18" />
+							</svg>
+						</div>
+						<h3>Sort or arrange</h3>
+						<p>Newest first, oldest first, A–Z, or full manual order — drag any clip to a new position and
+							the order sticks.</p>
+					</article>
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<path d="M12 20h9" />
+								<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+							</svg>
+						</div>
+						<h3>Edit in place</h3>
+						<p>Fix a typo, merge two paragraphs, or rewrite the wording. Edits save instantly to local
+							storage — no Save button.</p>
+					</article>
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<path d="M3 3l18 18" />
+								<rect x="3" y="3" width="18" height="18" rx="3" />
+							</svg>
+						</div>
+						<h3>Dedupe smartly</h3>
+						<p>Strict, normalized (case + whitespace insensitive), or off. Catches the "I clipped this twice
+							last week" problem.</p>
+					</article>
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<circle cx="12" cy="12" r="10" />
+								<polyline points="12 6 12 12 16 14" />
+							</svg>
+						</div>
+						<h3>Auto-prune (opt-in)</h3>
+						<p>Keep clips for 7, 30, or 90 days. Pinned clips are never pruned. Off by default — you decide
+							your own retention.</p>
+					</article>
+					<article class="feature-card feature-card--accent">
+						<a href="#autocapture" class="feature-card__link"
+							aria-label="Read more about Ctrl+C capture"></a>
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<rect x="3" y="6" width="18" height="14" rx="2" />
+								<path d="M7 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+								<line x1="8" y1="12" x2="16" y2="12" />
+								<line x1="8" y1="16" x2="13" y2="16" />
+							</svg>
+						</div>
+						<span class="feature-card__badge">New</span>
+						<h3>Capture every <kbd>Ctrl</kbd>+<kbd>C</kbd></h3>
+						<p>Flip a single toggle and copies are quietly mirrored into your Collection — with a per-domain
+							blocklist to keep sensitive sites out. <a href="#autocapture">How it works →</a></p>
+					</article>
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<rect x="3" y="3" width="18" height="18" rx="2" />
+								<path d="M3 9h18" />
+								<path d="M9 21V9" />
+							</svg>
+						</div>
+						<h3>Cap the collection</h3>
+						<p>Set a soft ceiling at 100, 500, or 1000 clips. Oldest unpinned drop first; your pins stay
+							safe. Off by default.</p>
+					</article>
+					<article class="feature-card">
+						<div class="feature-card__icon">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round">
+								<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+							</svg>
+						</div>
+						<h3>Saved searches</h3>
+						<p>Name a query+filter combo and recall it with one click. Stop re-typing
+							<code>label:research after:7d</code>.
+						</p>
+					</article>
+				</div>
+
+				<div class="reveal" style="margin-top: 64px;">
+					<div class="shot">
+						<div class="shot__image shot__image--matted">
+							<img src="PresentationImages/04-clip-anatomy.png"
+								alt="A single saved clip in close-up — pinned, with labels, a source URL, and the hover action row visible.">
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== SEARCH =================== -->
+		<section id="search">
+			<div class="wrap">
+				<div class="feature-row reveal">
+					<div class="feature-row__copy">
+						<span class="kicker">Find anything</span>
+						<h2>Search that <em>forgives</em> your typos.</h2>
+						<p>Fuzzy matching means <code>recevied</code> still finds <code>received</code>. Match
+							highlighting shows exactly where your query landed. Filter by label or date range. Save any
+							combination as a one-click saved search.</p>
+						<ul class="bulletlist">
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Live, fuzzy</strong> — results update as you type, with edit-distance
+									tolerance.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Date filters</strong> — today, last 7/30 days, or a custom range.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Saved searches</strong> — name a query+filter combo and recall it with one
+									click.</span>
+							</li>
+						</ul>
+					</div>
+
+					<div class="feature-row__media">
+						<div class="shot shot--compact">
+							<div class="shot__image shot__image--matted">
+								<img src="PresentationImages/05-search.png"
+									alt="The QuickPaste search input with a fuzzy query typed and matched substrings highlighted in the result clips below.">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== SEND-TO INTEGRATIONS =================== -->
+		<section id="sendto">
+			<div class="wrap">
+				<div class="sendto-layout reveal">
+					<div class="sendto-layout__copy">
+						<div class="section-head">
+							<span class="kicker">Send to</span>
+							<h2>Move a clip <em>out</em> of QuickPaste in one click.</h2>
+							<p>Saved clips don't live in a silo. Push them to the tools you already use, in the format
+								that tool expects.</p>
+						</div>
+
+						<div class="sendto-grid">
+							<article class="sendto">
+								<div class="sendto__head">
+									<span class="sendto__mark sendto__mark--notion">N</span>
+									<h3>Notion</h3>
+								</div>
+								<p>Copies the clip to your clipboard and opens a new Notion page in a new tab. One
+									<kbd>Ctrl</kbd>+<kbd>V</kbd> and you're done.
+								</p>
+							</article>
+							<article class="sendto">
+								<div class="sendto__head">
+									<span class="sendto__mark sendto__mark--gdocs">G</span>
+									<h3>Google Docs</h3>
+								</div>
+								<p>Same pattern — copies the clip, opens a fresh Doc. No OAuth dance, no API keys, no
+									surface area for the extension to abuse.</p>
+							</article>
+						</div>
+					</div>
+
+					<div class="sendto-layout__visual">
+						<div class="shot">
+							<div class="shot__image shot__image--matted shot__image--tiny">
+								<img src="PresentationImages/06-sendto.png"
+									alt="The Send-to dropdown open on a clip, with Notion and Google Docs as the destinations.">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== THEMES & PRIVACY =================== -->
+		<section>
+			<div class="wrap">
+				<div class="feature-row feature-row--flip reveal" style="margin-bottom: 96px;">
+					<div class="feature-row__copy">
+						<span class="kicker">Looks and feel</span>
+						<h2>Light, dark, and <em>made to be lived in</em>.</h2>
+						<p>Real dark mode (not just an inverted palette). A customisable accent colour. Compact or
+							comfortable density. Toggle the source-URL line. Adjustable preview length. The UI bends to
+							your reading habits, not the other way around.</p>
+						<ul class="bulletlist">
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Fraunces · Inter · Sora</strong> — a serif for headings, a sans for body,
+									and a humanist sans for buttons.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>System-aware</strong> theme that respects
+									<code>prefers-color-scheme</code> on first launch.</span>
+							</li>
+							<li>
+								<span class="bulletlist__bullet">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+										stroke-linecap="round" stroke-linejoin="round">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								</span>
+								<span><strong>Reduced-motion respectful</strong> — the floating logo holds still when
+									you ask it to.</span>
+							</li>
+						</ul>
+					</div>
+					<div class="feature-row__media">
+						<div class="shot">
+							<div class="shot__image">
+								<img src="PresentationImages/07-themes.png"
+									alt="The QuickPaste Collection rendered side-by-side in light theme and dark theme.">
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="privacy reveal" id="privacy">
+					<div class="privacy__seal" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+							stroke-linecap="round" stroke-linejoin="round">
+							<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+							<polyline points="9 12 11 14 15 10" />
+						</svg>
+					</div>
+					<div>
+						<span class="kicker">Privacy</span>
+						<h2>Your clips never leave your machine. Period.</h2>
+						<p>QuickPaste has no servers and no analytics. The optional Chrome Sync mirror uses
+							<em>your</em> Google account — the developer has no access to your data. The
+							<code>&lt;all_urls&gt;</code> permission exists so the right-click menu works on every site
+							and so the opt-in <strong>Ctrl+C auto-capture</strong> can listen for your own copy events
+							when you enable it. The extension does not read page content on its own.
+						</p>
+						<ul>
+							<li>No account</li>
+							<li>No telemetry</li>
+							<li>No third-party scripts</li>
+							<li>Open source</li>
+							<li>Local-first by default</li>
+						</ul>
+						<p class="privacy__more">
+							<a class="privacy__more-link" href="privacy.html">
+								Read the full privacy policy
+								<span class="arrow" aria-hidden="true">→</span>
+							</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== ORIGIN STORY =================== -->
+		<section>
+			<div class="wrap">
+				<div class="origin reveal">
+					<div>
+						<span class="kicker">The origin</span>
+						<h2 style="margin-top: 14px;">A Harvard CS50 project that just kept growing.</h2>
+						<p style="margin-top: 18px; font-size: 1.02rem;">
+							v1.0 started as a CS50x final project — friends had asked for "something fast and easy, to
+							select some text and save it, like taking notes as you go, but no logging in, no account,
+							really simple and fast." That brief is still the north star.
+						</p>
+						<p style="margin-top: 14px; font-size: 1.02rem;">
+							v2.0 (2026) was a near-complete rewrite around the same core idea, with the things four
+							years of using it taught us. The headline addition: <strong>opt-in
+								<kbd>Ctrl</kbd>+<kbd>C</kbd> auto-capture</strong> with a per-domain blocklist, so you
+							never have to remember to right-click. Plus image clips, pins, labels, drag-and-drop, fuzzy
+							search, in-place edit, bulk operations with undo, Chrome Sync, send-to integrations,
+							JSON/Markdown import/export, retention rules, and a proper light/dark theme.
+						</p>
+					</div>
+					<div>
+						<blockquote>
+							Build something of interest to you, that solves an actual problem, that impacts your
+							community.
+							<cite>— CS50x final project brief</cite>
+						</blockquote>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- =================== CTA =================== -->
+		<section class="cta">
+			<div class="wrap reveal">
+				<span class="eyebrow">Free · No account · No data collection</span>
+				<h2>Add QuickPaste to Chrome, save a sentence, see what happens.</h2>
+				<p>It works on every site, takes one right-click to learn, and stays out of your way until you need it.
+				</p>
+				<div class="cta__buttons">
+					<a class="btn btn--primary"
+						href="https://chromewebstore.google.com/detail/kdlcijllofgjnpdghojpdhjjhnnffcgb">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+							stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="10" />
+							<circle cx="12" cy="12" r="4" />
+						</svg>
+						Add to Chrome
+					</a>
+					<a class="btn btn--ghost" href="https://github.com/cristiangabriel88/quickpaste">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+							stroke-linecap="round" stroke-linejoin="round">
+							<path
+								d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+						</svg>
+						View on GitHub
+					</a>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- =================== FOOTER WAVE =================== -->
+	<div class="custom-shape-divider-bottom-1676369133" aria-hidden="true">
+		<svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+			<path
+				d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
+				opacity=".25" class="shape-fill"></path>
+			<path
+				d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"
+				opacity=".5" class="shape-fill"></path>
+			<path
+				d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"
+				class="shape-fill"></path>
+		</svg>
+	</div>
+
+	<!-- =================== FOOTER =================== -->
+	<footer>
+		<div class="wrap">
+			<div class="footer__top">
+				<div class="footer__brand">
+					<span class="brand__mark" aria-hidden="true">
+						<img src="icons/logo-no-text.png" alt="">
+					</span>
+					<div class="footer__brand-text">
+						<span class="brand__name">QuickPaste</span>
+						<p class="footer__byline">
+							by <a class="footer__author" href="https://cristiangabriel.dev" target="_blank" rel="author noopener">Cristian Gabriel</a>
+							<span class="dot" aria-hidden="true">·</span>
+							Released for personal &amp; educational use
+						</p>
+					</div>
+				</div>
+				<nav class="footer__links" aria-label="Footer">
+					<a href="https://chromewebstore.google.com/detail/kdlcijllofgjnpdghojpdhjjhnnffcgb">Chrome Web Store</a>
+					<a href="https://github.com/cristiangabriel88/quickpaste">GitHub</a>
+					<a href="https://github.com/cristiangabriel88/quickpaste/issues">Issues</a>
+					<a href="mailto:cristiconstantinescu88@gmail.com">Contact</a>
+				</nav>
+			</div>
+			<div class="footer__rule" aria-hidden="true"></div>
+			<div class="footer__bottom">
+				<p>&copy; 2026 QuickPaste</p>
+				<p>Made with care, kept on your device.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		// ------------------------------------------------------------------
+		// Theme toggle (persists across reloads; respects system preference)
+		// ------------------------------------------------------------------
+		(function () {
+			const root = document.documentElement;
+			const toggle = document.getElementById('themeToggle');
+
+			const stored = (() => {
+				try { return localStorage.getItem('qp-presentation-theme'); }
+				catch { return null; }
+			})();
+
+			const initial = stored || 'light';
+			root.setAttribute('data-theme', initial);
+
+			toggle.addEventListener('click', () => {
+				const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+				root.setAttribute('data-theme', next);
+				try { localStorage.setItem('qp-presentation-theme', next); } catch { }
+			});
+		})();
+
+		// ------------------------------------------------------------------
+		// Fade-in on scroll for .reveal blocks
+		// ------------------------------------------------------------------
+		(function () {
+			const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			const els = document.querySelectorAll('.reveal');
+
+			if (reduce || !('IntersectionObserver' in window)) {
+				els.forEach(el => el.classList.add('is-visible'));
+				return;
+			}
+
+			const io = new IntersectionObserver((entries) => {
+				entries.forEach(entry => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add('is-visible');
+						io.unobserve(entry.target);
+					}
+				});
+			}, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+
+			els.forEach(el => io.observe(el));
+		})();
+
+		// ------------------------------------------------------------------
+		// Click-to-enlarge lightbox for every .shot__image screenshot
+		// ------------------------------------------------------------------
+		(function () {
+			const images = document.querySelectorAll('.shot__image > img');
+			if (!images.length) return;
+
+			const lb = document.createElement('div');
+			lb.className = 'lightbox';
+			lb.setAttribute('role', 'dialog');
+			lb.setAttribute('aria-modal', 'true');
+			lb.setAttribute('aria-hidden', 'true');
+			lb.innerHTML =
+				'<button class="lightbox__close" type="button" aria-label="Close image">' +
+				'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+				'<line x1="6" y1="6" x2="18" y2="18" />' +
+				'<line x1="18" y1="6" x2="6" y2="18" />' +
+				'</svg>' +
+				'</button>' +
+				'<img class="lightbox__img" alt="">';
+			document.body.appendChild(lb);
+
+			const lbImg = lb.querySelector('.lightbox__img');
+			let lastTrigger = null;
+
+			function open(img) {
+				lastTrigger = img;
+				lbImg.src = img.currentSrc || img.src;
+				lbImg.alt = img.alt || '';
+				lb.classList.add('is-open');
+				lb.setAttribute('aria-hidden', 'false');
+				document.body.style.overflow = 'hidden';
+			}
+
+			function close() {
+				lb.classList.remove('is-open');
+				lb.setAttribute('aria-hidden', 'true');
+				document.body.style.overflow = '';
+				if (lastTrigger && typeof lastTrigger.focus === 'function') {
+					lastTrigger.focus({ preventScroll: true });
+				}
+			}
+
+			images.forEach(img => {
+				img.setAttribute('tabindex', '0');
+				img.setAttribute('role', 'button');
+				img.setAttribute('aria-label', (img.alt ? img.alt + ' — ' : '') + 'click to enlarge');
+				img.addEventListener('click', () => open(img));
+				img.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						open(img);
+					}
+				});
+			});
+
+			lb.addEventListener('click', close);
+
+			document.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape' && lb.classList.contains('is-open')) close();
+			});
+		})();
+	</script>
+</body>
+
+</html>

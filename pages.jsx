@@ -275,9 +275,9 @@ function ProjectsPage({ tweaks }) {
       name: 'QuickPaste',
       tagline: 'Save text clips from any website as notes in a tidy collection. A Chrome extension that lives in your toolbar.',
       tech: ['Chrome API', 'JavaScript'],
-      url: 'https://chromewebstore.google.com/detail/quickpaste/kdlcijllofgjnpdghojpdhjjhnnffcgb',
-      cta: 'Install extension',
-      thumb: 'resources/images/Projects/QuickPaste/ScreenShot2.webp',
+      url: 'Quickpaste/quickpaste.html',
+      cta: 'See the project',
+      thumb: 'resources/images/Projects/QuickPaste/small-promo-title.png',
       thumbLabel: 'QUICKPASTE',
     },
     {

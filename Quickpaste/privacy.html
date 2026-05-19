@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>QuickPaste — Privacy Policy</title>
+	<meta name="description"
+		content="The QuickPaste privacy policy. What data the extension handles, where it lives, and what it is (and is not) used for.">
+	<meta name="robots" content="index, follow">
+
+	<link rel="icon" type="image/png" sizes="32x32" href="icons/logo32x32.png">
+	<link rel="icon" type="image/png" sizes="128x128" href="icons/logo128x128.png">
+	<link rel="apple-touch-icon" href="icons/logo128x128.png">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600&display=swap"
+		rel="stylesheet">
+
+	<style>
+		:root {
+			--font-display: "Fraunces", ui-serif, Georgia, serif;
+			--font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+			--font-button: "Sora", -apple-system, BlinkMacSystemFont, sans-serif;
+			--font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+			--bg: #fbfbf8;
+			--bg-elevated: #ffffff;
+			--text: #1a1a1a;
+			--text-muted: #5a5a5a;
+			--text-faint: #8a8a8a;
+			--surface: #f5f5f0;
+			--surface-strong: #ebebe4;
+			--border: #e4e2da;
+			--border-strong: #d6d3c8;
+
+			--accent: #5b943e;
+			--accent-soft: #b4db6a;
+			--accent-deep: #46792c;
+			--accent-haze: rgba(108, 201, 94, 0.12);
+
+			--radius-sm: 6px;
+			--radius-md: 10px;
+			--radius-lg: 16px;
+			--radius-xl: 24px;
+
+			--shadow-soft: 0 1px 2px rgba(30, 50, 20, 0.06), 0 8px 24px rgba(30, 50, 20, 0.07);
+			--shadow-card: 0 1px 2px rgba(30, 50, 20, 0.05), 0 18px 40px rgba(30, 50, 20, 0.09);
+		}
+
+		[data-theme="dark"] {
+			--bg: #18181a;
+			--bg-elevated: #1f1f22;
+			--text: #ececec;
+			--text-muted: #b0b0b0;
+			--text-faint: #777;
+			--surface: #25252a;
+			--surface-strong: #2f2f35;
+			--border: #34343a;
+			--border-strong: #44444c;
+
+			--accent: #6cc95e;
+			--accent-soft: #7ab362;
+			--accent-deep: #4a8a3a;
+			--accent-haze: rgba(108, 201, 94, 0.16);
+
+			--shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+			--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.45), 0 18px 40px rgba(0, 0, 0, 0.45);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html {
+			scroll-behavior: smooth;
+		}
+
+		body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--text);
+			font-family: var(--font-sans);
+			font-weight: 400;
+			font-size: 16.5px;
+			line-height: 1.7;
+			letter-spacing: -0.005em;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			font-feature-settings: "cv11", "ss03", "kern";
+			text-rendering: optimizeLegibility;
+			transition: background-color 0.25s ease, color 0.25s ease;
+			overflow-x: hidden;
+		}
+
+		::selection {
+			background: var(--accent-haze);
+			color: var(--text);
+		}
+
+		body::before {
+			content: "";
+			position: fixed;
+			inset: 0;
+			pointer-events: none;
+			z-index: 0;
+			background:
+				radial-gradient(900px 600px at 8% -10%, rgba(122, 179, 98, 0.08), transparent 60%),
+				radial-gradient(800px 500px at 100% 10%, rgba(180, 219, 106, 0.07), transparent 65%),
+				radial-gradient(700px 500px at 50% 110%, rgba(91, 148, 62, 0.05), transparent 70%);
+		}
+
+		[data-theme="dark"] body::before {
+			background:
+				radial-gradient(900px 600px at 8% -10%, rgba(122, 179, 98, 0.05), transparent 60%),
+				radial-gradient(800px 500px at 100% 10%, rgba(180, 219, 106, 0.03), transparent 65%),
+				radial-gradient(700px 500px at 50% 110%, rgba(91, 148, 62, 0.04), transparent 70%);
+		}
+
+		main,
+		header,
+		footer {
+			position: relative;
+			z-index: 1;
+		}
+
+		.wrap {
+			width: 100%;
+			max-width: 760px;
+			margin: 0 auto;
+			padding: 0 24px;
+		}
+
+		/* ------------------------------------------------------------------
+		   Header
+		   ------------------------------------------------------------------ */
+		header {
+			padding: 28px 0;
+			border-bottom: 1px solid var(--border);
+			background:
+				linear-gradient(180deg, var(--bg-elevated), transparent);
+		}
+
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+		}
+
+		.brand {
+			display: inline-flex;
+			align-items: center;
+			gap: 12px;
+			text-decoration: none;
+			color: var(--text);
+		}
+
+		.brand__mark {
+			width: 36px;
+			height: 36px;
+			display: grid;
+			place-items: center;
+			flex-shrink: 0;
+		}
+
+		.brand__mark img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			display: block;
+			filter: drop-shadow(0 1px 2px rgba(30, 50, 20, 0.18));
+		}
+
+		.brand__name {
+			font-family: var(--font-display);
+			font-weight: 600;
+			font-size: 1.12rem;
+			letter-spacing: -0.01em;
+			font-variation-settings: "opsz" 144;
+		}
+
+		.brand__sub {
+			display: block;
+			font-family: var(--font-button);
+			font-size: 0.68rem;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			color: var(--text-faint);
+			margin-top: 1px;
+		}
+
+		.topbar__actions {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.iconbtn {
+			width: 38px;
+			height: 38px;
+			border-radius: 999px;
+			border: 1px solid var(--border);
+			background: var(--bg-elevated);
+			color: var(--text);
+			cursor: pointer;
+			display: grid;
+			place-items: center;
+			transition: background 0.18s ease, transform 0.18s ease, color 0.18s ease;
+		}
+
+		.iconbtn:hover {
+			background: var(--surface);
+			transform: translateY(-1px);
+		}
+
+		.iconbtn:focus-visible {
+			outline: 2px solid var(--accent);
+			outline-offset: 2px;
+		}
+
+		.iconbtn svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		.iconbtn .iconbtn__sun {
+			display: none;
+		}
+
+		[data-theme="dark"] .iconbtn .iconbtn__sun {
+			display: block;
+		}
+
+		[data-theme="dark"] .iconbtn .iconbtn__moon {
+			display: none;
+		}
+
+		.backlink {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			font-family: var(--font-button);
+			font-size: 0.82rem;
+			font-weight: 500;
+			letter-spacing: 0.02em;
+			color: var(--text-muted);
+			text-decoration: none;
+			padding: 9px 14px;
+			border-radius: 999px;
+			border: 1px solid var(--border);
+			background: var(--bg-elevated);
+			transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+		}
+
+		.backlink:hover {
+			color: var(--accent-deep);
+			border-color: var(--border-strong);
+			background: var(--surface);
+		}
+
+		[data-theme="dark"] .backlink:hover {
+			color: var(--accent);
+		}
+
+		.backlink svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		@media (max-width: 560px) {
+			.backlink__text {
+				display: none;
+			}
+
+			.backlink {
+				width: 38px;
+				height: 38px;
+				padding: 0;
+				justify-content: center;
+				border-radius: 999px;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Hero
+		   ------------------------------------------------------------------ */
+		.hero {
+			padding: 72px 0 40px;
+		}
+
+		.eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			font-family: var(--font-button);
+			font-size: 0.72rem;
+			font-weight: 500;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--accent-deep);
+			padding: 5px 11px 6px;
+			border-radius: 999px;
+			background: var(--accent-haze);
+			border: 1px solid rgba(108, 201, 94, 0.28);
+		}
+
+		[data-theme="dark"] .eyebrow {
+			color: var(--accent);
+		}
+
+		h1 {
+			font-family: var(--font-display);
+			font-weight: 500;
+			font-size: clamp(2.2rem, 5vw, 3.2rem);
+			line-height: 1.05;
+			letter-spacing: -0.02em;
+			margin: 18px 0 0;
+			font-variation-settings: "opsz" 144, "SOFT" 60;
+		}
+
+		h1 em {
+			font-style: italic;
+			color: var(--accent);
+			font-variation-settings: "opsz" 144, "SOFT" 100;
+		}
+
+		.lede {
+			margin-top: 22px;
+			font-size: 1.08rem;
+			line-height: 1.65;
+			color: var(--text-muted);
+			max-width: 60ch;
+		}
+
+		.datestrip {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 14px 22px;
+			margin-top: 28px;
+			padding: 18px 22px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius-md);
+			background: var(--bg-elevated);
+			box-shadow: var(--shadow-soft);
+		}
+
+		.datestrip__item {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		.datestrip__label {
+			font-family: var(--font-button);
+			font-size: 0.7rem;
+			font-weight: 500;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--text-faint);
+		}
+
+		.datestrip__value {
+			font-family: var(--font-mono);
+			font-size: 0.92rem;
+			color: var(--text);
+		}
+
+		/* ------------------------------------------------------------------
+		   Summary callout
+		   ------------------------------------------------------------------ */
+		.summary {
+			margin-top: 48px;
+			padding: 28px 30px;
+			border-radius: var(--radius-lg);
+			background:
+				radial-gradient(600px 200px at 50% 0%, rgba(180, 219, 106, 0.14), transparent 60%),
+				var(--bg-elevated);
+			border: 1px solid var(--border);
+			box-shadow: var(--shadow-soft);
+		}
+
+		.summary__title {
+			font-family: var(--font-button);
+			font-size: 0.74rem;
+			font-weight: 500;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			color: var(--accent-deep);
+			margin: 0 0 14px;
+		}
+
+		[data-theme="dark"] .summary__title {
+			color: var(--accent);
+		}
+
+		.summary ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: grid;
+			gap: 12px;
+		}
+
+		.summary li {
+			display: grid;
+			grid-template-columns: 22px 1fr;
+			gap: 12px;
+			align-items: start;
+			color: var(--text);
+		}
+
+		.summary__bullet {
+			width: 22px;
+			height: 22px;
+			margin-top: 2px;
+			border-radius: 50%;
+			background: var(--accent-haze);
+			color: var(--accent-deep);
+			display: grid;
+			place-items: center;
+		}
+
+		[data-theme="dark"] .summary__bullet {
+			color: var(--accent);
+		}
+
+		.summary__bullet svg {
+			width: 12px;
+			height: 12px;
+		}
+
+		/* ------------------------------------------------------------------
+		   Table of contents
+		   ------------------------------------------------------------------ */
+		.toc {
+			margin-top: 48px;
+			padding: 22px 26px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius-md);
+			background: var(--surface);
+		}
+
+		.toc__title {
+			font-family: var(--font-button);
+			font-size: 0.72rem;
+			font-weight: 500;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			color: var(--text-muted);
+			margin: 0 0 10px;
+		}
+
+		.toc ol {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			counter-reset: toc;
+			columns: 2;
+			column-gap: 32px;
+		}
+
+		.toc li {
+			counter-increment: toc;
+			break-inside: avoid;
+		}
+
+		.toc a {
+			display: flex;
+			align-items: baseline;
+			gap: 10px;
+			padding: 6px 0;
+			color: var(--text);
+			text-decoration: none;
+			border-bottom: 1px dashed transparent;
+			transition: color 0.18s ease, border-color 0.18s ease;
+		}
+
+		.toc a::before {
+			content: counter(toc, decimal-leading-zero);
+			font-family: var(--font-mono);
+			font-size: 0.78rem;
+			color: var(--text-faint);
+			font-variant-numeric: tabular-nums;
+		}
+
+		.toc a:hover {
+			color: var(--accent-deep);
+			border-bottom-color: var(--accent);
+		}
+
+		[data-theme="dark"] .toc a:hover {
+			color: var(--accent);
+		}
+
+		@media (max-width: 560px) {
+			.toc ol {
+				columns: 1;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Body / sections
+		   ------------------------------------------------------------------ */
+		main {
+			padding-bottom: 96px;
+		}
+
+		section.policy {
+			padding-top: 56px;
+			scroll-margin-top: 16px;
+		}
+
+		section.policy+section.policy {
+			border-top: 1px solid var(--border);
+			margin-top: 8px;
+		}
+
+		h2 {
+			font-family: var(--font-display);
+			font-weight: 500;
+			font-size: clamp(1.5rem, 2.6vw, 1.95rem);
+			line-height: 1.18;
+			letter-spacing: -0.015em;
+			margin: 0 0 8px;
+			font-variation-settings: "opsz" 100;
+		}
+
+		h2 em {
+			font-style: italic;
+			color: var(--accent);
+		}
+
+		h2 .sectnum {
+			display: inline-block;
+			font-family: var(--font-mono);
+			font-size: 0.74rem;
+			font-weight: 400;
+			letter-spacing: 0.06em;
+			vertical-align: middle;
+			color: var(--text-faint);
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 999px;
+			padding: 3px 10px;
+			margin-right: 12px;
+			transform: translateY(-2px);
+		}
+
+		section.policy p {
+			margin: 14px 0;
+			color: var(--text-muted);
+		}
+
+		section.policy p:first-of-type {
+			margin-top: 18px;
+		}
+
+		section.policy ul,
+		section.policy ol.numbered {
+			padding: 0;
+			margin: 18px 0;
+			list-style: none;
+		}
+
+		section.policy ul li,
+		section.policy ol.numbered li {
+			position: relative;
+			color: var(--text-muted);
+			line-height: 1.7;
+		}
+
+		section.policy ul li+li,
+		section.policy ol.numbered li+li {
+			margin-top: 14px;
+		}
+
+		/* Dot bullets — absolutely positioned so list-item text wraps naturally. */
+		section.policy ul li {
+			padding-left: 22px;
+		}
+
+		section.policy ul li::before {
+			content: "";
+			position: absolute;
+			left: 4px;
+			top: 0.72em;
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--accent);
+		}
+
+		/* Numbered bullets — circled monospaced counter, also absolute. */
+		section.policy ol.numbered {
+			counter-reset: pol;
+		}
+
+		section.policy ol.numbered li {
+			counter-increment: pol;
+			padding-left: 40px;
+			min-height: 26px;
+		}
+
+		section.policy ol.numbered li::before {
+			content: counter(pol);
+			position: absolute;
+			left: 0;
+			top: 0.1em;
+			width: 26px;
+			height: 26px;
+			border-radius: 50%;
+			background: var(--accent-haze);
+			color: var(--accent-deep);
+			font-family: var(--font-mono);
+			font-size: 0.78rem;
+			font-variant-numeric: tabular-nums;
+			display: grid;
+			place-items: center;
+		}
+
+		[data-theme="dark"] section.policy ol.numbered li::before {
+			color: var(--accent);
+		}
+
+		section.policy strong {
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		section.policy em {
+			color: var(--text);
+		}
+
+		code {
+			font-family: var(--font-mono);
+			font-size: 0.86em;
+			padding: 2px 6px;
+			border-radius: 5px;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			color: var(--accent-deep);
+		}
+
+		[data-theme="dark"] code {
+			color: var(--accent);
+		}
+
+		section.policy a {
+			color: var(--accent-deep);
+			text-decoration: underline;
+			text-decoration-color: var(--accent-soft);
+			text-underline-offset: 3px;
+			text-decoration-thickness: 1.5px;
+		}
+
+		[data-theme="dark"] section.policy a {
+			color: var(--accent);
+		}
+
+		section.policy a:hover {
+			text-decoration-thickness: 2px;
+		}
+
+		/* The "what QuickPaste does not do" block — visually distinct, slight tint */
+		section.policy .negatives {
+			background:
+				linear-gradient(180deg, var(--bg-elevated), var(--surface));
+			border: 1px solid var(--border);
+			border-radius: var(--radius-md);
+			padding: 22px 26px;
+			margin-top: 20px;
+		}
+
+		section.policy .negatives ul {
+			margin: 0;
+		}
+
+		section.policy .negatives li {
+			padding-left: 26px;
+		}
+
+		section.policy .negatives li::before {
+			content: "";
+			position: absolute;
+			left: 2px;
+			top: 0.55em;
+			width: 12px;
+			height: 12px;
+			border-radius: 50%;
+			background: transparent;
+			border: 2px solid var(--accent);
+		}
+
+		/* Contact box */
+		.contact {
+			margin-top: 28px;
+			padding: 24px 26px;
+			border-radius: var(--radius-md);
+			background: var(--accent-haze);
+			border: 1px solid rgba(108, 201, 94, 0.32);
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+		}
+
+		.contact p {
+			margin: 0 !important;
+			color: var(--text) !important;
+		}
+
+		.contact a {
+			font-family: var(--font-button);
+			font-weight: 500;
+			padding: 10px 18px;
+			border-radius: 999px;
+			background: var(--accent);
+			color: #fff !important;
+			text-decoration: none !important;
+			transition: background 0.18s ease, transform 0.18s ease;
+		}
+
+		.contact a:hover {
+			background: var(--accent-deep);
+			transform: translateY(-1px);
+		}
+
+		[data-theme="dark"] .contact a {
+			background: var(--accent);
+			color: #0c1a07 !important;
+		}
+
+		/* ------------------------------------------------------------------
+		   Footer
+		   ------------------------------------------------------------------ */
+		footer {
+			position: relative;
+			overflow: hidden;
+			padding: 56px 0 40px;
+			border-top: 1px solid var(--border);
+			background: linear-gradient(180deg, transparent, var(--surface));
+		}
+
+		footer::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			background:
+				radial-gradient(620px 280px at 8% 0%, rgba(122, 179, 98, 0.10), transparent 70%),
+				radial-gradient(520px 260px at 92% 100%, rgba(180, 219, 106, 0.08), transparent 75%);
+		}
+
+		[data-theme="dark"] footer::before {
+			background:
+				radial-gradient(620px 280px at 8% 0%, rgba(122, 179, 98, 0.06), transparent 70%),
+				radial-gradient(520px 260px at 92% 100%, rgba(180, 219, 106, 0.04), transparent 75%);
+		}
+
+		footer .wrap {
+			position: relative;
+		}
+
+		.footer__top {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 28px;
+			flex-wrap: wrap;
+		}
+
+		.footer__brand {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+		}
+
+		.footer__brand .brand__mark {
+			width: 40px;
+			height: 40px;
+		}
+
+		.footer__brand-text {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		footer .brand__name {
+			font-family: var(--font-display);
+			font-weight: 600;
+			font-size: 1.02rem;
+			letter-spacing: -0.01em;
+			color: var(--text);
+		}
+
+		.footer__byline {
+			margin: 0;
+			font-size: 0.82rem;
+			line-height: 1.5;
+			color: var(--text-muted);
+		}
+
+		.footer__byline .dot {
+			margin: 0 8px;
+			color: var(--text-faint);
+		}
+
+		.footer__author {
+			color: var(--text);
+			font-weight: 600;
+			text-decoration: none;
+			background-image: linear-gradient(currentColor, currentColor);
+			background-repeat: no-repeat;
+			background-position: 0 100%;
+			background-size: 100% 1px;
+			padding-bottom: 1px;
+			transition: color 0.2s ease, background-size 0.3s ease;
+		}
+
+		.footer__author:hover,
+		.footer__author:focus-visible {
+			color: var(--accent-deep);
+			background-image: linear-gradient(var(--accent), var(--accent));
+			background-size: 100% 2px;
+		}
+
+		[data-theme="dark"] .footer__author:hover,
+		[data-theme="dark"] .footer__author:focus-visible {
+			color: var(--accent);
+		}
+
+		.footer__links {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.footer__links a {
+			color: var(--text-muted);
+			text-decoration: none;
+			font-family: var(--font-button);
+			font-size: 0.78rem;
+			padding: 8px 14px;
+			border-radius: 999px;
+			border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+			background: color-mix(in srgb, var(--bg-elevated) 55%, transparent);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.2s ease;
+		}
+
+		.footer__links a:hover {
+			color: var(--accent-deep);
+			border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+			background: color-mix(in srgb, var(--bg-elevated) 85%, transparent);
+			transform: translateY(-1px);
+		}
+
+		[data-theme="dark"] .footer__links a:hover {
+			color: var(--accent);
+		}
+
+		.footer__rule {
+			height: 1px;
+			margin: 28px 0 18px;
+			background: linear-gradient(90deg,
+				transparent,
+				color-mix(in srgb, var(--border-strong) 70%, transparent) 18%,
+				color-mix(in srgb, var(--border-strong) 70%, transparent) 82%,
+				transparent);
+		}
+
+		.footer__bottom {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+
+		.footer__bottom p {
+			margin: 0;
+			font-size: 0.76rem;
+			color: var(--text-faint);
+		}
+
+		@media (max-width: 640px) {
+			.footer__top {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.footer__bottom {
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 4px;
+			}
+		}
+
+		/* ------------------------------------------------------------------
+		   Print
+		   ------------------------------------------------------------------ */
+		@media print {
+
+			body::before,
+			.topbar__actions,
+			.backlink,
+			.contact a,
+			.footer__links {
+				display: none !important;
+			}
+
+			body {
+				background: #fff;
+				color: #000;
+				font-size: 11pt;
+			}
+
+			.wrap {
+				max-width: 100%;
+				padding: 0;
+			}
+
+			h1,
+			h2 {
+				color: #000;
+			}
+
+			section.policy {
+				page-break-inside: avoid;
+				border: none !important;
+			}
+
+			a {
+				color: #000 !important;
+				text-decoration: underline !important;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			* {
+				transition: none !important;
+				animation: none !important;
+			}
+
+			html {
+				scroll-behavior: auto;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<header>
+		<div class="wrap topbar">
+			<a class="brand" href="quickpaste.html" aria-label="Back to QuickPaste presentation">
+				<span class="brand__mark" aria-hidden="true">
+					<img src="icons/logo-no-text.png" alt="">
+				</span>
+				<span>
+					<span class="brand__name">QuickPaste</span>
+					<span class="brand__sub">Privacy policy</span>
+				</span>
+			</a>
+			<div class="topbar__actions">
+				<a class="backlink" href="quickpaste.html">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+						stroke-linecap="round" stroke-linejoin="round">
+						<line x1="19" y1="12" x2="5" y2="12" />
+						<polyline points="12 19 5 12 12 5" />
+					</svg>
+					<span class="backlink__text">Back to QuickPaste</span>
+				</a>
+				<button class="iconbtn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
+					<svg class="iconbtn__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+						stroke-linecap="round" stroke-linejoin="round">
+						<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+					</svg>
+					<svg class="iconbtn__sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+						stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="12" cy="12" r="4.5" />
+						<line x1="12" y1="2.5" x2="12" y2="5" />
+						<line x1="12" y1="19" x2="12" y2="21.5" />
+						<line x1="4.5" y1="4.5" x2="6.25" y2="6.25" />
+						<line x1="17.75" y1="17.75" x2="19.5" y2="19.5" />
+						<line x1="2.5" y1="12" x2="5" y2="12" />
+						<line x1="19" y1="12" x2="21.5" y2="12" />
+						<line x1="4.5" y1="19.5" x2="6.25" y2="17.75" />
+						<line x1="17.75" y1="6.25" x2="19.5" y2="4.5" />
+					</svg>
+				</button>
+			</div>
+		</div>
+	</header>
+
+	<main id="top">
+		<div class="wrap">
+			<!-- HERO -->
+			<div class="hero">
+				<span class="eyebrow">Local-first · No account · No servers</span>
+				<h1>QuickPaste <em>Privacy</em> Policy</h1>
+				<p class="lede">
+					QuickPaste is a Chrome extension that lets you save text and image clips from web pages into a
+					local Collection. This policy explains what data the extension handles, where that data lives,
+					and what it is (and is not) used for.
+				</p>
+
+				<div class="datestrip">
+					<div class="datestrip__item">
+						<span class="datestrip__label">Effective date</span>
+						<span class="datestrip__value">2026-05-18</span>
+					</div>
+					<div class="datestrip__item">
+						<span class="datestrip__label">Last updated</span>
+						<span class="datestrip__value">2026-05-18</span>
+					</div>
+					<div class="datestrip__item">
+						<span class="datestrip__label">Applies to</span>
+						<span class="datestrip__value">QuickPaste v2.0</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- SUMMARY -->
+			<aside class="summary" aria-label="Summary">
+				<p class="summary__title">In short</p>
+				<ul>
+					<li>
+						<span class="summary__bullet" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+								stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="20 6 9 17 4 12" />
+							</svg>
+						</span>
+						<span>QuickPaste stores your saved clips on your own device using Chrome's built-in
+							storage.</span>
+					</li>
+					<li>
+						<span class="summary__bullet" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+								stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="20 6 9 17 4 12" />
+							</svg>
+						</span>
+						<span>If you turn on the optional <strong>Sync</strong> feature, your clips are mirrored
+							through your own Google Account using Chrome Sync. The developer never sees them.</span>
+					</li>
+					<li>
+						<span class="summary__bullet" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+								stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="20 6 9 17 4 12" />
+							</svg>
+						</span>
+						<span>QuickPaste does not send any data to the developer, any analytics service, or any
+							other third party.</span>
+					</li>
+					<li>
+						<span class="summary__bullet" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+								stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="20 6 9 17 4 12" />
+							</svg>
+						</span>
+						<span>QuickPaste has no account system, no login, and no server.</span>
+					</li>
+				</ul>
+			</aside>
+
+			<!-- TOC -->
+			<nav class="toc" aria-label="Table of contents">
+				<p class="toc__title">Contents</p>
+				<ol>
+					<li><a href="#data-handled">What data QuickPaste handles</a></li>
+					<li><a href="#where">Where the data is stored</a></li>
+					<li><a href="#does-not-do">What QuickPaste does <em>not</em> do</a></li>
+					<li><a href="#permissions">Permissions and why they are requested</a></li>
+					<li><a href="#your-control">Your control over your data</a></li>
+					<li><a href="#children">Children</a></li>
+					<li><a href="#changes">Changes to this policy</a></li>
+					<li><a href="#contact">Contact</a></li>
+				</ol>
+			</nav>
+
+			<!-- 1. WHAT DATA -->
+			<section class="policy" id="data-handled">
+				<h2><span class="sectnum">01</span>What data QuickPaste handles</h2>
+				<p>QuickPaste handles the following information, all of which stays on your device or inside your own
+					Google Account's Chrome Sync storage:</p>
+				<ol class="numbered">
+					<li><strong>Text you explicitly save.</strong> When you right-click selected text on a page and
+						choose "Save text to QuickPaste", the selected text and the URL of the page you saved it from
+						are stored as a clip.</li>
+					<li><strong>Images you explicitly save.</strong> When you right-click an image and choose "Save
+						image to QuickPaste", the image's URL (<code>src</code>) and the URL of the page it appeared
+						on are stored as a clip. QuickPaste does not download or re-host the image itself.</li>
+					<li><strong>Copied text, only if you opt in.</strong> QuickPaste includes an optional
+						"auto-capture" feature that, when enabled by you in the extension's settings, saves the
+						plain-text contents of any copy action (<code>Ctrl+C</code> / <code>Cmd+C</code>) on pages you
+						visit. This feature is <em>off by default</em>. You can also add specific sites to a blocklist
+						so that copies on those sites are never captured.</li>
+					<li><strong>Your extension settings.</strong> Preferences such as theme, notification on/off, sort
+						order, auto-delete window, sync on/off, and the auto-capture blocklist are stored as settings.
+					</li>
+					<li><strong>Tags and pin state you add to clips.</strong> Any tags or pin/unpin actions you perform
+						on saved clips are stored alongside the clip.</li>
+				</ol>
+				<p>QuickPaste does not collect or have access to: your browsing history, your form inputs, your
+					passwords, your cookies, your identity, your IP address, your location, your contacts, or the
+					contents of pages other than what you explicitly save (or what you copy while auto-capture is
+					enabled).</p>
+			</section>
+
+			<!-- 2. WHERE -->
+			<section class="policy" id="where">
+				<h2><span class="sectnum">02</span>Where the data is stored</h2>
+				<ul>
+					<li><strong>On your device:</strong> clip contents and most data are stored in
+						<code>chrome.storage.local</code>, which is a sandboxed storage area Chrome provides to the
+						extension. This data lives on your computer and is removed if you uninstall the extension.
+					</li>
+					<li><strong>In your Google Account (only if you turn on Sync):</strong> if you enable the "Sync"
+						feature in QuickPaste's settings, a subset of your clips (your pinned clips plus the most
+						recent N unpinned clips, where N is a number you choose) is written to
+						<code>chrome.storage.sync</code>. Chrome itself replicates that storage between browsers
+						signed in to the same Google Account. The data is encrypted in transit and at rest by Google;
+						the developer of QuickPaste has no access to it and no way to read it.</li>
+					<li><strong>In Chrome's clipboard (only when you trigger it):</strong> if you have "Auto-copy on
+						save" turned on, saved text is also written to your system clipboard so you can paste it
+						elsewhere. This happens locally through an offscreen document. Nothing is transmitted off
+						your machine.</li>
+				</ul>
+			</section>
+
+			<!-- 3. DOES NOT DO -->
+			<section class="policy" id="does-not-do">
+				<h2><span class="sectnum">03</span>What QuickPaste does <em>not</em> do</h2>
+				<div class="negatives">
+					<ul>
+						<li>QuickPaste does not make network requests to any server controlled by the developer.</li>
+						<li>QuickPaste does not include analytics, telemetry, crash reporting, or advertising SDKs.
+						</li>
+						<li>QuickPaste does not sell or transfer your data to anyone.</li>
+						<li>QuickPaste does not use your data for any purpose unrelated to the core feature (saving
+							and organizing clips).</li>
+						<li>QuickPaste does not use your data for credit, lending, or any form of automated
+							decision-making.</li>
+						<li>QuickPaste does not use your data to train any machine-learning or AI model.</li>
+					</ul>
+				</div>
+			</section>
+
+			<!-- 4. PERMISSIONS -->
+			<section class="policy" id="permissions">
+				<h2><span class="sectnum">04</span>Permissions and why they are requested</h2>
+				<ul>
+					<li><strong><code>storage</code></strong> — to save your clips and settings locally and
+						(optionally) to sync them through your own Google Account.</li>
+					<li><strong><code>contextMenus</code></strong> — to add the "Save text to QuickPaste" and "Save
+						image to QuickPaste" entries to the right-click menu.</li>
+					<li><strong><code>notifications</code></strong> — to optionally show a small confirmation
+						notification when a clip is saved (you can turn this off).</li>
+					<li><strong><code>clipboardWrite</code></strong> — to optionally place the contents of a saved
+						clip onto your system clipboard when "Auto-copy" is enabled.</li>
+					<li><strong><code>offscreen</code></strong> — required by Chrome's Manifest V3 to perform the
+						clipboard write from a hidden helper page, since service workers cannot access the clipboard
+						directly.</li>
+					<li><strong><code>alarms</code></strong> — to wake the extension once per day to delete clips
+						older than your configured retention window (if you have set one).</li>
+					<li><strong>Host permissions: all URLs (<code>&lt;all_urls&gt;</code>)</strong> — required so that
+						the "Save text" and "Save image" right-click menu items work on any website you choose to use
+						them on, and so the opt-in auto-capture feature can observe copy actions on the sites you
+						visit. The extension does not read page contents on its own; it only reads what you select,
+						what you right-click, or what you copy when auto-capture is enabled.</li>
+				</ul>
+			</section>
+
+			<!-- 5. YOUR CONTROL -->
+			<section class="policy" id="your-control">
+				<h2><span class="sectnum">05</span>Your control over your data</h2>
+				<ul>
+					<li>You can delete individual clips, bulk-delete selected clips, or clear everything from
+						QuickPaste's options page.</li>
+					<li>You can disable Sync at any time in the settings; doing so stops further uploads to
+						<code>chrome.storage.sync</code>.</li>
+					<li>You can disable auto-capture at any time, or add specific sites to its blocklist.</li>
+					<li>Uninstalling the extension removes all local data. Chrome may retain the synced copy in your
+						Google Account until you also clear it from
+						<code>chrome://settings/syncSetup/advanced</code> or sign out and delete your sync data
+						through Google.</li>
+				</ul>
+			</section>
+
+			<!-- 6. CHILDREN -->
+			<section class="policy" id="children">
+				<h2><span class="sectnum">06</span>Children</h2>
+				<p>QuickPaste is not directed at children under 13 and does not knowingly collect any data from them.
+				</p>
+			</section>
+
+			<!-- 7. CHANGES -->
+			<section class="policy" id="changes">
+				<h2><span class="sectnum">07</span>Changes to this policy</h2>
+				<p>If the extension's behavior changes in a way that affects this policy, the policy will be updated
+					before the new version is published, and the "Last updated" date at the top will change.</p>
+			</section>
+
+			<!-- 8. CONTACT -->
+			<section class="policy" id="contact">
+				<h2><span class="sectnum">08</span>Contact</h2>
+				<p>Questions, bug reports, or feedback about this policy and the extension can be filed publicly on
+					the project's issue tracker.</p>
+				<div class="contact">
+					<p><strong>GitHub Issues:</strong> github.com/cristiangabriel88/quickpaste/issues</p>
+					<a href="https://github.com/cristiangabriel88/quickpaste/issues" target="_blank"
+						rel="noopener">Open an issue</a>
+				</div>
+			</section>
+		</div>
+	</main>
+
+	<footer>
+		<div class="wrap">
+			<div class="footer__top">
+				<div class="footer__brand">
+					<span class="brand__mark" aria-hidden="true">
+						<img src="icons/logo-no-text.png" alt="">
+					</span>
+					<div class="footer__brand-text">
+						<span class="brand__name">QuickPaste</span>
+						<p class="footer__byline">
+							by <a class="footer__author" href="https://cristiangabriel.dev" target="_blank"
+								rel="author noopener">Cristian Gabriel</a>
+							<span class="dot" aria-hidden="true">·</span>
+							Released for personal &amp; educational use
+						</p>
+					</div>
+				</div>
+				<nav class="footer__links" aria-label="Footer">
+					<a href="quickpaste.html">Back to QuickPaste</a>
+					<a href="https://chromewebstore.google.com/detail/kdlcijllofgjnpdghojpdhjjhnnffcgb">Chrome Web Store</a>
+					<a href="https://github.com/cristiangabriel88/quickpaste">GitHub</a>
+					<a href="https://github.com/cristiangabriel88/quickpaste/issues">Issues</a>
+				</nav>
+			</div>
+			<div class="footer__rule" aria-hidden="true"></div>
+			<div class="footer__bottom">
+				<p>&copy; <span id="year">2026</span> QuickPaste</p>
+				<p>Your data, your machine.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		// Theme toggle — defaults to light; user choice is remembered across reloads
+		(function () {
+			const root = document.documentElement;
+			const toggle = document.getElementById('themeToggle');
+
+			const stored = (() => {
+				try { return localStorage.getItem('qp-privacy-theme'); }
+				catch { return null; }
+			})();
+
+			root.setAttribute('data-theme', stored || 'light');
+
+			toggle.addEventListener('click', () => {
+				const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+				root.setAttribute('data-theme', next);
+				try { localStorage.setItem('qp-privacy-theme', next); } catch { }
+			});
+		})();
+
+		// Auto-update copyright year
+		document.getElementById('year').textContent = new Date().getFullYear();
+	</script>
+</body>
+
+</html>
