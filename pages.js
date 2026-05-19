@@ -149,7 +149,7 @@
         {
           className: "hero-blurb",
         },
-        "A software engineer based in Bucharest, building server-side applications and personal side-quests outside of client work. This is my own little plot of the internet. Quiet, green, occasionally pixelated.",
+        "A software developer based in Bucharest, building server-side applications and personal side-quests outside of client work. This is my own little plot of the internet. Quiet, green, occasionally pixelated.",
       ),
       React.createElement(
         "div",
@@ -357,7 +357,7 @@
         React.createElement(
           "p",
           null,
-          "My name is Cristian Gabriel. I’m a software engineer focused on building practical, well-structured solutions, with a strong foundation in ",
+          "My name is Cristian Gabriel. I’m a software developer focused on building practical, well-structured solutions, with a strong foundation in ",
           React.createElement("strong", null, "HTML"),
           ", ",
           React.createElement("strong", null, "CSS"),

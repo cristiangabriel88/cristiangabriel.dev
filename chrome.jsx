@@ -87,7 +87,7 @@ function Sidebar({ onNav }) {
         React.createElement('span', null, 'Cristian'),
         React.createElement('span', null, 'Gabriel'),
       ),
-      React.createElement('div', { className: 'brand-role' }, 'Software Engineer'),
+      React.createElement('div', { className: 'brand-role' }, 'Software Developer'),
     ),
     React.createElement('nav', { className: 'sidebar-socials' },
       React.createElement('a', { className: 'social', href: 'https://github.com/cristiangabriel88', target: '_blank', rel: 'noopener' },

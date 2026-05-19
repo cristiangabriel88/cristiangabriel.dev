@@ -1056,7 +1056,7 @@ function Terminal({ open, onClose, autoLaunchGame = false }) {
         setAsciiMode('text');
       }
     } else if (cmd === 'about') {
-      print('Cristian Gabriel. Software engineer, Bucharest, RO.');
+      print('Cristian Gabriel. Software developer, Bucharest, RO.');
       print('Works mostly with Java + Spring Boot. Likes plants.');
     } else if (cmd === 'projects') {
       print('  1. Impostor            · social party game (live)');

@@ -760,15 +760,13 @@ a.timeline-year:hover {
   text-decoration: none;
   color: inherit;
   overflow: hidden;
-  /* Soft-breeze ease — a long, gentle sine-like curve so the card
-     drifts up rather than springs. Slow enter, slow settle, no
-     front-loaded snap. translateZ(0) pre-promotes the compositor
+  /* Brisk soft-ease — translateZ(0) pre-promotes the compositor
      layer so the first hover doesn't pay the layer-creation tax. */
   transform: translateZ(0);
-  transition: transform 900ms cubic-bezier(0.37, 0, 0.27, 1),
-              border-color 900ms cubic-bezier(0.37, 0, 0.27, 1),
-              background 900ms cubic-bezier(0.37, 0, 0.27, 1),
-              box-shadow 900ms cubic-bezier(0.37, 0, 0.27, 1);
+  transition: transform 240ms cubic-bezier(0.37, 0, 0.27, 1),
+              border-color 240ms cubic-bezier(0.37, 0, 0.27, 1),
+              background 240ms cubic-bezier(0.37, 0, 0.27, 1),
+              box-shadow 240ms cubic-bezier(0.37, 0, 0.27, 1);
   will-change: transform, box-shadow;
 }
 .project-card:hover {
@@ -863,7 +861,7 @@ a.timeline-year:hover {
   font-weight: 600;
 }
 .project-card:hover .project-cta .arrow { transform: translateX(5px); }
-.project-cta .arrow { transition: transform 900ms cubic-bezier(0.37, 0, 0.27, 1); }
+.project-cta .arrow { transition: transform 240ms cubic-bezier(0.37, 0, 0.27, 1); }
 
 /* corner pixel sprouts */
 .corner-sprout {

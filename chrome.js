@@ -136,7 +136,7 @@ function Sidebar({
     className: 'brand-name'
   }, React.createElement('span', null, 'Cristian'), React.createElement('span', null, 'Gabriel')), React.createElement('div', {
     className: 'brand-role'
-  }, 'Software Engineer')), React.createElement('nav', {
+  }, 'Software Developer')), React.createElement('nav', {
     className: 'sidebar-socials'
   }, React.createElement('a', {
     className: 'social',
