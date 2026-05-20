@@ -68,7 +68,7 @@ function leafMark(tx, ty, scale, fill) {
 const PAD = 96;
 const name = textPath(fraunces, 'Cristian Gabriel', 104, PAD, 330);
 const tagline = textPath(interReg, 'Full-stack developer · Bucharest', 40, PAD, 410);
-const url = textPath(interSemi, 'cristiangabriel88.github.io', 28, PAD, 560, { letterSpacing: 2 });
+const url = textPath(interSemi, 'cristiangabriel.dev', 28, PAD, 560, { letterSpacing: 2 });
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="${C.parchment}"/>

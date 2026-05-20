@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cristiangabriel88.github.io/sitemap.xml
+Sitemap: https://cristiangabriel.dev/sitemap.xml
