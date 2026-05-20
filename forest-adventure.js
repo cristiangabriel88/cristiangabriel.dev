@@ -22,7 +22,7 @@
   // Save key & version
   // ────────────────────────────────────────────────────────────
   const SAVE_KEY = 'forest-save-v1';
-  const SAVE_VERSION = 1;
+  const SAVE_VERSION = 2;
   const PROMPT = '>> ';
 
   // ────────────────────────────────────────────────────────────
@@ -47,6 +47,77 @@
   }
   function addItem(state, itemId) {
     if (!has(state, itemId)) state.inventory.push(itemId);
+    markFound(state, itemId);
+  }
+
+  // Mark an item as "discovered" for the end-of-game tally. Acquiring any
+  // item (pickup, craft, reward) routes through addItem, so this is central.
+  function markFound(state, itemId) {
+    if (state && state.found && state.found.items) state.found.items[itemId] = true;
+  }
+  // Mark a story beat seen, for the same tally.
+  function markSecret(state, key) {
+    if (state && state.found && state.found.secrets) state.found.secrets[key] = true;
+  }
+  // The end-of-game "what the woods remember of you" tally — also shown by `journal`.
+  function scoreLines(state) {
+    const itemsFound = Object.keys((state.found && state.found.items) || {}).length;
+    const roomsSeen = Object.keys(state.visits || {}).filter(id => LOCATIONS[id]).length;
+    const totalRooms = Object.keys(LOCATIONS).length;
+    const secrets = Object.keys((state.found && state.found.secrets) || {}).length;
+    const events = (state.found && state.found.events) || 0;
+    return [
+      dim("— what the woods will remember of you —"),
+      dim("  rooms walked:  " + roomsSeen + " / " + totalRooms),
+      dim("  things found:  " + itemsFound),
+      dim("  secrets seen:  " + secrets),
+      dim("  small wonders: " + events),
+      dim("  turns taken:   " + state.meta.turnCount),
+    ];
+  }
+
+  // ── Weather & time-of-day ───────────────────────────────────
+  // Weather is chosen once per life and gives the woods a mood; the
+  // time-of-day is read off the daylight resource so dusk genuinely
+  // changes how the place reads.
+  const WEATHERS = ['clear', 'mist', 'rain'];
+  function pickWeather() {
+    return WEATHERS[Math.floor(Math.random() * WEATHERS.length)];
+  }
+  function timeOfDay(state) {
+    const d = state.resources.daylight;
+    if (d <= 0)  return 'night';
+    if (d <= 30) return 'dusk';
+    if (d <= 70) return 'afternoon';
+    return 'morning';
+  }
+  // A single dim atmosphere line woven from weather + time of day. Returned
+  // as one line() or null. Kept short so it sits under the room text.
+  function weatherLine(state) {
+    const tod = timeOfDay(state);
+    const w = state.weather || 'clear';
+    const TABLE = {
+      clear: {
+        morning:   "The morning light comes down clean and cold between the trunks.",
+        afternoon: "The light is high and still; the woods hold their colour.",
+        dusk:      "The light has gone amber and low, and the shadows have grown long arms.",
+        night:     "A clear night. The dark between the trees is complete, and very old.",
+      },
+      mist: {
+        morning:   "A low mist lies in the hollows, and the near trees stand in it like people half-remembered.",
+        afternoon: "The mist has not lifted. The forest ends, in every direction, about thirty paces out.",
+        dusk:      "Mist and dusk have agreed to meet; the world closes to a soft grey room around you.",
+        night:     "Mist and night together — you walk by the feel of the ground more than the look of it.",
+      },
+      rain: {
+        morning:   "A fine rain is falling, so light it is more a change in the air than a weather.",
+        afternoon: "Rain ticks steadily through the canopy and gathers, cold, at the back of your collar.",
+        dusk:      "The rain has settled in for the evening, patient as the trees that drink it.",
+        night:     "Rain in the dark, everywhere and from no particular direction.",
+      },
+    };
+    const text = (TABLE[w] || TABLE.clear)[tod];
+    return text ? dim(text) : null;
   }
 
   // ────────────────────────────────────────────────────────────
@@ -140,6 +211,18 @@
       description: "A small golden locket. Inside, a portrait so faded that you cannot tell whether it is of a person, or a place.",
       takeable: true,
     },
+    wisp_ember: {
+      name: 'a cold blue ember',
+      aliases: ['ember', 'blue ember', 'cold ember', 'wisp ember', 'flame'],
+      description: "A scrap of the wisp's own light, cupped in your hand. It is cold, and it does not flicker. It wants, very gently, to be carried somewhere.",
+      takeable: true,
+    },
+    feather: {
+      name: 'a long grey feather',
+      aliases: ['feather', 'grey feather', 'pinion'],
+      description: "A long pinion feather, grey going to silver at the tip. Held to the eye, the whole forest narrows into its vane.",
+      takeable: true,
+    },
     // ── Scenery / non-takeable references ──
     carved_chest: {
       name: 'a carved chest',
@@ -181,6 +264,24 @@
       name: 'a workbench',
       aliases: ['workbench', 'bench', 'table'],
       description: "A long workbench, the wood softer than wood should be after this many seasons. Vines have grown the length of it.",
+      takeable: false,
+    },
+    mire: {
+      name: 'the black water',
+      aliases: ['water', 'mire', 'bog', 'reeds', 'pool'],
+      description: "Still black water, skinned with mist. It gives back no reflection at all — not the trees, not the sky, not you. Only, far out, the steady pale light.",
+      takeable: false,
+    },
+    altar: {
+      name: 'the stone altar',
+      aliases: ['altar', 'stone', 'cup', 'offerings'],
+      description: "A flat stone with a shallow cup worn into its centre, exactly the size of a small flame. The bark around it bristles with a hundred small kept things, each pressed in by someone who came this far carrying something they could not put down.",
+      takeable: false,
+    },
+    view: {
+      name: 'the view',
+      aliases: ['view', 'woods', 'forest', 'canopy', 'horizon'],
+      description: "The whole forest, laid open below. From here the paths make sense — clearing to brook to spring, the dark seam of the bog to the west. It is the kind of seeing that does not last once you climb back down.",
       takeable: false,
     },
   };
@@ -281,10 +382,10 @@
         out.push(room('— Pine Grove —'));
         if (!state.visits.pine_grove) {
           out.push(line("Pines so tall the sky narrows to a pale ribbon stitched between their crowns. The ground is a deep red quilt of fallen needles that breathes resin where you step. High in one trunk, a magpie shifts its head and fixes you with one mad, shining eye."));
-          out.push(line("Below the nest, two pine paths fork: east, and a narrow one dropping north into a half-collapsed roof."));
+          out.push(line("Paths fork from the needle-floor: east the way you came, north into a half-collapsed roof, and west where the ground softens and the air goes white. Pegs hammered into the largest trunk climb up into the canopy."));
         } else {
           out.push(line("Tall pines. The magpie watches."));
-          out.push(dim("Paths lead east and north."));
+          out.push(dim("Paths lead east, north, and west; pegs climb up the great trunk."));
         }
         return out;
       },
@@ -298,6 +399,8 @@
       exits: {
         east:  'mossy_clearing',
         north: 'sunken_workshop',
+        west:  'misty_bog',
+        up:    'treetop_roost',
       },
     },
 
@@ -402,6 +505,90 @@
       exits: { south: 'pine_grove' },
       requiresLight: true,
     },
+
+    misty_bog: {
+      id: 'misty_bog',
+      title: 'Misty Hollow',
+      describe(state) {
+        const out = [];
+        out.push(room('— Misty Hollow —'));
+        if (!state.visits.misty_bog) {
+          out.push(line("West of the pines the ground gives up being ground. A low hollow of black water and tussock grass lies under a standing mist that does not move with the wind, because there is no wind. Reeds lean at the edges. Somewhere out over the water, a single pale light hangs, patient, the size of a held breath."));
+        } else {
+          out.push(line("The black water. The standing mist. The pale light, waiting."));
+        }
+        if (state.flags.wispLed) {
+          out.push(line("Where the mist had been a wall, it has thinned to a doorway: a path north, between two leaning oaks."));
+        }
+        out.push(dim("The pine grove is east." + (state.flags.wispLed ? " A path leads north." : "")));
+        return out;
+      },
+      ambient: [
+        "You stand at the lip of the water and let the mist come to you. It tastes of cold iron and old leaves. The pale light holds its distance, neither approaching nor fleeing — only attending.",
+        "Frogs you cannot see keep a slow conversation going in the reeds. The mist hangs in a single sheet, as though the hollow were a room and someone had pulled a curtain across the far wall.",
+      ],
+      scenery: ['mire'],
+      items: [],
+      exits: {
+        east: 'pine_grove',
+        north(state) {
+          if (state.flags.wispLed) return { to: 'oak_shrine' };
+          return { to: null, msg: "the mist stands across the way like a wall. it is waiting to be given a reason to part." };
+        },
+      },
+    },
+
+    oak_shrine: {
+      id: 'oak_shrine',
+      title: 'The Hollow-Oak Shrine',
+      describe(state) {
+        const out = [];
+        out.push(room('— The Hollow-Oak Shrine —'));
+        if (!state.visits.oak_shrine) {
+          out.push(line("Beyond the mist, a single oak so old it has gone hollow, wide enough to walk into. Someone, long ago, made its hollow a shrine: a flat stone altar, a ring of guttered candle-stubs, and on the bark a hundred small offerings — buttons, teeth, rings — pressed in by hands the tree has long since grown around."));
+          out.push(line("The altar has a shallow cup worn into its centre, the exact size of a held flame."));
+        } else {
+          out.push(line("The hollow oak. The altar. The offerings grown into the bark."));
+        }
+        if (state.resources.daylight <= 0 && !has(state, 'lit_lantern')) {
+          out.push(dim("It is too dark under the oak to make out the altar."));
+        }
+        out.push(dim("The misty hollow is south."));
+        return out;
+      },
+      ambient: [
+        "You step inside the tree. The hollow holds you the way cupped hands hold water. The offerings catch what little light there is — a button here, a child's tooth there — each one a small thing someone could not keep, and would not throw away.",
+        "The altar's cup is worn smooth as an old coin. Whoever made this place meant a flame to sit here, and meant someone, someday, to bring one.",
+      ],
+      scenery: ['altar'],
+      items: [],
+      exits: { south: 'misty_bog' },
+      requiresLight: true,
+    },
+
+    treetop_roost: {
+      id: 'treetop_roost',
+      title: 'Treetop Roost',
+      describe(state) {
+        const out = [];
+        out.push(room('— Treetop Roost —'));
+        if (!state.visits.treetop_roost) {
+          out.push(line("The pegs end at a platform of weathered boards lashed high between three crowns — a watcher's roost, or a child's, abandoned to the wind a long time back. From up here the whole woods lie open below you, breathing, and you can see how the paths thread between the places you have walked."));
+          out.push(line("A long grey feather is caught in a knot of the railing."));
+        } else {
+          out.push(line("The high platform. The woods spread out below, breathing."));
+        }
+        out.push(dim("The pegs lead back down."));
+        return out;
+      },
+      ambient: [
+        "You sit on the boards with your legs over the long drop and let the wind have you for a while. From here the forest is not a maze at all but a single slow animal, turning over in its sleep.",
+        "Far below, the clearing, the brook, the pale smudge of the bog. Seen all at once, the woods seem less like somewhere you are lost and more like somewhere that is keeping you.",
+      ],
+      scenery: ['view'],
+      items: ['feather'],
+      exits: { down: 'pine_grove' },
+    },
   };
 
   // ────────────────────────────────────────────────────────────
@@ -423,10 +610,14 @@
           return [
             npcSay("\"who walks here?\" — slow, unsurprised."),
             line("the hermit eyes you for a long moment, then nods you toward the fire."),
-            dim("(ask the hermit about the melody, the forest, or yourself.)"),
+            dim("(ask the hermit about the melody, the forest, the fire, or yourself.)"),
           ];
         }
         if (ns.mood === 'wary')   return [npcSay("\"still walking, then.\" the hermit pokes at the fire.")];
+        if (state.flags.gaveTokenToOracle)
+          return [npcSay("the hermit looks at you a moment longer than before. \"you carry the leaf now. you know what it is for.\"")];
+        if (state.flags.learnedMelody)
+          return [npcSay("the hermit hums four notes back at you, pleased. \"so the spring sang. sit.\"")];
         return [npcSay("the hermit gestures you to the fire. \"sit. it knows you now.\"")];
       },
       topics: {
@@ -434,6 +625,9 @@
           const ns = state.npc.hermit;
           ns.mood = 'friendly';
           ns.topicsAsked.push('melody');
+          if (state.flags.learnedMelody) {
+            return [npcSay("\"you found it. good. a song is only kept by being carried.\"")];
+          }
           return [
             npcSay("\"the song the woods forgot. find it. bring it. or don't.\""),
             npcSay("\"the spring will sing for you if you sit and don't try.\""),
@@ -448,9 +642,24 @@
         },
         yourself(state) {
           state.npc.hermit.topicsAsked.push('self');
+          if (state.flags.gaveTokenToOracle)
+            return [npcSay("\"i gave the stone a token once, too. it gave me a leaf. i have been deciding what to do with it ever since.\"")];
           return [
             npcSay("\"i was a wanderer once. now i wait.\""),
             npcSay("\"the leaves on this robe are not from this year.\""),
+          ];
+        },
+        fire(state) {
+          if (has(state, 'ember') || state.flags.lampLit || has(state, 'lit_lantern')) {
+            return [npcSay("\"you have a light of your own now. the fire is glad to have helped.\"")];
+          }
+          addItem(state, 'ember');
+          markSecret(state, 'ember');
+          if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.chime();
+          return [
+            npcSay("\"cold ahead of you, where you're going.\" the hermit nods at the coals. \"take one. it won't go out while the woods still want you walking.\""),
+            line("you lift a single live ember from his fire. it sits warm and patient in your pocket."),
+            dim("(you take a live ember. something soft and something hot will wake a lantern.)"),
           ];
         },
         magpie(state) {
@@ -464,6 +673,24 @@
         },
         workshop(state) {
           return [npcSay("\"a carver lived north of the pines. his lock-work was famous in a town that is also gone.\"")];
+        },
+        wisp(state) {
+          return [npcSay("\"a light out in the bog. it was someone's once. take it a flame and it will show you where it wants to go — west, and then north.\"")];
+        },
+        bog(state) {
+          return [npcSay("\"west of the pines the ground gives up. don't go in dark. the bog keeps what comes to it without a light.\"")];
+        },
+        shrine(state) {
+          return [npcSay("\"the hollow oak. the carver's wife waited there for a man who'd gone into the bog with the last lantern. she is still waiting, after a fashion.\"")];
+        },
+        weather(state) {
+          const w = state.weather || 'clear';
+          const says = {
+            clear: "\"clear today. the woods show their whole face. rarer than you'd think.\"",
+            mist:  "\"mist. the bog will be honest in this — it is the one weather that opens it.\"",
+            rain:  "\"rain. good for walking slow, which is the only way the woods like to be walked.\"",
+          };
+          return [npcSay(says[w] || says.clear)];
         },
       },
       onGive(itemId, state) {
@@ -512,6 +739,9 @@
         hermit(state) {
           return [npcSay("\"old man. used to be shiny. now leaves.\"")];
         },
+        wisp(state) {
+          return [npcSay("\"bog-light! not shiny — too cold. won't sit in a nest. won't sit anywhere. tried.\"")];
+        },
       },
       onGive(itemId, state) {
         const it = ITEMS[itemId];
@@ -558,12 +788,15 @@
         melody(state) {
           if (!state.flags.learnedMelody) {
             state.flags.learnedMelody = true;
+            markSecret(state, 'melody');
             addItem(state, 'melody_pebble');
+            if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.melody();
             return [
               line("the water shapes a hand. on your palm: a small pebble that hums the four notes."),
               dim("(you take a humming pebble.)"),
             ];
           }
+          if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.melody();
           return [line("the spring repeats the melody. it is already in your pocket.")];
         },
         water(state) {
@@ -574,6 +807,12 @@
         },
         forest(state) {
           return [line("\"older than the song. younger than the stone.\"")];
+        },
+        wisp(state) {
+          return [line("the face in the water turns west, toward the bog. \"... a light that stayed too long ... it is only water, now, that forgot it was a flame ...\"")];
+        },
+        bog(state) {
+          return [line("\"... the bog and i are sisters ...\" the water says. \"... it keeps. i return. that is the only difference ...\"")];
         },
       },
       onGive(itemId, state) {
@@ -617,7 +856,11 @@
             key:    "\"three notches and a curl. one for moss, one for light, one for the carpenter.\"",
             spring: "\"the spring is a kind of memory that has not happened yet.\"",
             self:   "\"you are walking. that is most of the answer.\"",
-            ending: "\"you may give the leaf, or keep the song. either way the woods remember.\"",
+            ending: "\"three doors. give the leaf and rest. keep the song and wander. or carry a light west, and give the light a home.\"",
+            wisp:   "\"a piece of someone's last lantern. it is looking for the place it was lit.\"",
+            bog:    "\"west, where the ground forgets itself. take a light, or the light takes you.\"",
+            shrine: "\"the carver's wife waited at the hollow oak. she is the offering grown deepest into the bark.\"",
+            weather: "\"the woods wear the sky like a mood. the mist is the truest of its faces.\"",
             default: "\"the stone considers a long time. the trend is uncertain.\"",
           };
           const ans = answers[topic] || answers.default;
@@ -627,6 +870,7 @@
       onGive(itemId, state) {
         if (itemId === 'engraved_token') {
           state.flags.gaveTokenToOracle = true;
+          markSecret(state, 'silver_leaf');
           addItem(state, 'silver_leaf');
           return [
             line("the stone accepts the engraved token. for a long second, the glyphs read themselves."),
@@ -635,6 +879,65 @@
           ];
         }
         return [line("the stone takes " + ITEMS[itemId].name + ", considers it, and gives it back unchanged.")];
+      },
+    },
+
+    wisp: {
+      id: 'wisp',
+      name: 'the wisp',
+      aliases: ['wisp', 'light', 'glow', 'will o the wisp', 'will-o-wisp', 'flame', 'pale light'],
+      location: 'misty_bog',
+      greet(state) {
+        const ns = state.npc.wisp;
+        if (state.flags.wispLed) {
+          return [line("the wisp hangs by the northern oaks, where the mist has parted for it. it has shown you what it had to show.")];
+        }
+        if (!has(state, 'lit_lantern')) {
+          if (!ns.met) {
+            ns.met = true;
+            return [
+              line("the pale light drifts a little nearer over the black water, then stops, as if let down."),
+              npcSay("— a thought, not a voice — \"dark thing. you carry no light of your own.\""),
+              dim("(it is drawn to flame. come back when something of yours is lit.)"),
+            ];
+          }
+          return [line("the wisp keeps its distance over the water. it will not come to a dark hand.")];
+        }
+        // The player carries the lit lantern — the wisp comes, leads, and gives.
+        ns.met = true; ns.led = true;
+        state.flags.wispLed = true;
+        markSecret(state, 'wisp');
+        if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.melody([392, 466, 587, 784], 130);
+        addItem(state, 'wisp_ember');
+        return [
+          line("the wisp sees the green-gold light in your hand and comes to it the way a moth comes — but gladly, and unhurried, as if it had been waiting for exactly this lamp."),
+          line("it circles the lantern once, twice, and a scrap of its own cold blue light comes away into your palm and settles there, patient."),
+          line("then it drifts north, and the standing mist goes with it, opening a way between two leaning oaks."),
+          dim("(you take a cold blue ember. a path north has opened.)"),
+        ];
+      },
+      topics: {
+        light(state) {
+          return [npcSay("— \"all that is left of a lantern someone carried into the bog and did not carry out. it remembers being warm.\"")];
+        },
+        shrine(state) {
+          return [npcSay("— \"north. the hollow oak. that is where it was lit. that is where it would like to rest.\"")];
+        },
+        bog(state) {
+          return [npcSay("— \"the water keeps no faces. that is why the lost come here: to stop being looked for.\"")];
+        },
+        hermit(state) {
+          return [npcSay("— \"the old man by the fire. he chose to rest. it is only one of the ways.\"")];
+        },
+        melody(state) {
+          return [npcSay("— \"the song is the spring's. the bog has only the one note: stay.\"")];
+        },
+      },
+      onGive(itemId, state) {
+        if (itemId === 'lit_lantern') {
+          return [line("you offer the lantern; the wisp shies back. it does not want to take the light. it wants to be near it.")];
+        }
+        return [line("the wisp draws away from " + ITEMS[itemId].name + ". it wants light, not things.")];
       },
     },
   };
@@ -673,6 +976,12 @@
       message: "you press the humming pebble to the locket. they resonate. the four notes become eight, then four again, deeper this time.",
       consumes: [],
       sets: { resonance: true },
+    },
+    'altar+wisp_ember': {
+      result: null,
+      message: "you set the cold blue ember into the cup worn in the altar. it does not warm — it deepens, the way a held note deepens, and the hundred small kept things in the bark catch the light and, very faintly, answer.",
+      consumes: ['wisp_ember'],
+      sets: { shrineKindled: true },
     },
   };
 
@@ -827,6 +1136,12 @@
     const loc = LOCATIONS[state.location];
     const out = loc.describe(state);
 
+    // A line of weather / time-of-day mood, unless it's too dark to perceive much.
+    if (!(loc.requiresLight && state.resources.daylight <= 0 && !has(state, 'lit_lantern'))) {
+      const wl = weatherLine(state);
+      if (wl) out.push(wl);
+    }
+
     // List visible items.
     const items = (loc.items || []).filter(id => !state.removedItems[loc.id + '/' + id]);
     const extras = state.locationItems[loc.id] || [];
@@ -869,7 +1184,7 @@
     if (rest[0] === 'at' || rest[0] === 'into' || rest[0] === 'on') rest = rest.slice(1);
     const noun = resolveNoun(rest, state, 'both');
     tickResources(state, { stamina: 1, daylight: 1 });
-    if (!noun) return { lines: [err("you don't see anything like that here.")], state };
+    if (!noun) return { lines: [err("you don't see anything like that here." + nounSuggestion(rest, state, 'both'))], state };
     if (noun.kind === 'item' || noun.kind === 'scenery') {
       return { lines: [line(ITEMS[noun.id].description)], state };
     }
@@ -881,10 +1196,40 @@
     return { lines: [err("you don't see anything like that here.")], state };
   }
 
+  // Move one item id from the floor into the inventory. Returns the report line.
+  function takeOne(itemId, state) {
+    addItem(state, itemId);
+    state.removedItems[state.location + '/' + itemId] = true;
+    const extras = state.locationItems[state.location];
+    if (extras) {
+      const i = extras.indexOf(itemId);
+      if (i !== -1) extras.splice(i, 1);
+    }
+    return line("taken: " + ITEMS[itemId].name + ".");
+  }
+  // The ids of takeable items lying in the open at the current location.
+  function takeableHere(state) {
+    const loc = LOCATIONS[state.location];
+    const floor = (loc.items || []).filter(id => !state.removedItems[loc.id + '/' + id]);
+    const extras = state.locationItems[loc.id] || [];
+    return floor.concat(extras).filter(id => ITEMS[id] && ITEMS[id].takeable !== false);
+  }
+
   function handleTake(rest, state) {
     if (rest.length === 0) return { lines: [err("take what?")], state };
+
+    // `take all` / `take everything` — sweep up the open items here.
+    if (rest[0] === 'all' || rest[0] === 'everything') {
+      const ids = takeableHere(state).filter(id => !has(state, id));
+      if (!ids.length) return { lines: [line("there is nothing here to take.")], state };
+      const out = ids.map(id => takeOne(id, state));
+      tickResources(state, { stamina: 2, daylight: 1 });
+      if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.chime();
+      return { lines: out, state };
+    }
+
     const noun = resolveNoun(rest, state, 'here');
-    if (!noun) return { lines: [err("you don't see that here.")], state };
+    if (!noun) return { lines: [err("you don't see that here." + nounSuggestion(rest, state, 'here'))], state };
 
     if (noun.kind === 'npc')   return { lines: [err("you can't take " + NPCS[noun.id].name + ".")], state };
     if (noun.kind === 'scenery') {
@@ -893,17 +1238,10 @@
     }
     if (has(state, noun.id)) return { lines: [line("you already have it.")], state };
 
-    addItem(state, noun.id);
-    // Mark as removed from location (so it doesn't list again).
-    state.removedItems[state.location + '/' + noun.id] = true;
-    // Also remove from any `locationItems` extras (e.g. golden_locket from chest).
-    const extras = state.locationItems[state.location];
-    if (extras) {
-      const i = extras.indexOf(noun.id);
-      if (i !== -1) extras.splice(i, 1);
-    }
+    const reportLine = takeOne(noun.id, state);
     tickResources(state, { stamina: 2, daylight: 1 });
-    return { lines: [line("taken: " + ITEMS[noun.id].name + ".")], state };
+    if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.chime();
+    return { lines: [reportLine], state };
   }
 
   function handleDrop(rest, state) {
@@ -955,18 +1293,42 @@
     }
     if (combo.sets) {
       for (const k in combo.sets) state.flags[k] = combo.sets[k];
+      // Story beats worth remembering at the end.
+      if (combo.sets.chestOpen) markSecret(state, 'chest');
+      if (combo.sets.resonance) markSecret(state, 'resonance');
+      if (combo.sets.lampLit)   markSecret(state, 'lantern');
     }
+    if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.chime();
 
     // Ending B trigger.
     if (state.flags.resonance && !state.flags.endedB) {
       state.flags.endedB = true;
+      markSecret(state, 'ending_b');
       out.push(blank());
       out.push(line("the resonance does not stop. the four notes braid into eight, then sixteen, then a forest's worth."));
       out.push(line("you turn from the path, the song already with you, and walk deeper than the woods know how to be."));
       out.push(blank());
       out.push(room("— Ending B · The Wanderer's Choice —"));
+      out.push.apply(out, scoreLines(state));
       out.push(dim("(type `restart` to play again, or `quit` to leave.)"));
+      if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.melody([523, 587, 659, 880, 1047], 150);
       return { lines: out, state, ended: 'B' };
+    }
+
+    // Ending C trigger — the cold ember given a home in the shrine.
+    if (state.flags.shrineKindled && !state.flags.endedC) {
+      state.flags.endedC = true;
+      markSecret(state, 'ending_c');
+      out.push(blank());
+      out.push(line("the offerings in the bark glow, each one, a small held light — a button, a tooth, a ring — and last of all the wisp's own ember, home."));
+      out.push(line("you did not rest, and you did not vanish into the song. you carried a light to where a light was needed, and left it. that is its own kind of arriving."));
+      out.push(line("you walk back out under the oaks. behind you the mist does not close. it has a lamp to keep now."));
+      out.push(blank());
+      out.push(room("— Ending C · The Light Kept —"));
+      out.push.apply(out, scoreLines(state));
+      out.push(dim("(type `restart` to play again, or `quit` to leave.)"));
+      if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.melody([392, 466, 587, 784, 587, 392], 160);
+      return { lines: out, state, ended: 'C' };
     }
     return { lines: out, state };
   }
@@ -999,9 +1361,12 @@
 
     // Special: oracle handles any topic.
     if (npc.id === 'oracle') {
-      const knownTopics = ['melody','hermit','forest','magpie','chest','workshop','key','spring','self','ending','myself','me'];
-      let t = topicName;
+      const knownTopics = ['melody','hermit','forest','magpie','chest','workshop','key','spring','self','ending','myself','me','wisp','bog','shrine','weather'];
+      let t = topicName.replace(/\s+/g, '_');
       if (t === 'myself' || t === 'me') t = 'self';
+      if (t === 'light' || t === 'will-o-wisp') t = 'wisp';
+      if (t === 'mire' || t === 'marsh' || t === 'swamp') t = 'bog';
+      if (t === 'oak' || t === 'hollow_oak' || t === 'altar') t = 'shrine';
       if (knownTopics.indexOf(t) === -1) t = 'default';
       return { lines: npc.topics._any(state, t), state };
     }
@@ -1014,6 +1379,10 @@
       song: 'melody', tune: 'melody', music: 'melody',
       pebble: 'melody', humming_pebble: 'melody',
       woods: 'forest', trees: 'forest',
+      will_o_wisp: 'light', glow: 'light', flame: 'light',
+      mire: 'bog', marsh: 'bog', swamp: 'bog',
+      oak: 'shrine', hollow_oak: 'shrine', altar: 'shrine',
+      ember: 'fire', coal: 'fire', campfire: 'fire',
     };
     if (aliasMap[topicKey]) topicKey = aliasMap[topicKey];
     const topicFn = npc.topics[topicKey];
@@ -1037,16 +1406,29 @@
     // Ending A trigger: silver_leaf to hermit.
     if (state.flags.gaveSilverLeafToHermit && !state.flags.endedA) {
       state.flags.endedA = true;
+      markSecret(state, 'ending_a');
       out.push(blank());
       out.push(line("the fire takes the gift quietly. the hermit's robe loses a leaf, and gains one."));
       out.push(line("\"sit,\" he says. \"it knows you now.\""));
       out.push(line("you sit. for the first time since you came into the woods, you are not walking."));
       out.push(blank());
       out.push(room("— Ending A · The Returned Path —"));
+      out.push.apply(out, scoreLines(state));
       out.push(dim("(type `restart` to play again, or `quit` to leave.)"));
+      if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.melody([523, 494, 440, 392], 170);
       return { lines: out, state, ended: 'A' };
     }
     return { lines: out, state };
+  }
+
+  // Resolve a raw exit value (string id, or a function returning
+  // { to, msg }) into { destId, guardMsg }.
+  function resolveExit(exitVal, state) {
+    if (typeof exitVal === 'function') {
+      const r = exitVal(state) || {};
+      return { destId: r.to || null, guardMsg: r.msg || null };
+    }
+    return { destId: exitVal || null, guardMsg: null };
   }
 
   function handleGo(rest, state) {
@@ -1054,37 +1436,62 @@
     if (rest.length === 0) return { lines: [err("go where?")], state };
     const word = rest.join(' ');
 
+    const loc = LOCATIONS[state.location];
+
+    // `back` / `go back` — return the way you came, if it is still an exit.
+    if (word === 'back') {
+      const prev = state.meta.prevLocation;
+      if (!prev) return { lines: [err("there is no back yet — you have only just arrived.")], state };
+      const connected = Object.keys(loc.exits).some(d => resolveExit(loc.exits[d], state).destId === prev);
+      if (!connected) return { lines: [err("the way back is not the way you would think. no path leads there from here.")], state };
+      return moveTo(prev, state);
+    }
+
     // Direction aliases first.
     const dirAliases = {
-      north:'north', n:'north', up:'north',
-      south:'south', s:'south', down:'south', back:'south',
+      north:'north', n:'north',
+      south:'south', s:'south',
       east:'east',   e:'east',
       west:'west',   w:'west',
+      up:'up', u:'up', climb:'up',
+      down:'down', d:'down', descend:'down',
     };
     let dir = dirAliases[word] || dirAliases[rest[0]];
 
-    const loc = LOCATIONS[state.location];
-    let destId = null;
-    if (dir) destId = loc.exits[dir];
-    else {
+    let destId = null, guardMsg = null;
+    if (dir && loc.exits[dir] != null) {
+      const r = resolveExit(loc.exits[dir], state);
+      destId = r.destId; guardMsg = r.guardMsg;
+    } else if (!dir) {
       // Try matching by destination location name keywords.
       for (const d in loc.exits) {
-        const target = LOCATIONS[loc.exits[d]];
+        const r = resolveExit(loc.exits[d], state);
+        if (!r.destId) continue;
+        const target = LOCATIONS[r.destId];
         const keys = [target.id.replace(/_/g, ' '), target.title.toLowerCase()];
         if (keys.some(k => k.indexOf(word) !== -1 || word.indexOf(k) !== -1)) {
-          destId = loc.exits[d];
+          destId = r.destId; guardMsg = r.guardMsg;
           break;
         }
       }
     }
-    if (!destId) return { lines: [err("no path that way.")], state };
+    if (!destId) {
+      if (guardMsg) return { lines: [err(guardMsg)], state };
+      return { lines: [err("no path that way.")], state };
+    }
+    return moveTo(destId, state);
+  }
 
-    // Light requirement at night.
+  // Perform the actual move to destId, with light gating, resource tick,
+  // death routing, and a chance of a wandering event.
+  function moveTo(destId, state) {
     const dest = LOCATIONS[destId];
     if (dest.requiresLight && state.resources.daylight <= 0 && !has(state, 'lit_lantern')) {
       return { lines: [err("it is too dark to go that way without a light.")], state };
     }
 
+    const firstVisit = !state.visits[destId];
+    state.meta.prevLocation = state.location;
     state.location = destId;
     state.visits[destId] = (state.visits[destId] || 0) + 1;
     tickResources(state, { stamina: 3, daylight: 2 });
@@ -1094,7 +1501,38 @@
       return { lines: death.lines, state, done: death.done, pendingGameOver: death.pendingGameOver };
     }
 
-    return { lines: emitLocation(state), state };
+    const out = emitLocation(state);
+    // A wandering event, sometimes, on a room you've seen before.
+    if (!firstVisit) {
+      const ev = maybeWanderingEvent(state);
+      if (ev) out.push(ev);
+    }
+    return { lines: out, state };
+  }
+
+  // ── Wandering events ────────────────────────────────────────
+  // Flavor-first interludes that fire on a fraction of moves into
+  // already-seen rooms. Some are weather-gated. They never cost the
+  // player anything; each one counted as a small wonder in the tally.
+  const WANDER_EVENTS = [
+    { weather: null,   line: "A deer steps onto the path ahead, regards you without alarm, and is gone between two breaths." },
+    { weather: null,   line: "Somewhere close a branch settles with a sound like a held word finally let go." },
+    { weather: null,   line: "A magpie — perhaps the magpie — crosses overhead, trailing one harsh remark." },
+    { weather: 'mist', line: "The mist thickens for a moment into almost a shape, almost a face, then thins again into only weather." },
+    { weather: 'mist', line: "Out in the white, something the size of a person passes, parallel to you, and does not come closer." },
+    { weather: 'rain', line: "The rain finds a new way through the canopy and lays a cold line straight down your spine." },
+    { weather: 'rain', line: "A run of rain over far leaves makes, for four notes, the melody — then forgets it." },
+    { weather: 'clear', line: "A single coin of sun moves across the ground, slow as an hour, and you watch it the whole way." },
+  ];
+  function maybeWanderingEvent(state) {
+    if (state.resources.stamina <= 0) return null;
+    if (Math.random() > 0.28) return null; // ~28% of revisited-room moves
+    const w = state.weather || 'clear';
+    const pool = WANDER_EVENTS.filter(e => !e.weather || e.weather === w);
+    if (!pool.length) return null;
+    const e = pool[Math.floor(Math.random() * pool.length)];
+    state.found.events = (state.found.events || 0) + 1;
+    return dim(e.line);
   }
 
   function handleInventory(rest, state) {
@@ -1114,10 +1552,12 @@
       const filled = Math.round(n / 10);
       return '[' + '#'.repeat(filled) + '·'.repeat(10 - filled) + '] ' + n;
     };
+    const itemsFound = Object.keys((state.found && state.found.items) || {}).length;
     return { lines: [
       line("stamina:  " + bar(r.stamina)),
-      line("daylight: " + bar(r.daylight)),
+      line("daylight: " + bar(r.daylight) + "  (" + timeOfDay(state) + ", " + (state.weather || 'clear') + ")"),
       dim("turn " + state.meta.turnCount + " · location: " + LOCATIONS[state.location].title),
+      dim("found " + itemsFound + " things · " + ((state.found && state.found.events) || 0) + " small wonders"),
     ], state };
   }
 
@@ -1133,6 +1573,9 @@
     echo_spring: 'spring',
     oracle_stone: 'oracle',
     sunken_workshop: 'workshop',
+    misty_bog: 'bog',
+    oak_shrine: 'shrine',
+    treetop_roost: 'treetop',
   };
   // A 12-char cell: "[ label__ ]". Current location uses < > instead of [ ].
   // Only ever called for rooms the player has visited.
@@ -1158,14 +1601,16 @@
     const nd = (col, id) => seen(id) ? [col, mapNode(id, state)] : null;
     const conn = (col, text, a, b) => (seen(a) && seen(b)) ? [col, text] : null;
     const compact = arr => arr.filter(Boolean);
+    // Four schematic columns: W(west wing) L(pine stack) C(spine) R(east wing).
+    // Centres (col + 6) carry the vertical connectors.
     let rows = [
-      [nd(22, 'oracle_stone')],
-      [conn(28, '|', 'oracle_stone', 'brook_crossing')],
-      [nd(2, 'sunken_workshop'), nd(22, 'brook_crossing'), conn(34, '------', 'brook_crossing', 'echo_spring'), nd(40, 'echo_spring')],
-      [conn(8, '|', 'sunken_workshop', 'pine_grove'), conn(28, '|', 'brook_crossing', 'mossy_clearing')],
-      [nd(2, 'pine_grove'), conn(14, '--------', 'pine_grove', 'mossy_clearing'), nd(22, 'mossy_clearing'), conn(34, '------', 'mossy_clearing', 'hermit_hollow'), nd(40, 'hermit_hollow')],
-      [conn(28, '|', 'mossy_clearing', 'edge_of_woods')],
-      [nd(22, 'edge_of_woods')],
+      [nd(36, 'oracle_stone')],
+      [conn(42, '|', 'oracle_stone', 'brook_crossing')],
+      [nd(2, 'oak_shrine'), nd(18, 'sunken_workshop'), nd(36, 'brook_crossing'), conn(48, '------', 'brook_crossing', 'echo_spring'), nd(54, 'echo_spring')],
+      [conn(8, '|', 'oak_shrine', 'misty_bog'), conn(24, '|', 'sunken_workshop', 'pine_grove'), conn(42, '|', 'brook_crossing', 'mossy_clearing')],
+      [nd(2, 'misty_bog'), conn(14, '----', 'misty_bog', 'pine_grove'), nd(18, 'pine_grove'), conn(30, '------', 'pine_grove', 'mossy_clearing'), nd(36, 'mossy_clearing'), conn(48, '------', 'mossy_clearing', 'hermit_hollow'), nd(54, 'hermit_hollow')],
+      [conn(24, '|', 'pine_grove', 'treetop_roost'), conn(42, '|', 'mossy_clearing', 'edge_of_woods')],
+      [nd(18, 'treetop_roost'), nd(36, 'edge_of_woods')],
     ].map(r => placeRow(compact(r)));
     // Trim blank rows from the top and bottom so the map stays compact.
     while (rows.length && rows[0].trim() === '') rows.shift();
@@ -1207,7 +1652,9 @@
   function handleListen(rest, state) {
     if (state.location === 'echo_spring' && !state.flags.learnedMelody) {
       state.flags.learnedMelody = true;
+      markSecret(state, 'melody');
       addItem(state, 'melody_pebble');
+      if (window.cgSound && window.cgSound.isEnabled()) window.cgSound.melody();
       return { lines: [
         line("you sit. you do not try to listen. the four notes come."),
         line("the water shapes a hand and lays a small pebble on the moss beside you."),
@@ -1263,8 +1710,10 @@
       row('go <dir> · n s e w',  'move in a direction'),
       row('inventory · i',       'list what you carry'),
       row('map',                 'sketch the woods you have walked'),
+      row('journal · j',         'what you have done and what waits'),
       row('stats',               'show stamina, daylight, turn'),
       row('listen · smell',      'perceive in another way'),
+      row('again · g',           'repeat your last action'),
       row('rest · sleep · wait', 'pass time, recover stamina'),
       row('save · load',         'persist or restore progress'),
       row('restart · quit',      'start over or leave the woods'),
@@ -1286,6 +1735,47 @@
     return { lines: hints.map(h => dim('hint: ' + h)), state };
   }
 
+  // The journal: a checklist of what has been done and what still waits.
+  // Reads only from flags/inventory, so it never reveals a step before its time.
+  function handleJournal(rest, state) {
+    const f = state.flags;
+    const box = (done) => done ? '[x] ' : '[ ] ';
+    const item = (done, text) => line(box(done) + text, done ? 'dim' : 'game');
+    const out = [room('· the journal ·'), blank()];
+
+    out.push(dim("the walking, so far:"));
+    out.push(item(f.metHermit, "find whoever waits in the woods"));
+    out.push(item(f.learnedMelody, "learn the song the spring keeps"));
+    out.push(item(f.lampLit || has(state, 'lit_lantern'), "wake a light of your own"));
+
+    // The three ways to end only surface once you've learned the song —
+    // before that the woods have not yet shown you a choice.
+    if (f.learnedMelody || f.endedA || f.endedB || f.endedC) {
+      out.push(blank());
+      out.push(dim("three ways the walking can end:"));
+      out.push(item(f.endedA, "the leaf — give the hermit a year back  (rest)"));
+      out.push(item(f.endedB, "the song — make locket and pebble resonate  (wander)"));
+      out.push(item(f.endedC, "the light — carry a flame to the hollow oak  (keep)"));
+    }
+
+    // A single, gentle current-objective pointer, borrowed from the hints.
+    if (!f.endedA && !f.endedB && !f.endedC) {
+      const next = handleHint([], state).lines[0];
+      if (next) { out.push(blank()); out.push(next); }
+    }
+
+    out.push(blank());
+    out.push.apply(out, scoreLines(state));
+    return { lines: out, state };
+  }
+
+  // `again` / `g` — re-run the last non-`again` command.
+  function handleAgain(rest, state) {
+    const last = state.meta.lastCommand;
+    if (!last) return { lines: [err("there is nothing yet to do again.")], state };
+    return parse(last, state);
+  }
+
   // Map of verbs and their aliases → handler function.
   function buildVerbTable() {
     const map = Object.create(null);
@@ -1298,7 +1788,7 @@
     reg(handleTalk,      'talk', 'speak', 'greet');
     reg(handleAsk,       'ask', 'tell');
     reg(handleGive,      'give', 'offer', 'hand');
-    reg(handleGo,        'go', 'walk', 'head', 'enter', 'follow', 'cross', 'leave', 'north', 'south', 'east', 'west', 'n', 's', 'e', 'w');
+    reg(handleGo,        'go', 'walk', 'head', 'enter', 'follow', 'cross', 'leave', 'climb', 'descend', 'north', 'south', 'east', 'west', 'up', 'down', 'n', 's', 'e', 'w');
     reg(handleInventory, 'inventory', 'inv', 'i');
     reg(handleMap,       'map');
     reg(handleStats,     'stats', 'status', 'state');
@@ -1313,9 +1803,108 @@
     reg(handleRestart,   'restart', 'reset');
     reg(handleHelp,      'help', '?');
     reg(handleHint,      'hint');
+    reg(handleJournal,   'journal', 'log', 'quests', 'objectives', 'j');
+    reg(handleAgain,     'again', 'g', 'repeat');
     return map;
   }
   const VERBS = buildVerbTable();
+
+  // ────────────────────────────────────────────────────────────
+  // Suggestions & completion (typo "did you mean", Tab-complete)
+  // ────────────────────────────────────────────────────────────
+  // Classic two-row Levenshtein.
+  function levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    if (!m) return n;
+    if (!n) return m;
+    let prev = [];
+    for (let j = 0; j <= n; j++) prev[j] = j;
+    for (let i = 1; i <= m; i++) {
+      const cur = [i];
+      for (let j = 1; j <= n; j++) {
+        const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      }
+      prev = cur;
+    }
+    return prev[n];
+  }
+  // Closest candidate within maxDist (inclusive), else null.
+  function closest(word, candidates, maxDist) {
+    if (!word) return null;
+    let best = null, bestD = Infinity;
+    for (const c of candidates) {
+      const d = levenshtein(word, c);
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    return (best != null && bestD <= (maxDist == null ? 2 : maxDist)) ? best : null;
+  }
+  // Single-word nouns currently in scope (item/scenery/npc aliases).
+  function scopeNouns(state, scope) {
+    const words = new Set();
+    const add = entry => (entry.aliases || []).forEach(a => { if (a.indexOf(' ') === -1) words.add(a); });
+    if (scope === 'inventory' || scope === 'both') {
+      state.inventory.forEach(id => ITEMS[id] && add(ITEMS[id]));
+    }
+    if (scope === 'here' || scope === 'both') {
+      const loc = LOCATIONS[state.location];
+      (loc.items || []).filter(id => !state.removedItems[loc.id + '/' + id]).forEach(id => ITEMS[id] && add(ITEMS[id]));
+      (state.locationItems[loc.id] || []).forEach(id => ITEMS[id] && add(ITEMS[id]));
+      (loc.scenery || []).forEach(id => ITEMS[id] && add(ITEMS[id]));
+      Object.keys(NPCS).filter(id => NPCS[id].location === state.location).forEach(id => add(NPCS[id]));
+    }
+    return Array.from(words);
+  }
+  // " did you mean "X"?" suffix, or '' — for a failed noun resolution.
+  function nounSuggestion(phrase, state, scope) {
+    const text = (phrase || []).join(' ');
+    if (!text) return '';
+    const cands = scopeNouns(state, scope);
+    const c = closest(text, cands, 3) || closest(phrase[phrase.length - 1], cands, 2);
+    return c ? "  (did you mean \"" + c + "\"?)" : '';
+  }
+  function commonPrefix(words) {
+    if (!words.length) return '';
+    let p = words[0];
+    for (const w of words) {
+      let i = 0;
+      while (i < p.length && i < w.length && p[i] === w[i]) i++;
+      p = p.slice(0, i);
+      if (!p) break;
+    }
+    return p;
+  }
+  // Tab-completion. Given the raw input + state, returns
+  // { completion, candidates }: completion is a full replacement line (or
+  // null), candidates is the list to show when there are several.
+  function complete(input, state) {
+    const raw = input || '';
+    const endsSpace = /\s$/.test(raw);
+    const words = raw.trim().length ? raw.trim().split(/\s+/) : [];
+    if (!words.length) return { completion: null, candidates: [] };
+
+    const completingVerb = (words.length === 1 && !endsSpace);
+    const prefix = (endsSpace ? '' : words[words.length - 1]).toLowerCase();
+
+    let pool;
+    if (completingVerb) {
+      pool = Object.keys(VERBS);
+    } else {
+      pool = scopeNouns(state, 'both').concat(['north', 'south', 'east', 'west', 'up', 'down', 'back', 'all', 'around']);
+    }
+    const uniq = Array.from(new Set(pool.filter(w => w.indexOf(prefix) === 0))).sort();
+    if (!uniq.length) return { completion: null, candidates: [] };
+
+    const head = completingVerb ? '' : words.slice(0, endsSpace ? words.length : words.length - 1).join(' ');
+    const withHead = w => (head ? head + ' ' : '') + w;
+
+    if (uniq.length === 1) return { completion: withHead(uniq[0]), candidates: uniq };
+    const common = commonPrefix(uniq);
+    return {
+      completion: common.length > prefix.length ? withHead(common) : null,
+      candidates: uniq,
+    };
+  }
 
   // ────────────────────────────────────────────────────────────
   // Public parse() — terminal calls this with each line of input.
@@ -1331,15 +1920,22 @@
     let rest = tokens.slice(1);
     if ((verb === 'pick' || verb === 'get') && rest[0] === 'up') rest = rest.slice(1);
 
+    // Remember the command for `again` — but never remember `again` itself,
+    // or it would only ever repeat itself.
+    if (verb !== 'again' && verb !== 'g' && verb !== 'repeat') {
+      state.meta.lastCommand = input;
+    }
+
     // Bare directional input (e.g. "north", "n") → go.
-    if (rest.length === 0 && ['north','south','east','west','n','s','e','w'].indexOf(verb) !== -1) {
+    if (rest.length === 0 && ['north','south','east','west','up','down','n','s','e','w','u','d'].indexOf(verb) !== -1) {
       return wrapDeath(handleGo([verb], state), state);
     }
 
     const handler = VERBS[verb];
     if (!handler) {
+      const guess = closest(verb, Object.keys(VERBS), 2);
       return { lines: [
-        err("i don't know how to \"" + verb + "\"."),
+        err("i don't know how to \"" + verb + "\"." + (guess ? "  (did you mean \"" + guess + "\"?)" : '')),
         dim("(type `help` for actions.)"),
       ], state };
     }
@@ -1381,6 +1977,7 @@
         magpie: { met: false, traded: false },
         echo:   { met: false },
         oracle: { met: false, questionsLeft: 3 },
+        wisp:   { met: false, led: false },
       },
       flags: {
         metHermit: false,
@@ -1391,14 +1988,19 @@
         gaveTokenToOracle: false,
         gaveSilverLeafToHermit: false,
         gaveMelodyToHermit: false,
+        wispLed: false,
+        shrineKindled: false,
         deathSpent: false,
         duskWarned: false,
         nightFell: false,
         endedA: false,
         endedB: false,
+        endedC: false,
       },
+      weather: pickWeather(),
+      found: { items: {}, secrets: {}, events: 0 },
       resources: { stamina: 100, daylight: 100 },
-      meta: { turnCount: 0, startedAt: Date.now() },
+      meta: { turnCount: 0, startedAt: Date.now(), lastCommand: null, prevLocation: null },
     };
   }
 
@@ -1448,6 +2050,7 @@
     PROMPT,
     start,
     parse,
+    complete,
     save,
     load,
     clearSave,

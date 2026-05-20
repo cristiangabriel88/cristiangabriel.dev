@@ -57,5 +57,22 @@
       blip(660, 0.09, 0.06, 'sine');
       setTimeout(function () { blip(990, 0.11, 0.05, 'sine'); }, 70);
     },
+    // A single soft note — used by the forest game for pickups and cues.
+    // peak defaults low so it stays in the same gentle register as chime().
+    note(freq, durSec, peak) {
+      if (!enabled) return;
+      blip(freq, durSec || 0.12, peak || 0.05, 'sine');
+    },
+    // Play a sequence of notes, staggered. Defaults to the forest's
+    // recurring four ascending notes (low, lower, low, high → here rendered
+    // as a gentle rising run). `freqs` is an array of Hz; `gapMs` the spacing.
+    melody(freqs, gapMs) {
+      if (!enabled) return;
+      const seq = (freqs && freqs.length) ? freqs : [392, 440, 523, 659];
+      const gap = gapMs || 140;
+      seq.forEach(function (f, i) {
+        setTimeout(function () { blip(f, 0.18, 0.05, 'sine'); }, i * gap);
+      });
+    },
   };
 })();

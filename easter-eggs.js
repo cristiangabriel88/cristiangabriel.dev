@@ -764,6 +764,52 @@
       el.setSelectionRange(v.length, v.length);
     }
 
+    // Record a submitted line into the recall history and reset the cursor.
+    // Shared by the normal command line and the forest game so Up/Down recalls
+    // work the same in both.
+    function pushHistory(raw) {
+      const entry = (raw || "").trim();
+      const hist = cmdHistoryRef.current;
+      if (entry && hist[hist.length - 1] !== entry) {
+        hist.push(entry);
+        if (hist.length > 100) hist.shift();
+      }
+      histCursorRef.current = -1;
+      histDraftRef.current = "";
+    }
+
+    // Tab-completion for the normal command line (the forest game supplies its
+    // own completer via window.ForestAdventure.complete).
+    const TERM_COMMANDS = ["about", "ascii", "clear", "contact", "date", "exit", "forest", "help", "projects", "snake", "stack", "whoami"];
+    function completeCommand(val) {
+      const endsSpace = /\s$/.test(val);
+      const words = val.trim() ? val.trim().split(/\s+/) : [];
+      if (words.length !== 1 || endsSpace) return {
+        completion: null,
+        candidates: []
+      };
+      const prefix = words[0].toLowerCase();
+      const matches = TERM_COMMANDS.filter(c => c.indexOf(prefix) === 0);
+      if (!matches.length) return {
+        completion: null,
+        candidates: []
+      };
+      if (matches.length === 1) return {
+        completion: matches[0],
+        candidates: matches
+      };
+      let common = matches[0];
+      for (const m of matches) {
+        let i = 0;
+        while (i < common.length && i < m.length && common[i] === m[i]) i++;
+        common = common.slice(0, i);
+      }
+      return {
+        completion: common.length > prefix.length ? common : null,
+        candidates: matches
+      };
+    }
+
     // Cancel any in-flight typewriter (e.g. on `clear` or terminal close).
     function cancelAllTypewriters() {
       if (typewriterCtrl.current.skipFn) typewriterCtrl.current.skipFn();
@@ -971,9 +1017,30 @@
       }
     }
     function onInputKeyDown(e) {
-      // Arrow recall only on the normal command line: not during the forest game,
-      // the ASCII prompt, the snake overlay, or while a typewriter reveal runs.
-      if (gameMode || asciiMode || gameOpen || typewriterCtrl.current.busy) return;
+      // Tab completes the current word — forest verbs/nouns in the game, or
+      // the top-level commands on the normal line. Never let Tab move focus.
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (asciiMode || gameOpen || gameMode === "forest-resume-prompt") return;
+        const el = inputRef.current;
+        if (!el) return;
+        const F = window.ForestAdventure;
+        const res = gameMode === "forest" && F && F.complete ? F.complete(el.value, gameStateRef.current) : completeCommand(el.value);
+        if (res && res.completion) {
+          setInputValue(res.completion);
+        } else if (res && res.candidates && res.candidates.length > 1) {
+          enqueueGameLines([{
+            text: res.candidates.join("   "),
+            kind: "dim"
+          }]);
+        }
+        return;
+      }
+      // Arrow recall on the normal command line and inside the forest game —
+      // but not during the resume prompt, the ASCII prompt, the snake overlay,
+      // or while a typewriter reveal runs.
+      if (asciiMode || gameOpen || typewriterCtrl.current.busy) return;
+      if (gameMode && gameMode !== "forest") return;
       const hist = cmdHistoryRef.current;
       if (e.key === "ArrowUp") {
         if (!hist.length) return;
@@ -1051,6 +1118,7 @@
       if (gameMode === "forest") {
         const F = window.ForestAdventure;
         print(">> " + raw, "cmd");
+        pushHistory(raw);
         const result = F.parse(raw, gameStateRef.current);
         gameStateRef.current = result.state;
         enqueueGameLines(result.lines);
@@ -1087,14 +1155,7 @@
         setAsciiMode(null);
         return;
       }
-      const entry = raw.trim();
-      const hist = cmdHistoryRef.current;
-      if (entry && hist[hist.length - 1] !== entry) {
-        hist.push(entry);
-        if (hist.length > 100) hist.shift();
-      }
-      histCursorRef.current = -1;
-      histDraftRef.current = "";
+      pushHistory(raw);
       run(raw);
     }
     if (!open) return null;
