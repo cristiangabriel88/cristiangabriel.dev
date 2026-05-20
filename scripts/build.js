@@ -20,7 +20,9 @@ const CHECK = process.argv.includes('--check');
 let failed = false;
 for (const [src, out] of ENTRIES) {
   const jsx = fs.readFileSync(path.join(ROOT, src), 'utf8');
-  const compiled = toCreate(jsx) + '\n';
+  // Always emit LF so output bytes (and the cache-bust hashes derived from them)
+  // are identical regardless of the source's line endings / git autocrlf state.
+  const compiled = toCreate(jsx).replace(/\r\n/g, '\n') + '\n';
 
   if (CHECK) {
     const onDisk = fs.readFileSync(path.join(ROOT, out), 'utf8');
@@ -51,5 +53,5 @@ html = html.replace(/\b(src|href)="([^"?:]+\.(?:js|css))(\?v=[^"]*)?"/g, (m, att
   const h = hash(file);
   return h ? `${attr}="${file}?v=${h}"` : m;
 });
-fs.writeFileSync(indexPath, html);
+fs.writeFileSync(indexPath, html.replace(/\r\n/g, '\n'));
 console.log('stamped cache-busting hashes in index.html');

@@ -1,0 +1,35 @@
+# Stable LF line endings for the JSX build pipeline. Without this, git autocrlf
+# flips CRLF<->LF between commit and checkout, so every `npm run build` re-stamps
+# new cache-busting hashes from byte-different files. Browsers don't care about
+# line endings; this just stops git from churning them. Scoped to the files the
+# build reads/writes (root-level only) so the tapedeck/quickpaste sub-projects
+# are left untouched.
+src/*.jsx     text eol=lf
+scripts/*.js  text eol=lf
+/*.js         text eol=lf
+
+# Self-hosted React: third-party minified artifacts — keep byte-pristine (and
+# matching their SRI hashes); never let git touch their line endings.
+vendor/*.js   binary
+/*.css        text eol=lf
+/index.html   text eol=lf
+/sitemap.xml  text eol=lf
+/robots.txt   text eol=lf
+/*.md         text eol=lf
+/*.json       text eol=lf
+
+# Binary assets — never normalize.
+*.png   binary
+*.webp  binary
+*.jpg   binary
+*.jpeg  binary
+*.bmp   binary
+*.ico   binary
+*.gif   binary
+*.ttf   binary
+*.woff  binary
+*.woff2 binary
+*.eot   binary
+*.mp3   binary
+*.wav   binary
+*.pdf   binary
