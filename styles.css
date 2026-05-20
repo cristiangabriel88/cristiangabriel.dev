@@ -974,21 +974,47 @@ a.timeline-year:hover {
   from { transform: rotate(calc(var(--sway-deg, 2deg) * -1)); }
   to   { transform: rotate(var(--sway-deg, 2deg)); }
 }
-/* The reveal clips the plant up from the soil line; toggling `.grown` on the
-   parent grows it, removing it retreats it back into the ground. Each plant
-   sets its own --rev-dur / --rev-delay (slow + randomized) so the garden
-   emerges in irregular bursts rather than a uniform sweep. */
+/* Organic growth + organic disappearance — no curtain wipe in either direction.
+   Both are keyframes scaling from the base (transform-origin: bottom center):
+   - GROW: a thin shoot rises, its leaves unfurl wider, then it settles with a
+     whisper of overshoot.
+   - WILT: the plant loses turgor (a brief slump), then folds down into the soil
+     while leaning aside (per-plant --wilt-lean direction) and fading out — so a
+     clump withers every-which-way rather than snapping shut.
+   `.retreating` (only set after a plant has actually grown) drives the wilt, so
+   it never plays on first load. Each plant sets its own --rev-dur / --rev-delay
+   (slow + randomized) so the garden emerges, and later wilts, in irregular
+   bursts rather than a uniform sweep. */
 .idle-plant-reveal {
-  clip-path: inset(100% 0 0 0);
+  transform-origin: bottom center;
+  /* Seed / at-rest state: a barely-there sliver at the soil line. Matches the
+     0% of idleGrow so growth begins without a jump. */
+  transform: scaleX(0.18) scaleY(0.02);
   opacity: 0;
-  image-rendering: pixelated;
-  transition:
-    clip-path var(--rev-dur, 8s) cubic-bezier(0.33, 0.4, 0.2, 1) var(--rev-delay, 0s),
-    opacity calc(var(--rev-dur, 8s) * 0.5) ease var(--rev-delay, 0s);
+  /* Vector foliage now (matches the cursor-trail leaves) — let it anti-alias,
+     and float a soft shadow under each plant so a clump reads with depth. */
+  filter: drop-shadow(0 3px 4px rgba(20, 30, 12, 0.22));
 }
 .idle-plant.grown .idle-plant-reveal {
-  clip-path: inset(0 0 0 0);
-  opacity: 1;
+  animation: idleGrow var(--rev-dur, 8s) cubic-bezier(0.22, 0.61, 0.3, 1) var(--rev-delay, 0s) both;
+}
+.idle-plant.retreating .idle-plant-reveal {
+  animation: idleWilt var(--rev-dur, 4s) cubic-bezier(0.55, 0.06, 0.68, 0.19) var(--rev-delay, 0s) both;
+}
+@keyframes idleGrow {
+  0%   { transform: scaleX(0.18) scaleY(0.02) rotate(0deg); opacity: 0; }
+  12%  { opacity: 1; }
+  55%  { transform: scaleX(0.62) scaleY(0.9) rotate(0deg); }   /* shoots up, still slim */
+  80%  { transform: scaleX(1.05) scaleY(1.02) rotate(0deg); }  /* leaves unfurl, slight overshoot */
+  100% { transform: scaleX(1) scaleY(1) rotate(0deg); opacity: 1; }
+}
+@keyframes idleWilt {
+  0%   { transform: scaleX(1) scaleY(1) rotate(0deg); opacity: 1; }
+  /* turgor loss: a quick little slump, leaves splay slightly, a touch of lean */
+  22%  { transform: scaleX(1.04) scaleY(0.9) rotate(calc(var(--wilt-lean, 4deg) * 0.35)); opacity: 1; }
+  65%  { opacity: 0.92; }
+  /* fold down into the soil, leaning aside, fading as it goes */
+  100% { transform: scaleX(0.4) scaleY(0.02) rotate(var(--wilt-lean, 4deg)); opacity: 0; }
 }
 
 /* ---------- Terminal ---------- */
@@ -1301,5 +1327,6 @@ a.timeline-year:hover {
   /* The idle garden is opt-in delight that should keep its full grow + sway
      even under reduced-motion (intentional override). */
   .idle-plant-sway { animation-duration: var(--sway-dur, 5s) !important; }
-  .idle-plant-reveal { transition-duration: var(--rev-dur, 8s) !important; }
+  .idle-plant.grown .idle-plant-reveal,
+  .idle-plant.retreating .idle-plant-reveal { animation-duration: var(--rev-dur, 8s) !important; }
 }

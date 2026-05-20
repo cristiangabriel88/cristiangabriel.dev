@@ -483,6 +483,7 @@ function ProjectsPage({ tweaks }) {
       cta: "View on GitHub",
       thumb: "resources/images/Projects/Trendalizer.webp",
       thumbLabel: "TRENDALIZER",
+      thumbFit: "contain",
     },
     {
       name: "Furniture Boutique",
