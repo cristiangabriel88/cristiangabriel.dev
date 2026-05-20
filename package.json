@@ -1,5 +1,5 @@
 {
-  "name": "cristiangabriel88.github.io",
+  "name": "cristiangabriel.dev",
   "version": "1.0.0",
   "description": "",
   "main": "forest-adventure.js",
@@ -26,14 +26,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cristiangabriel88/cristiangabriel88.github.io.git"
+    "url": "git+https://github.com/cristiangabriel88/cristiangabriel.dev.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/cristiangabriel88/cristiangabriel88.github.io/issues"
+    "url": "https://github.com/cristiangabriel88/cristiangabriel.dev/issues"
   },
-  "homepage": "https://github.com/cristiangabriel88/cristiangabriel88.github.io#readme"
+  "homepage": "https://github.com/cristiangabriel88/cristiangabriel.dev#readme"
 }
