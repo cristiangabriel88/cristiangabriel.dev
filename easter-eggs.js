@@ -359,6 +359,12 @@ function Terminal({
   // Track which history indices have already kicked off their reveal so the
   // callback ref doesn't restart the animation on every re-render.
   const revealStartedRef = useRef(new Set());
+  // Command-history recall. Past commands oldest->newest; a cursor into that list
+  // (-1 = the live line, i.e. not navigating); and the draft we were typing before
+  // pressing Up, restored when we navigate back down past the newest entry.
+  const cmdHistoryRef = useRef([]);
+  const histCursorRef = useRef(-1);
+  const histDraftRef = useRef('');
 
   // Uncontrolled input: the <input> owns its value via the DOM. We only read
   // it on submit (via inputRef.current.value) and clear it the same way.
@@ -366,6 +372,14 @@ function Terminal({
   // which is what causes the typing to feel sluggish.
   function clearInput() {
     if (inputRef.current) inputRef.current.value = '';
+  }
+
+  // Set the input value and drop the caret at the end (used by arrow recall).
+  function setInputValue(v) {
+    const el = inputRef.current;
+    if (!el) return;
+    el.value = v;
+    el.setSelectionRange(v.length, v.length);
   }
 
   // Cancel any in-flight typewriter (e.g. on `clear` or terminal close).
@@ -445,6 +459,8 @@ function Terminal({
         text: l
       })));
       clearInput();
+      histCursorRef.current = -1;
+      histDraftRef.current = '';
       setMinimized(false);
       setMaximized(false);
       setAsciiMode(null);
@@ -572,6 +588,33 @@ function Terminal({
       print('try `help`', 'dim');
     }
   }
+  function onInputKeyDown(e) {
+    // Arrow recall only on the normal command line: not during the forest game,
+    // the ASCII prompt, the snake overlay, or while a typewriter reveal runs.
+    if (gameMode || asciiMode || gameOpen || typewriterCtrl.current.busy) return;
+    const hist = cmdHistoryRef.current;
+    if (e.key === 'ArrowUp') {
+      if (!hist.length) return;
+      e.preventDefault();
+      if (histCursorRef.current === -1) {
+        histDraftRef.current = inputRef.current ? inputRef.current.value : '';
+        histCursorRef.current = hist.length - 1;
+      } else if (histCursorRef.current > 0) {
+        histCursorRef.current -= 1;
+      }
+      setInputValue(hist[histCursorRef.current]);
+    } else if (e.key === 'ArrowDown') {
+      if (histCursorRef.current === -1) return;
+      e.preventDefault();
+      if (histCursorRef.current < hist.length - 1) {
+        histCursorRef.current += 1;
+        setInputValue(hist[histCursorRef.current]);
+      } else {
+        histCursorRef.current = -1; // past the newest -> back to the draft
+        setInputValue(histDraftRef.current);
+      }
+    }
+  }
   function onSubmit(e) {
     e.preventDefault();
 
@@ -662,6 +705,14 @@ function Terminal({
       setAsciiMode(null);
       return;
     }
+    const entry = raw.trim();
+    const hist = cmdHistoryRef.current;
+    if (entry && hist[hist.length - 1] !== entry) {
+      hist.push(entry);
+      if (hist.length > 100) hist.shift();
+    }
+    histCursorRef.current = -1;
+    histDraftRef.current = '';
     run(raw);
   }
   if (!open) return null;
@@ -749,6 +800,7 @@ function Terminal({
     className: 'ps'
   }, gameMode ? window.ForestAdventure ? window.ForestAdventure.PROMPT.trim() : '>>' : asciiMode ? '>' : '~ $'), React.createElement('input', {
     ref: inputRef,
+    onKeyDown: onInputKeyDown,
     defaultValue: '',
     autoFocus: true,
     spellCheck: false,

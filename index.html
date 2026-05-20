@@ -7,7 +7,6 @@
 	<title>Cristian Gabriel · Portfolio</title>
 	<meta name="description" content="Cristian Gabriel — full-stack developer based in Bucharest. Personal portfolio of projects, experiments, and side-quests." />
 
-	<!-- Open Graph / WhatsApp / Facebook — square preview for chat link unfurls -->
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="Cristian Gabriel · Portfolio" />
 	<meta property="og:description" content="Full-stack developer based in Bucharest. Projects, experiments, and side-quests." />
@@ -19,7 +18,6 @@
 	<meta property="og:image:height" content="1080" />
 	<meta property="og:image:alt" content="Cristian Gabriel" />
 
-	<!-- Twitter / X -->
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content="Cristian Gabriel · Portfolio" />
 	<meta name="twitter:description" content="Full-stack developer based in Bucharest." />
@@ -32,13 +30,10 @@
 		rel="stylesheet" />
 
 	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
-	<!-- Bump ?v= on every deploy to bust GitHub Pages / browser cache. -->
-	<link rel="stylesheet" href="styles.css?v=2026-05-19b" />
+	<link rel="stylesheet" href="styles.css?v=2026-05-20" />
 	<link rel="stylesheet" href="theme-dark.css?v=2026-05-19b" />
 
-	<!-- Preload the home botanical — visible immediately on first paint. -->
 	<link rel="preload" as="image" href="resources/images/home.webp" fetchpriority="high" />
-	<!-- Prefetch the other botanicals and project thumbs — needed only after navigation. -->
 	<link rel="prefetch" as="image" href="resources/images/about.webp" />
 	<link rel="prefetch" as="image" href="resources/images/contact2.webp" />
 	<link rel="prefetch" as="image" href="resources/images/Projects/02-queue-working.png" />
@@ -48,7 +43,6 @@
 	<link rel="prefetch" as="image" href="resources/images/Projects/Trendalizer.webp" />
 	<link rel="prefetch" as="image" href="resources/images/Projects/loopretto.webp" />
 
-	<!-- React (production, pinned) — no Babel needed: JSX pre-compiled at build time. -->
 	<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
 		integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
 		crossorigin="anonymous"></script>
@@ -60,15 +54,14 @@
 <body>
 	<div id="root"></div>
 
-	<!-- ###### SCRIPT LOAD ORDER ###### -->
-	<!-- pixel-art -> chrome -> pages -> easter-eggs -> tweaks-panel -> app -->
-	<!-- Bump ?v= on every deploy to bust GitHub Pages / browser cache. -->
+	<script src="site-content.js?v=2026-05-20"></script>
+	<script src="sound.js?v=2026-05-20"></script>
 	<script src="pixel-art.js?v=2026-05-19b"></script>
-	<script src="chrome.js?v=2026-05-19b"></script>
+	<script src="chrome.js?v=2026-05-20"></script>
 	<script src="pages.js?v=2026-05-19b"></script>
-	<script src="easter-eggs.js?v=2026-05-19b"></script>
+	<script src="easter-eggs.js?v=2026-05-20b"></script>
 	<script src="tweaks-panel.compiled.js?v=2026-05-19b"></script>
-	<script src="app.js?v=2026-05-19b"></script>
+	<script src="app.js?v=2026-05-20"></script>
 </body>
 
 </html>
