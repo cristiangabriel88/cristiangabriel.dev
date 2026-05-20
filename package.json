@@ -11,9 +11,17 @@
   "devDependencies": {
     "@babel/cli": "^7.28.6",
     "@babel/core": "^7.29.0",
-    "@babel/preset-react": "^7.28.5"
+    "@babel/preset-react": "^7.28.5",
+    "babel-plugin-transform-react-createelement-to-jsx": "^1.1.0",
+    "opentype.js": "^2.0.0",
+    "prettier": "^3.8.3"
   },
   "scripts": {
+    "build": "node scripts/build.js",
+    "watch": "node scripts/watch.js",
+    "verify": "node scripts/build.js --check",
+    "format": "prettier --write \"src/*.jsx\"",
+    "card": "node scripts/make-og-card.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

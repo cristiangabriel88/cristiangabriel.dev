@@ -1,0 +1,11 @@
+{
+  "comments": true,
+  "presets": [
+    ["@babel/preset-react", {
+      "runtime": "classic",
+      "pragma": "React.createElement",
+      "pragmaFrag": "React.Fragment",
+      "development": false
+    }]
+  ]
+}

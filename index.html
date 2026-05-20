@@ -8,20 +8,46 @@
 	<meta name="description" content="Cristian Gabriel — full-stack developer based in Bucharest. Personal portfolio of projects, experiments, and side-quests." />
 
 	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="Cristian Gabriel" />
+	<meta property="og:locale" content="en_US" />
 	<meta property="og:title" content="Cristian Gabriel · Portfolio" />
 	<meta property="og:description" content="Full-stack developer based in Bucharest. Projects, experiments, and side-quests." />
 	<meta property="og:url" content="https://cristiangabriel88.github.io/" />
-	<meta property="og:image" content="https://cristiangabriel88.github.io/resources/images/og-preview.jpg" />
-	<meta property="og:image:secure_url" content="https://cristiangabriel88.github.io/resources/images/og-preview.jpg" />
-	<meta property="og:image:type" content="image/jpeg" />
-	<meta property="og:image:width" content="1080" />
-	<meta property="og:image:height" content="1080" />
-	<meta property="og:image:alt" content="Cristian Gabriel" />
+	<meta property="og:image" content="https://cristiangabriel88.github.io/resources/images/og-card.png" />
+	<meta property="og:image:secure_url" content="https://cristiangabriel88.github.io/resources/images/og-card.png" />
+	<meta property="og:image:type" content="image/png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content="Cristian Gabriel — Full-stack developer based in Bucharest" />
 
-	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="Cristian Gabriel · Portfolio" />
 	<meta name="twitter:description" content="Full-stack developer based in Bucharest." />
-	<meta name="twitter:image" content="https://cristiangabriel88.github.io/resources/images/og-preview.jpg" />
+	<meta name="twitter:image" content="https://cristiangabriel88.github.io/resources/images/og-card.png" />
+	<meta name="twitter:image:alt" content="Cristian Gabriel — Full-stack developer based in Bucharest" />
+
+	<!-- Structured data: tells search engines this site is a Person (rec 3.4). -->
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "Person",
+		"name": "Cristian Gabriel",
+		"url": "https://cristiangabriel88.github.io/",
+		"image": "https://cristiangabriel88.github.io/resources/images/og-card.png",
+		"jobTitle": "Full-stack developer",
+		"email": "mailto:me@cristiangabriel.dev",
+		"address": {
+			"@type": "PostalAddress",
+			"addressLocality": "Bucharest",
+			"addressCountry": "RO"
+		},
+		"sameAs": [
+			"https://github.com/cristiangabriel88",
+			"https://www.linkedin.com/in/cristian-gabriel-constantinescu-781a6b237",
+			"https://stackoverflow.com/users/18754276/cristiangabriel"
+		]
+	}
+	</script>
 
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -30,38 +56,32 @@
 		rel="stylesheet" />
 
 	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
-	<link rel="stylesheet" href="styles.css?v=2026-05-20i" />
-	<link rel="stylesheet" href="theme-dark.css?v=2026-05-19b" />
+	<link rel="stylesheet" href="styles.css?v=f2b20eae" />
+	<link rel="stylesheet" href="theme-dark.css?v=dc17e4fb" />
 
+	<!-- Preload the current-page botanical hero; prefetch the other two pages' heroes
+	     so the per-page swap is warm (rec 3.3). Project thumbnails are below the fold
+	     on the hidden Projects tab and lazy-load on demand instead of prefetching. -->
 	<link rel="preload" as="image" href="resources/images/home.webp" fetchpriority="high" />
 	<link rel="prefetch" as="image" href="resources/images/about.webp" />
 	<link rel="prefetch" as="image" href="resources/images/contact2.webp" />
-	<link rel="prefetch" as="image" href="resources/images/Projects/02-queue-working.png" />
-	<link rel="prefetch" as="image" href="resources/images/Projects/impostorGame.webp" />
-	<link rel="prefetch" as="image" href="resources/images/Projects/Looptube.webp" />
-	<link rel="prefetch" as="image" href="resources/images/Projects/QuickPaste/ScreenShot2.webp" />
-	<link rel="prefetch" as="image" href="resources/images/Projects/Trendalizer.webp" />
-	<link rel="prefetch" as="image" href="resources/images/Projects/loopretto.webp" />
 
-	<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
-		integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
-		crossorigin="anonymous"></script>
-	<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
-		integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1"
-		crossorigin="anonymous"></script>
+	<!-- React self-hosted (rec 3.2): byte-identical to react@18.3.1 UMD, no CDN dependency. -->
+	<script src="vendor/react.production.min.js?v=d949f1c3"></script>
+	<script src="vendor/react-dom.production.min.js?v=35f4f974"></script>
 </head>
 
 <body>
 	<div id="root"></div>
 
-	<script src="site-content.js?v=2026-05-20"></script>
-	<script src="sound.js?v=2026-05-20"></script>
-	<script src="pixel-art.js?v=2026-05-20c"></script>
-	<script src="chrome.js?v=2026-05-20"></script>
-	<script src="pages.js?v=2026-05-19b"></script>
-	<script src="easter-eggs.js?v=2026-05-20k"></script>
-	<script src="tweaks-panel.compiled.js?v=2026-05-19b"></script>
-	<script src="app.js?v=2026-05-20e"></script>
+	<script src="site-content.js?v=5cd33470"></script>
+	<script src="sound.js?v=bda730e1"></script>
+	<script src="pixel-art.js?v=ab25daa2"></script>
+	<script src="chrome.js?v=1fbc8f38"></script>
+	<script src="pages.js?v=eec95872"></script>
+	<script src="easter-eggs.js?v=0889992b"></script>
+	<script src="tweaks-panel.compiled.js?v=a56f1d04"></script>
+	<script src="app.js?v=d610f868"></script>
 </body>
 
 </html>
