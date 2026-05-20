@@ -1003,6 +1003,65 @@
 		}
 
 		/* ------------------------------------------------------------------
+		   Hero — narrow-phone fit (≤600px). Desktop/tablet layout is
+		   untouched; this only kicks in on small screens so the device frame
+		   and the floating popup never get clipped or cramped.
+		   ------------------------------------------------------------------ */
+		@media (max-width: 600px) {
+			.hero {
+				padding-top: 92px;
+				padding-bottom: 56px;
+			}
+
+			.hero__inner {
+				gap: 36px;
+			}
+
+			/* The eyebrow pill is a long single line — let it shrink + wrap
+			   instead of overflowing the viewport edge. */
+			.hero .eyebrow {
+				font-size: 0.64rem;
+				letter-spacing: 0.1em;
+				white-space: normal;
+			}
+
+			.device__halo {
+				inset: -18px;
+				filter: blur(20px);
+			}
+
+			.browser__body {
+				min-height: 0;
+				padding: 18px 16px 20px;
+			}
+
+			.browser__url {
+				font-size: 0.66rem;
+			}
+
+			.mock-article {
+				font-size: 0.86rem;
+				line-height: 1.6;
+			}
+
+			.mock-article h4 {
+				font-size: 1.2rem;
+			}
+
+			/* Stop floating: the popup flows under the article so it stays
+			   fully visible and centred rather than being cut off. */
+			.popup-mock {
+				position: relative;
+				right: auto;
+				top: auto;
+				width: 100%;
+				max-width: 300px;
+				margin: 18px auto 0;
+				transform: none;
+			}
+		}
+
+		/* ------------------------------------------------------------------
 		   Section heading block
 		   ------------------------------------------------------------------ */
 		.section-head {
