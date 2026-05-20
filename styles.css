@@ -1126,6 +1126,13 @@ a.timeline-year:hover {
   color: #7AA355;
   font-weight: 600;
 }
+/* Input + ghost-text overlay share one relatively-positioned cell so the dim
+   predicted suffix lines up exactly behind/after what you've typed. */
+.terminal-prompt .term-inputwrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
 .terminal-prompt input {
   background: transparent;
   border: none;
@@ -1134,8 +1141,28 @@ a.timeline-year:hover {
   font-family: var(--pixel);
   font-size: 18px;
   flex: 1;
+  padding: 0;
   caret-color: #B5DFAA;
+  position: relative;
+  z-index: 1;
 }
+.terminal-prompt .term-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  font-family: var(--pixel);
+  font-size: 18px;
+  white-space: pre;
+  overflow: hidden;
+  z-index: 0;
+}
+.terminal-prompt .term-ghost-typed  { color: transparent; }
+.terminal-prompt .term-ghost-suffix { color: #4E6A2F; }
 .terminal .cmd { color: #DFEFD2; }
 .terminal .ok { color: #B5DFAA; }
 .terminal .dim { color: #5A7838; }
@@ -1144,6 +1171,12 @@ a.timeline-year:hover {
 .terminal .room { color: #E8F5D5; }
 .terminal .npc  { color: #DFEFD2; font-style: italic; }
 .terminal .game { color: #B5DFAA; }
+.terminal .win    { color: #F2E9C8; font-weight: 700; letter-spacing: 0.04em; }
+.terminal .choice { color: #CDE9B0; }
+/* Forest Wanderer inline emphasis tokens (§i/§d/§s). */
+.terminal .tok-item   { color: #E8C36A; }
+.terminal .tok-dir    { color: #6FB3C9; }
+.terminal .tok-secret { color: #C39BE0; }
 /* Blinking pixel-block caret shown after the currently typing line. */
 .terminal-body p.typing::after {
   content: '▌';

@@ -723,10 +723,14 @@
     const [minimized, setMinimized] = useState(false);
     const [maximized, setMaximized] = useState(false);
     const [asciiMode, setAsciiMode] = useState(null); // null | 'text'
-    const [gameMode, setGameMode] = useState(null); // null | 'forest' | 'forest-resume-prompt'
+    const [gameMode, setGameMode] = useState(null); // null | 'forest' | 'forest-menu' | 'forest-seed'
     const wasKonamiRef = useRef(false);
     const inputRef = useRef(null);
     const bodyRef = useRef(null);
+    // Ghost-text autocomplete overlay: the element we paint the dim suffix into,
+    // and the current suffix (accepted with → or Tab).
+    const ghostRef = useRef(null);
+    const ghostSuffixRef = useRef("");
     // Live forest-adventure state — ref'd (not state) so the per-turn updates
     // don't trigger React re-renders of the history list.
     const gameStateRef = useRef(null);
@@ -754,6 +758,7 @@
     // which is what causes the typing to feel sluggish.
     function clearInput() {
       if (inputRef.current) inputRef.current.value = "";
+      clearGhost();
     }
 
     // Set the input value and drop the caret at the end (used by arrow recall).
@@ -762,6 +767,64 @@
       if (!el) return;
       el.value = v;
       el.setSelectionRange(v.length, v.length);
+      updateGhost();
+    }
+
+    // ── Ghost-text autocomplete ──────────────────────────────────
+    // Paint a dim suffix after the caret showing the predicted completion.
+    // The typed text is mirrored transparently so the suffix lines up.
+    function clearGhost() {
+      ghostSuffixRef.current = "";
+      if (ghostRef.current) ghostRef.current.textContent = "";
+    }
+    function updateGhost() {
+      const el = inputRef.current;
+      const g = ghostRef.current;
+      if (!el || !g) return;
+      const val = el.value;
+      let suffix = "";
+      // Only when there's input and the caret sits at the very end.
+      if (val && el.selectionStart === val.length && el.selectionEnd === val.length) {
+        const F = window.ForestAdventure;
+        const res = gameMode === "forest" && F && F.complete ? F.complete(val, gameStateRef.current) : completeCommand(val);
+        if (res && res.completion && res.completion.length > val.length && res.completion.indexOf(val) === 0) {
+          suffix = res.completion.slice(val.length);
+        }
+      }
+      ghostSuffixRef.current = suffix;
+      g.textContent = "";
+      if (suffix) {
+        const typed = document.createElement("span");
+        typed.className = "term-ghost-typed";
+        typed.textContent = val;
+        const suf = document.createElement("span");
+        suf.className = "term-ghost-suffix";
+        suf.textContent = suffix;
+        g.appendChild(typed);
+        g.appendChild(suf);
+      }
+    }
+
+    // Render a history line's text, expanding `§x{…}` emphasis tokens emitted
+    // by the forest game into coloured spans. Plain text passes straight through.
+    function renderLineText(text) {
+      if (!text || text.indexOf("§") === -1) return text;
+      const parts = [];
+      const re = /§([ids])\{([^}]*)\}/g;
+      let last = 0;
+      let m;
+      let key = 0;
+      while (m = re.exec(text)) {
+        if (m.index > last) parts.push(text.slice(last, m.index));
+        const cls = m[1] === "i" ? "tok-item" : m[1] === "d" ? "tok-dir" : "tok-secret";
+        parts.push(/*#__PURE__*/React.createElement("span", {
+          key: key++,
+          className: cls
+        }, m[2]));
+        last = re.lastIndex;
+      }
+      if (last < text.length) parts.push(text.slice(last));
+      return parts;
     }
 
     // Record a submitted line into the recall history and reset the cursor.
@@ -833,6 +896,76 @@
         }
         return next;
       });
+    }
+
+    // The forest title screen. Options vary with whether a save exists.
+    function forestMenuLines(F) {
+      const hasSave = F.hasSave && F.hasSave();
+      const out = [{
+        text: "",
+        kind: "game"
+      }, {
+        text: "F O R E S T   W A N D E R E R",
+        kind: "room"
+      }, {
+        text: "a small adventure in the woods.",
+        kind: "dim"
+      }, {
+        text: "",
+        kind: "game"
+      }, {
+        text: "  1) new game",
+        kind: "choice"
+      }];
+      if (hasSave) out.push({
+        text: "  2) resume your walk",
+        kind: "choice"
+      });
+      out.push({
+        text: "  3) endings & achievements",
+        kind: "choice"
+      });
+      out.push({
+        text: "  4) how to play",
+        kind: "choice"
+      });
+      out.push({
+        text: "  5) new game with a seed",
+        kind: "choice"
+      });
+      out.push({
+        text: "",
+        kind: "game"
+      });
+      out.push({
+        text: "(type a number.)",
+        kind: "dim"
+      });
+      return out;
+    }
+    // Begin a fresh forest run (optionally seeded) and enter play mode.
+    function startForestGame(F, opts) {
+      if (F.clearSave) F.clearSave();
+      const result = F.start(opts || {});
+      gameStateRef.current = result.state;
+      setGameMode("forest");
+      enqueueGameLines(result.lines);
+    }
+    // Resume the saved run and re-orient the player with a fresh `look`.
+    function resumeForestGame(F) {
+      const loaded = F.load();
+      if (!loaded) {
+        startForestGame(F);
+        return;
+      }
+      gameStateRef.current = loaded;
+      setGameMode("forest");
+      const ok = F.parse("look", gameStateRef.current);
+      gameStateRef.current = ok.state;
+      enqueueGameLines([{
+        text: "(resumed.)",
+        kind: "dim"
+      }].concat(ok.lines));
     }
 
     // Reveal `text` character-by-character on the given DOM element. Calls
@@ -944,19 +1077,10 @@
         print("  stack     · tech stack");
         print("  whoami    · guess");
       } else if (cmd === "forest") {
-        // Lazy-load + start. If a save exists, prompt to resume.
+        // Lazy-load, then show the title menu.
         const onReady = F => {
-          const existing = F.load();
-          if (existing) {
-            print("saved game found in these woods. type `yes` to resume, `no` to start fresh.", "dim");
-            setGameMode("forest-resume-prompt");
-          } else {
-            gameStateRef.current = null;
-            const result = F.start();
-            gameStateRef.current = result.state;
-            setGameMode("forest");
-            enqueueGameLines(result.lines);
-          }
+          enqueueGameLines(forestMenuLines(F));
+          setGameMode("forest-menu");
         };
         if (window.ForestAdventure) {
           onReady(window.ForestAdventure);
@@ -1021,7 +1145,7 @@
       // the top-level commands on the normal line. Never let Tab move focus.
       if (e.key === "Tab") {
         e.preventDefault();
-        if (asciiMode || gameOpen || gameMode === "forest-resume-prompt") return;
+        if (asciiMode || gameOpen || gameMode && gameMode !== "forest") return;
         const el = inputRef.current;
         if (!el) return;
         const F = window.ForestAdventure;
@@ -1036,8 +1160,17 @@
         }
         return;
       }
+      // → at the end of the line accepts the dim ghost-text suggestion.
+      if (e.key === "ArrowRight") {
+        const el = inputRef.current;
+        if (el && ghostSuffixRef.current && el.selectionStart === el.value.length) {
+          e.preventDefault();
+          setInputValue(el.value + ghostSuffixRef.current);
+          return;
+        }
+      }
       // Arrow recall on the normal command line and inside the forest game —
-      // but not during the resume prompt, the ASCII prompt, the snake overlay,
+      // but not during a menu/prompt, the ASCII prompt, the snake overlay,
       // or while a typewriter reveal runs.
       if (asciiMode || gameOpen || typewriterCtrl.current.busy) return;
       if (gameMode && gameMode !== "forest") return;
@@ -1077,40 +1210,38 @@
       const raw = inputRef.current ? inputRef.current.value : "";
       clearInput();
 
-      // Forest adventure — resume prompt (yes/no after a save was detected).
-      if (gameMode === "forest-resume-prompt") {
+      // Forest adventure — title menu (numbered options).
+      if (gameMode === "forest-menu") {
         print(">> " + raw, "cmd");
-        const ans = raw.trim().toLowerCase();
         const F = window.ForestAdventure;
-        if (ans === "yes" || ans === "y") {
-          const loaded = F && F.load();
-          if (loaded) {
-            gameStateRef.current = loaded;
-            setGameMode("forest");
-            // Re-emit the current location so the player is reoriented.
-            const ok = F.parse("look", gameStateRef.current);
-            gameStateRef.current = ok.state;
-            enqueueGameLines([{
-              text: "(resumed.)",
-              kind: "dim",
-              instant: true
-            }].concat(ok.lines));
-          } else {
-            print("save was empty or corrupt. starting fresh.", "err");
-            const result = F.start();
-            gameStateRef.current = result.state;
-            setGameMode("forest");
-            enqueueGameLines(result.lines);
-          }
-        } else if (ans === "no" || ans === "n") {
-          F.clearSave();
-          const result = F.start();
-          gameStateRef.current = result.state;
-          setGameMode("forest");
-          enqueueGameLines(result.lines);
+        const ans = raw.trim().toLowerCase();
+        if (ans === "1" || ans === "new" || ans === "new game") {
+          startForestGame(F);
+        } else if (ans === "2" && F.hasSave && F.hasSave()) {
+          resumeForestGame(F);
+        } else if (ans === "3" || ans === "endings" || ans === "achievements") {
+          enqueueGameLines(F.galleryLines());
+          // stay in the menu
+        } else if (ans === "4" || ans === "help" || ans === "how to play") {
+          enqueueGameLines(F.helpLines());
+          // stay in the menu
+        } else if (ans === "5" || ans === "seed") {
+          print("enter a number for the seed (or leave blank for a random one):", "dim");
+          setGameMode("forest-seed");
         } else {
-          print("please type `yes` or `no`.", "dim");
+          print("please type a number from the menu.", "dim");
         }
+        return;
+      }
+
+      // Forest adventure — seed entry for "new game with a seed".
+      if (gameMode === "forest-seed") {
+        print(">> " + raw, "cmd");
+        const F = window.ForestAdventure;
+        const n = parseInt(raw.trim(), 10);
+        startForestGame(F, isNaN(n) ? {} : {
+          seed: n
+        });
         return;
       }
 
@@ -1233,21 +1364,28 @@
           startReveal(el, line.fullText, i);
         }
       } : null
-    }, line.text))), /*#__PURE__*/React.createElement("form", {
+    }, renderLineText(line.text)))), /*#__PURE__*/React.createElement("form", {
       className: "terminal-prompt",
       onSubmit: onSubmit
     }, /*#__PURE__*/React.createElement("span", {
       className: "ps"
-    }, gameMode ? window.ForestAdventure ? window.ForestAdventure.PROMPT.trim() : ">>" : asciiMode ? ">" : "~ $"), /*#__PURE__*/React.createElement("input", {
+    }, gameMode ? window.ForestAdventure ? window.ForestAdventure.PROMPT.trim() : ">>" : asciiMode ? ">" : "~ $"), /*#__PURE__*/React.createElement("span", {
+      className: "term-inputwrap"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "term-ghost",
+      ref: ghostRef,
+      "aria-hidden": "true"
+    }), /*#__PURE__*/React.createElement("input", {
       ref: inputRef,
       onKeyDown: onInputKeyDown,
+      onInput: updateGhost,
       defaultValue: "",
       autoFocus: true,
       spellCheck: false,
       autoComplete: "off",
       autoCorrect: "off",
       autoCapitalize: "off"
-    })))));
+    }))))));
   }
 
   // ###### SNAKE ######
