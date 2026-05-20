@@ -286,9 +286,9 @@
         </div>
         {tweaks.showPixelArt && <PixelDivider width={480} />}
         <div id="tech-stack" className="section-label">
-          <h3>
+          <h2>
             Tech <em>stack</em>
-          </h3>
+          </h2>
         </div>
         <div className="tech-grid">
           {techStack.map((name) => (
@@ -310,9 +310,9 @@
           ))}
         </div>
         <div className="section-label">
-          <h3>
+          <h2>
             A short <em>timeline</em>
-          </h3>
+          </h2>
         </div>
         <div className="timeline">
           {timeline.map((t) => {

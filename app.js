@@ -150,7 +150,17 @@
       setTermOpen(false);
       setAutoLaunchGame(false);
     }, []);
-    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Sidebar, {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
+      className: "skip-link",
+      href: "#main-content",
+      onClick: e => {
+        // Focus <main> directly instead of letting the hash change — the
+        // hash router would otherwise read "#main-content" and bounce home.
+        e.preventDefault();
+        const m = document.getElementById("main-content");
+        if (m) m.focus();
+      }
+    }, "Skip to content"), /*#__PURE__*/React.createElement(Sidebar, {
       onNav: navigate
     }), /*#__PURE__*/React.createElement(TopNav, {
       page: page,
@@ -158,6 +168,8 @@
     }), /*#__PURE__*/React.createElement(BotanicalAnchor, {
       page: page
     }), /*#__PURE__*/React.createElement("main", {
+      id: "main-content",
+      tabIndex: -1,
       className: "page"
     }, /*#__PURE__*/React.createElement("div", {
       className: "page-slot",

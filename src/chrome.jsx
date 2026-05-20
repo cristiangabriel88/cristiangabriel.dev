@@ -39,6 +39,8 @@
       strokeWidth: 1.6,
       strokeLinecap: "round",
       strokeLinejoin: "round",
+      "aria-hidden": true,
+      focusable: false,
     };
     if (name === "github")
       return (
@@ -124,7 +126,7 @@
           </div>
           <div className="brand-role">Software Developer</div>
         </a>
-        <nav className="sidebar-socials">
+        <nav className="sidebar-socials" aria-label="Social and contact links">
           <a
             className="social"
             href="https://github.com/cristiangabriel88"
@@ -255,12 +257,13 @@
       },
     ];
     return (
-      <nav className="topnav">
+      <nav className="topnav" aria-label="Primary">
         {pages.map((p) => (
           <button
             key={p.id}
             className={"nav-btn" + (page === p.id ? " active" : "")}
             onClick={() => onNav(p.id)}
+            aria-current={page === p.id ? "page" : undefined}
           >
             {p.label}
           </button>

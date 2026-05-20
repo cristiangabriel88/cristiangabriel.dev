@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>404 — Lost in the woods · Cristian Gabriel</title>
+	<meta name="description" content="This page wandered off the trail. Head back to cristiangabriel.dev." />
+	<meta name="robots" content="noindex" />
+	<meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)" />
+	<meta name="theme-color" content="#3A2E23" media="(prefers-color-scheme: dark)" />
+
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500&display=swap"
+		rel="stylesheet" />
+
+	<style>
+		:root {
+			--parchment: #FAF7F2;
+			--ink: #1A1A1A;
+			--ink-soft: #4A4A4A;
+			--ink-mute: #8A847A;
+			--forest: #2D5016;
+			--moss: #7AA355;
+			--rule: rgba(45, 80, 22, 0.18);
+		}
+
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--parchment: #3A2E23;
+				--ink: #ECE3CC;
+				--ink-soft: #BFB59A;
+				--ink-mute: #948871;
+				--forest: #E6FACB;
+				--moss: #D5F0B0;
+				--rule: rgba(197, 230, 176, 0.24);
+			}
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		html,
+		body {
+			height: 100%;
+		}
+
+		body {
+			background: var(--parchment);
+			color: var(--ink);
+			font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			line-height: 1.6;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			display: grid;
+			place-items: center;
+			padding: 32px;
+		}
+
+		main {
+			max-width: 520px;
+			text-align: center;
+		}
+
+		.code {
+			font-family: "Fraunces", Georgia, serif;
+			font-size: clamp(5rem, 22vw, 9rem);
+			font-weight: 500;
+			font-style: italic;
+			line-height: 0.9;
+			color: var(--forest);
+			letter-spacing: -0.03em;
+		}
+
+		h1 {
+			font-family: "Fraunces", Georgia, serif;
+			font-weight: 600;
+			font-size: clamp(1.5rem, 5vw, 2.1rem);
+			color: var(--ink);
+			margin: 18px 0 12px;
+		}
+
+		p {
+			color: var(--ink-soft);
+			font-size: 1.05rem;
+			margin-bottom: 28px;
+		}
+
+		.home {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			font-weight: 500;
+			text-decoration: none;
+			color: var(--parchment);
+			background: var(--forest);
+			padding: 12px 22px;
+			border-radius: 999px;
+			transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.15s ease;
+			box-shadow: 0 8px 22px rgba(45, 80, 22, 0.22);
+		}
+
+		@media (prefers-color-scheme: dark) {
+			.home {
+				color: #1F3A0F;
+			}
+		}
+
+		.home:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 12px 28px rgba(45, 80, 22, 0.3);
+		}
+
+		.rule {
+			width: 56px;
+			height: 1px;
+			margin: 0 auto 24px;
+			background: var(--rule);
+		}
+
+		.note {
+			margin-top: 26px;
+			font-size: 0.85rem;
+			color: var(--ink-mute);
+		}
+	</style>
+</head>
+
+<body>
+	<main>
+		<div class="code">404</div>
+		<h1>This page wandered off the trail.</h1>
+		<div class="rule"></div>
+		<p>The link is broken or the page has moved on. Let's get you back to somewhere green.</p>
+		<a class="home" href="/">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+				stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M19 12H5" />
+				<polyline points="12 19 5 12 12 5" />
+			</svg>
+			Back to the portfolio
+		</a>
+		<p class="note">cristiangabriel.dev</p>
+	</main>
+</body>
+
+</html>

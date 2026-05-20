@@ -208,7 +208,7 @@
     }), /*#__PURE__*/React.createElement("div", {
       id: "tech-stack",
       className: "section-label"
-    }, /*#__PURE__*/React.createElement("h3", null, "Tech ", /*#__PURE__*/React.createElement("em", null, "stack"))), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("h2", null, "Tech ", /*#__PURE__*/React.createElement("em", null, "stack"))), /*#__PURE__*/React.createElement("div", {
       className: "tech-grid"
     }, techStack.map(name => /*#__PURE__*/React.createElement("div", {
       key: name,
@@ -227,7 +227,7 @@
       className: "label"
     }, name)))), /*#__PURE__*/React.createElement("div", {
       className: "section-label"
-    }, /*#__PURE__*/React.createElement("h3", null, "A short ", /*#__PURE__*/React.createElement("em", null, "timeline"))), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("h2", null, "A short ", /*#__PURE__*/React.createElement("em", null, "timeline"))), /*#__PURE__*/React.createElement("div", {
       className: "timeline"
     }, timeline.map(t => {
       const yearEl = t.year === "2023" ? /*#__PURE__*/React.createElement("a", {

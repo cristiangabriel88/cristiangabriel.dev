@@ -41,7 +41,9 @@
       stroke: "currentColor",
       strokeWidth: 1.6,
       strokeLinecap: "round",
-      strokeLinejoin: "round"
+      strokeLinejoin: "round",
+      "aria-hidden": true,
+      focusable: false
     };
     if (name === "github") return /*#__PURE__*/React.createElement("svg", common, /*#__PURE__*/React.createElement("path", {
       d: "M9 19c-4.3 1.4-4.3-2.5-6-3M15 22v-4a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.7A5.2 5.2 0 0 0 18.7 5a4.8 4.8 0 0 0-.1-3.6S17.3 1 15 2.7a13.4 13.4 0 0 0-7 0C5.7 1 4.4 1.4 4.4 1.4A4.8 4.8 0 0 0 4.3 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3 6.4 6 6.7A3 3 0 0 0 8 18v4"
@@ -127,7 +129,8 @@
     }, /*#__PURE__*/React.createElement("span", null, "Cristian"), /*#__PURE__*/React.createElement("span", null, "Gabriel")), /*#__PURE__*/React.createElement("div", {
       className: "brand-role"
     }, "Software Developer")), /*#__PURE__*/React.createElement("nav", {
-      className: "sidebar-socials"
+      className: "sidebar-socials",
+      "aria-label": "Social and contact links"
     }, /*#__PURE__*/React.createElement("a", {
       className: "social",
       href: "https://github.com/cristiangabriel88",
@@ -277,11 +280,13 @@
       label: "Projects"
     }];
     return /*#__PURE__*/React.createElement("nav", {
-      className: "topnav"
+      className: "topnav",
+      "aria-label": "Primary"
     }, pages.map(p => /*#__PURE__*/React.createElement("button", {
       key: p.id,
       className: "nav-btn" + (page === p.id ? " active" : ""),
-      onClick: () => onNav(p.id)
+      onClick: () => onNav(p.id),
+      "aria-current": page === p.id ? "page" : undefined
     }, p.label)));
   }
 

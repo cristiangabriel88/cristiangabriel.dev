@@ -4,6 +4,9 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="author" content="Cristian Gabriel" />
+	<meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)" />
+	<meta name="theme-color" content="#3A2E23" media="(prefers-color-scheme: dark)" />
 	<title>Cristian Gabriel · Portfolio</title>
 	<meta name="description" content="Cristian Gabriel — full-stack developer based in Bucharest. Personal portfolio of projects, experiments, and side-quests." />
 	<link rel="canonical" href="https://cristiangabriel.dev/" />
@@ -50,14 +53,14 @@
 	}
 	</script>
 
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..600,30..100,0..1;1,9..144,300..600,30..100,0..1&family=Inter:wght@300;400;500;600&family=VT323&display=swap"
-		rel="stylesheet" />
+	<!-- Self-hosted fonts (latin + latin-ext) — no Google CDN connection, matching
+	     the self-hosted React above. Preload the two faces used above the fold. -->
+	<link rel="preload" href="vendor/fonts/fraunces-normal-300-600-latin.woff2" as="font" type="font/woff2" crossorigin />
+	<link rel="preload" href="vendor/fonts/inter-normal-300-latin.woff2" as="font" type="font/woff2" crossorigin />
+	<link rel="stylesheet" href="vendor/fonts/fonts.css?v=49b3382d" />
 
 	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
-	<link rel="stylesheet" href="styles.css?v=594b36fb" />
+	<link rel="stylesheet" href="styles.css?v=4988acc2" />
 	<link rel="stylesheet" href="theme-dark.css?v=dc17e4fb" />
 
 	<!-- Preload the current-page botanical hero; prefetch the other two pages' heroes
@@ -75,14 +78,42 @@
 <body>
 	<div id="root"></div>
 
+	<!-- Crawlable / no-JS fallback. The portfolio is rendered client-side by
+	     app.js; this gives search engines and JS-less bots real content, and
+	     keeps the page useful if the scripts fail to load. -->
+	<noscript>
+		<main style="max-width: 720px; margin: 0 auto; padding: 48px 24px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1A1A1A; background: #FAF7F2; line-height: 1.6;">
+			<h1 style="font-family: 'Fraunces', Georgia, serif; font-size: 2rem; color: #2D5016; margin-bottom: 8px;">Cristian Gabriel</h1>
+			<p style="color: #4A4A4A; margin-bottom: 24px;">
+				Full-stack developer based in Bucharest, building server-side
+				applications and personal side-quests outside of client work.
+			</p>
+			<h2 style="font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; color: #2D5016; margin-bottom: 12px;">Selected projects</h2>
+			<ul style="padding-left: 18px;">
+				<li><a href="tapedeck/tapedeck.html" style="color: #2D5016;">tapedeck.local</a> — a local-first web audio extractor (MP3, M4A, Opus, WAV, FLAC), all on your machine.</li>
+				<li><a href="Quickpaste/quickpaste.html" style="color: #2D5016;">QuickPaste</a> — a Chrome extension that saves text clips from any website into a tidy collection.</li>
+				<li><a href="https://impostorgame.top/" style="color: #2D5016;">Impostor</a> — a mobile-first social game about spotting the hidden impostor.</li>
+				<li><a href="https://github.com/cristiangabriel88/loopretto#readme" style="color: #2D5016;">Loopretto</a> — a transcription tool for musicians: loop, slow down, find your notes.</li>
+				<li><a href="https://cristiangabriel88.github.io/furniture-boutique/" style="color: #2D5016;">Furniture Boutique</a> — a landing page for a fictional woodshop, in static HTML.</li>
+			</ul>
+			<p style="margin-top: 24px;">
+				Find me on
+				<a href="https://github.com/cristiangabriel88" style="color: #2D5016;">GitHub</a>,
+				<a href="https://www.linkedin.com/in/cristian-gabriel-constantinescu-781a6b237" style="color: #2D5016;">LinkedIn</a>, and
+				<a href="https://stackoverflow.com/users/18754276/cristiangabriel" style="color: #2D5016;">Stack Overflow</a>.
+			</p>
+			<p style="margin-top: 16px; color: #8A847A; font-size: 0.9rem;">This page is interactive — enable JavaScript for the full experience.</p>
+		</main>
+	</noscript>
+
 	<script src="site-content.js?v=5cd33470"></script>
 	<script src="sound.js?v=8cdfb79b"></script>
 	<script src="pixel-art.js?v=ab25daa2"></script>
-	<script src="chrome.js?v=1fbc8f38"></script>
-	<script src="pages.js?v=eec95872"></script>
-	<script src="easter-eggs.js?v=3d46e846"></script>
+	<script src="chrome.js?v=f66801fc"></script>
+	<script src="pages.js?v=3724bcce"></script>
+	<script src="easter-eggs.js?v=0862e197"></script>
 	<script src="tweaks-panel.compiled.js?v=a56f1d04"></script>
-	<script src="app.js?v=d610f868"></script>
+	<script src="app.js?v=e5e74b45"></script>
 </body>
 
 </html>

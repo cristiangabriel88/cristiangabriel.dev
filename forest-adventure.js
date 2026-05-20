@@ -1169,7 +1169,9 @@
       state.visits[state.location] = (state.visits[state.location] || 0) + 1;
       return { lines: out, done: false };
     }
-    // Second death: real game over.
+    // Second death: real game over. Latch a flag so parse() knows the run is
+    // finished and only restart/load/quit are meaningful from here.
+    state.flags.gameOver = true;
     return {
       lines: [
         blank(),
@@ -2202,13 +2204,35 @@
         return { lines: [dim("(you let the moment pass.)")], state };
       }
       if (/^[0-9]+$/.test(t0)) {
-        const npcId = state.pending.npcId;
         const opt = state.pending.options.filter(o => String(o.n) === t0)[0];
+        if (!opt) {
+          // Not one of the choices — keep the prompt open and re-show the
+          // options so the player can see what to pick.
+          const out = [err("that wasn't one of the choices.")];
+          state.pending.options.forEach(o => out.push(line('  ' + o.n + ') ' + o.label, 'choice')));
+          out.push(dim('(type a number, or `cancel`.)'));
+          return { lines: out, state };
+        }
+        const npcId = state.pending.npcId;
         state.pending = null;
-        if (!opt) return { lines: [err("that wasn't one of the choices.")], state };
         return wrapDeath(resolveChoice(state, npcId, opt.action), state);
       }
       state.pending = null; // fall through to normal parsing
+    }
+
+    // After a real game over, the run is finished: only restart / load / quit
+    // mean anything. Anything else just re-shows those options so the player is
+    // never left typing into a closed book with no way forward.
+    if (state.flags.gameOver) {
+      const v = tokens[0];
+      const tail = tokens.slice(1);
+      if (v === 'restart' || v === 'reset') return handleRestart(tail, state, input);
+      if (v === 'load')                      return handleLoad(tail, state, input);
+      if (v === 'quit' || v === 'exit' || v === 'q') return handleQuit(tail, state, input);
+      return { lines: [
+        line("the woods have closed for this walk."),
+        dim("(type `restart` to begin again, `load` to return to your save, or `quit` to leave.)"),
+      ], state };
     }
 
     // Compound-verb shortcuts.
@@ -2295,6 +2319,7 @@
         locketGiven: false,
         usedSleep: false,
         deathSpent: false,
+        gameOver: false,
         duskWarned: false,
         nightFell: false,
         endedA: false,

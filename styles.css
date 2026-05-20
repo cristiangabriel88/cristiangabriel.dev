@@ -55,6 +55,55 @@ body {
   color: var(--forest-deep);
 }
 
+/* ── Accessibility ──────────────────────────────────────────────────
+   Skip link: hidden off-screen until it receives keyboard focus, then
+   it drops in over the top-left so keyboard users can jump past the
+   sidebar/nav straight to <main>. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  transform: translateY(-150%);
+  padding: 10px 18px;
+  background: var(--forest);
+  color: var(--parchment);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(45, 80, 22, 0.28);
+  transition: transform 160ms ease;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--parchment);
+  outline-offset: -4px;
+}
+
+/* Consistent keyboard-focus ring across interactive elements. Pointer
+   clicks don't trigger :focus-visible, so this only shows for keyboard
+   users and never affects the mouse experience. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* <main> is focused programmatically by the skip link; don't paint a ring
+   around the whole page when that happens. */
+main:focus,
+main:focus-visible {
+  outline: none;
+}
+
 /* Subtle grain to lift the parchment off "just beige" */
 body::before {
   content: "";
@@ -637,14 +686,14 @@ img.botanical[src=""] { display: none; }
   font-size: 14px;
   color: var(--moss);
 }
-.section-label h3 {
+.section-label h2 {
   font-family: var(--serif);
   font-weight: 300;
   font-size: 26px;
   letter-spacing: -0.01em;
   color: var(--ink);
 }
-.section-label h3 em { font-style: italic; color: var(--forest); }
+.section-label h2 em { font-style: italic; color: var(--forest); }
 
 .tech-grid {
   display: grid;

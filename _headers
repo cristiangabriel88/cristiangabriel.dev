@@ -1,0 +1,21 @@
+# Netlify response headers. Applied at the edge with no build step.
+# Docs: https://docs.netlify.com/routing/headers/
+
+# --- Applied to every response (these never affect how a page renders) ---
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Cross-Origin-Opener-Policy: same-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()
+
+# --- Content-Security-Policy, homepage only ---
+# Scoped to "/" because the homepage loads only self-hosted scripts (React in
+# vendor/, app.js, etc.) plus non-executable JSON-LD, so script-src can stay
+# strict. The tapedeck / QuickPaste subpages use inline <script> blocks and are
+# intentionally left out of this strict policy.
+/
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+/index.html
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests

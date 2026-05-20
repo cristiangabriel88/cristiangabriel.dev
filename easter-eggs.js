@@ -898,9 +898,40 @@
       });
     }
 
-    // The forest title screen. Options vary with whether a save exists.
-    function forestMenuLines(F) {
+    // The forest title-screen items, in display order. `resume` only appears
+    // when a save exists — the rest stay contiguous so the printed numbers are
+    // always 1, 2, 3, … with no gaps.
+    function forestMenuItems(F) {
       const hasSave = F.hasSave && F.hasSave();
+      const items = [{
+        id: "new",
+        label: "new game",
+        aliases: ["new", "new game"]
+      }];
+      if (hasSave) items.push({
+        id: "resume",
+        label: "resume your walk",
+        aliases: ["resume"]
+      });
+      items.push({
+        id: "endings",
+        label: "endings & achievements",
+        aliases: ["endings", "achievements"]
+      });
+      items.push({
+        id: "help",
+        label: "how to play",
+        aliases: ["help", "how to play"]
+      });
+      items.push({
+        id: "seed",
+        label: "new game with a seed",
+        aliases: ["seed"]
+      });
+      return items;
+    }
+    // The forest title screen, numbered from the active items above.
+    function forestMenuLines(F) {
       const out = [{
         text: "",
         kind: "game"
@@ -913,25 +944,12 @@
       }, {
         text: "",
         kind: "game"
-      }, {
-        text: "  1) new game",
-        kind: "choice"
       }];
-      if (hasSave) out.push({
-        text: "  2) resume your walk",
-        kind: "choice"
-      });
-      out.push({
-        text: "  3) endings & achievements",
-        kind: "choice"
-      });
-      out.push({
-        text: "  4) how to play",
-        kind: "choice"
-      });
-      out.push({
-        text: "  5) new game with a seed",
-        kind: "choice"
+      forestMenuItems(F).forEach((it, i) => {
+        out.push({
+          text: "  " + (i + 1) + ") " + it.label,
+          kind: "choice"
+        });
       });
       out.push({
         text: "",
@@ -942,6 +960,15 @@
         kind: "dim"
       });
       return out;
+    }
+    // Resolve a typed answer (a menu number or a word alias) to a menu item.
+    function resolveForestMenuChoice(F, ans) {
+      const items = forestMenuItems(F);
+      if (/^\d+$/.test(ans)) {
+        const n = parseInt(ans, 10);
+        return n >= 1 && n <= items.length ? items[n - 1] : null;
+      }
+      return items.filter(it => it.aliases.indexOf(ans) !== -1)[0] || null;
     }
     // Begin a fresh forest run (optionally seeded) and enter play mode.
     function startForestGame(F, opts) {
@@ -1215,21 +1242,27 @@
         print(">> " + raw, "cmd");
         const F = window.ForestAdventure;
         const ans = raw.trim().toLowerCase();
-        if (ans === "1" || ans === "new" || ans === "new game") {
+        const choice = resolveForestMenuChoice(F, ans);
+        if (!choice) {
+          // Wrong answer — re-show the menu so the options never scroll out of
+          // reach, no matter how many times the player misses.
+          enqueueGameLines([{
+            text: "that's not one of the options.",
+            kind: "dim"
+          }].concat(forestMenuLines(F)));
+        } else if (choice.id === "new") {
           startForestGame(F);
-        } else if (ans === "2" && F.hasSave && F.hasSave()) {
+        } else if (choice.id === "resume") {
           resumeForestGame(F);
-        } else if (ans === "3" || ans === "endings" || ans === "achievements") {
-          enqueueGameLines(F.galleryLines());
-          // stay in the menu
-        } else if (ans === "4" || ans === "help" || ans === "how to play") {
-          enqueueGameLines(F.helpLines());
-          // stay in the menu
-        } else if (ans === "5" || ans === "seed") {
-          print("enter a number for the seed (or leave blank for a random one):", "dim");
+        } else if (choice.id === "endings") {
+          // Show the list, then re-print the menu so the choices are back in
+          // view after the gallery has scrolled the screen.
+          enqueueGameLines(F.galleryLines().concat(forestMenuLines(F)));
+        } else if (choice.id === "help") {
+          enqueueGameLines(F.helpLines().concat(forestMenuLines(F)));
+        } else if (choice.id === "seed") {
+          print("enter a number for the seed, leave blank for a random one, or type `cancel` to go back:", "dim");
           setGameMode("forest-seed");
-        } else {
-          print("please type a number from the menu.", "dim");
         }
         return;
       }
@@ -1238,10 +1271,22 @@
       if (gameMode === "forest-seed") {
         print(">> " + raw, "cmd");
         const F = window.ForestAdventure;
-        const n = parseInt(raw.trim(), 10);
-        startForestGame(F, isNaN(n) ? {} : {
-          seed: n
-        });
+        const trimmed = raw.trim();
+        const lower = trimmed.toLowerCase();
+        if (lower === "cancel" || lower === "back") {
+          // Bail out without starting a game (and without wiping any save).
+          enqueueGameLines(forestMenuLines(F));
+          setGameMode("forest-menu");
+        } else if (trimmed === "") {
+          startForestGame(F); // blank → a random seed
+        } else if (/^\d+$/.test(trimmed)) {
+          startForestGame(F, {
+            seed: parseInt(trimmed, 10)
+          });
+        } else {
+          // Don't silently start (and clear the save) on a typo — re-ask.
+          print("that's not a number. type a seed number, leave blank for random, or `cancel`.", "dim");
+        }
         return;
       }
 
@@ -1254,8 +1299,9 @@
         gameStateRef.current = result.state;
         enqueueGameLines(result.lines);
 
-        // Auto-save after each substantive turn (skip pure quit).
-        if (!result.done) F.save(gameStateRef.current);
+        // Auto-save after each substantive turn (skip a pure quit, and skip a
+        // game-over so a finished run never overwrites a still-playable save).
+        if (!result.done && !result.pendingGameOver) F.save(gameStateRef.current);
 
         // Handle game-end flows.
         if (result.ended) {

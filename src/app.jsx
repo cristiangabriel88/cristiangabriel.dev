@@ -167,10 +167,23 @@
     }, []);
     return (
       <React.Fragment>
+        <a
+          className="skip-link"
+          href="#main-content"
+          onClick={(e) => {
+            // Focus <main> directly instead of letting the hash change — the
+            // hash router would otherwise read "#main-content" and bounce home.
+            e.preventDefault();
+            const m = document.getElementById("main-content");
+            if (m) m.focus();
+          }}
+        >
+          Skip to content
+        </a>
         <Sidebar onNav={navigate} />
         <TopNav page={page} onNav={navigate} />
         <BotanicalAnchor page={page} />
-        <main className="page">
+        <main id="main-content" tabIndex={-1} className="page">
           <div className="page-slot" hidden={page !== "home"}>
             <HomePage onNav={navigate} tweaks={t} paused={termOpen} />
           </div>
