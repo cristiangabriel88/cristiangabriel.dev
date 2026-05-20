@@ -22,7 +22,8 @@ const TWEAK_DEFAULTS = {
   headlineSize: 1.0,
   showPixelArt: true,
   showPixelCharacter: true,
-  showLeafParticles: true
+  showLeafParticles: true,
+  soundEnabled: false
 };
 const ACCENT_PALETTES = [['#2D5016', '#7AA355', '#B5DFAA'],
 // deep forest (default)
@@ -32,9 +33,48 @@ const ACCENT_PALETTES = [['#2D5016', '#7AA355', '#B5DFAA'],
 // pine
 ['#5C4A1E', '#A38A55', '#D9C896'] // bark / olive accent
 ];
+
+// ###### HASH ROUTING ######
+// Page state is mirrored into the URL hash so views are shareable/bookmarkable
+// (`#about`, `#projects`) and the browser back/forward buttons work. Home stays
+// on the bare URL (no hash). Purely behavioral — no visual change.
+const ROUTES = ['home', 'about', 'projects'];
+function readHashPage() {
+  const h = (window.location.hash || '').replace(/^#\/?/, '').toLowerCase();
+  return ROUTES.includes(h) ? h : 'home';
+}
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
-  const [page, setPage] = useState('home');
+  const [page, setPage] = useState(readHashPage);
+
+  // Navigate: update the URL, let the hash listener (or pushState) drive `page`.
+  const navigate = useCallback(p => {
+    if (p === 'home') {
+      // Clear the hash for a clean root URL; pushState keeps back/forward intact.
+      history.pushState('', document.title, window.location.pathname + window.location.search);
+      setPage('home');
+    } else if (window.location.hash.slice(1) !== p) {
+      window.location.hash = p; // fires hashchange → setPage below
+    } else {
+      setPage(p);
+    }
+  }, []);
+
+  // Mirror the opt-in sound setting into the cgSound module (default off).
+  useEffect(() => {
+    if (window.cgSound) window.cgSound.setEnabled(t.soundEnabled);
+  }, [t.soundEnabled]);
+
+  // Browser back/forward (and any manual hash edit) re-sync `page`.
+  useEffect(() => {
+    const sync = () => setPage(readHashPage());
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('popstate', sync);
+    return () => {
+      window.removeEventListener('hashchange', sync);
+      window.removeEventListener('popstate', sync);
+    };
+  }, []);
   const [termOpen, setTermOpen] = useState(false);
   const [autoLaunchGame, setAutoLaunchGame] = useState(false);
   const [tweaksOpen, setTweaksOpen] = useState(false);
@@ -103,10 +143,10 @@ function App() {
     setAutoLaunchGame(false);
   }, []);
   return React.createElement(React.Fragment, null, React.createElement(Sidebar, {
-    onNav: setPage
+    onNav: navigate
   }), React.createElement(TopNav, {
     page,
-    onNav: setPage
+    onNav: navigate
   }), React.createElement(BotanicalAnchor, {
     page
   }),
@@ -119,7 +159,7 @@ function App() {
     className: 'page-slot',
     hidden: page !== 'home'
   }, React.createElement(HomePage, {
-    onNav: setPage,
+    onNav: navigate,
     tweaks: t,
     paused: termOpen
   })), React.createElement('div', {
@@ -182,6 +222,10 @@ function App() {
     label: 'Leaf particles on cursor',
     value: t.showLeafParticles,
     onChange: v => setTweak('showLeafParticles', v)
+  }), React.createElement(TweakToggle, {
+    label: 'Sound effects (opt-in)',
+    value: t.soundEnabled,
+    onChange: v => setTweak('soundEnabled', v)
   })));
 }
 const root = ReactDOM.createRoot(document.getElementById('root'));

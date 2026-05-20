@@ -200,13 +200,17 @@
         const out = [];
         out.push(room('— Edge of the Woods —'));
         if (!state.visits.edge_of_woods) {
-          out.push(line("The forest begins where the path narrows. The smell of cold soil. An old wooden signpost stands knee-deep in fern, leaning."));
-          out.push(line("A single faint trail goes north."));
+          out.push(line("The forest begins where the path narrows. The smell of cold soil rises to meet you, and the noise of the open road dies away behind, swallowed whole. An old wooden signpost stands knee-deep in fern, leaning, as though it has been listening for footsteps a very long time."));
+          out.push(line("A single faint trail goes north, dim under the first of the trees."));
         } else {
           out.push(line("The signpost. The fern. The faint trail north."));
         }
         return out;
       },
+      ambient: [
+        "You stand still and let the place arrive. Behind you the road you came by has already gone soft at the edges, the way roads do once the trees begin paying attention.",
+        "Fern crowds the signpost knee-high, beaded with the last of some old rain. The cold smell of turned earth sits beneath everything. Far ahead the trail gives one quiet breath of pine, and then holds it.",
+      ],
       scenery: ['signpost'],
       items: ['compass', 'raw_lantern'],
       exits: { north: 'mossy_clearing' },
@@ -219,7 +223,7 @@
         const out = [];
         out.push(room('— Mossy Clearing —'));
         if (!state.visits.mossy_clearing) {
-          out.push(line("A round, soft clearing carpeted in green-grey moss. The trees lean inward as if listening."));
+          out.push(line("A round, soft clearing carpeted in green-grey moss, deep enough to swallow the sound of your own steps. The trees lean inward on every side as if listening, and the light comes down in slow coins through the canopy."));
           out.push(line("Something metal glints near your foot."));
         } else {
           out.push(line("The moss-soft clearing. Trees leaning in."));
@@ -227,6 +231,10 @@
         out.push(dim("Paths lead south, north, east, and west."));
         return out;
       },
+      ambient: [
+        "You turn slowly in the soft centre of the clearing. The moss takes your weight without a sound, green-grey and deep enough to lose a coin in and never hear it land.",
+        "The trees crowd close on every side, patient as people gathered at a bedside. Four ways lead out from here, and the woods seem honestly curious which one you will choose.",
+      ],
       scenery: [],
       items: ['brass_key', 'moss_handful'],
       exits: {
@@ -244,14 +252,18 @@
         const out = [];
         out.push(room('— Brook Crossing —'));
         if (!state.visits.brook_crossing) {
-          out.push(line("A clear brook chuckles over flat stones. A mossy log offers a way across."));
-          out.push(line("From the west, a melody loops in the air — four notes, then four again."));
+          out.push(line("A clear brook chuckles over flat stones, bright and cold and never quite finishing a sentence. A mossy log, older than the crossing itself, offers a soft and certain way across."));
+          out.push(line("From the west a melody loops in the air: four notes, then four again, folding back on itself."));
         } else {
           out.push(line("The brook. The log. The looping melody to the west."));
         }
         out.push(dim("Paths lead south, west, and north."));
         return out;
       },
+      ambient: [
+        "You watch the water a while. The brook moves over the flat stones in small bright sentences and abandons every one of them halfway through.",
+        "The log across it gives gently underfoot, sure of itself. From the west the four-note melody keeps returning, near enough now that you find yourself humming it without deciding to.",
+      ],
       scenery: [],
       items: ['river_stone'],
       exits: {
@@ -268,14 +280,18 @@
         const out = [];
         out.push(room('— Pine Grove —'));
         if (!state.visits.pine_grove) {
-          out.push(line("Pines so tall the sky becomes a ribbon. High in one trunk, a magpie shifts its head and stares at you with one mad eye."));
-          out.push(line("Below the nest, two pine paths fork: east, and a narrow one down into a half-collapsed roof to the north."));
+          out.push(line("Pines so tall the sky narrows to a pale ribbon stitched between their crowns. The ground is a deep red quilt of fallen needles that breathes resin where you step. High in one trunk, a magpie shifts its head and fixes you with one mad, shining eye."));
+          out.push(line("Below the nest, two pine paths fork: east, and a narrow one dropping north into a half-collapsed roof."));
         } else {
           out.push(line("Tall pines. The magpie watches."));
           out.push(dim("Paths lead east and north."));
         }
         return out;
       },
+      ambient: [
+        "You tip your head back until the trunks become a cathedral, climbing and climbing until the sky is only a thread.",
+        "Underfoot the needles lie ankle-deep and warm with old resin. High above, the magpie turns its black eye on you and tilts its head, plainly weighing whatever you might be worth to it.",
+      ],
       scenery: ['nest'],
       // mirror_shard and paper_scrap live in the nest — taken by trading with the magpie or by `take`
       items: [],
@@ -292,13 +308,17 @@
         const out = [];
         out.push(room("— Hermit's Hollow —"));
         if (!state.visits.hermit_hollow) {
-          out.push(line("A hollow at the foot of a great oak. A small fire of pine cones and dry needles. An old man, robe stitched of leaves, looks up — slowly."));
+          out.push(line("A hollow at the foot of a great oak, curved overhead like a cupped hand. A small fire of pine cones and dry needles keeps a careful, well-mannered light. An old man, his robe stitched of leaves, looks up at you, slowly, as though he had all the time the woods could spare."));
         } else {
           out.push(line("The oak. The polite little fire. The hermit waiting."));
         }
         out.push(dim("A path leads west."));
         return out;
       },
+      ambient: [
+        "You settle into the hush of the hollow. The great oak leans over the little fire, and the fire leans back, and neither is in any hurry.",
+        "The hermit's robe is sewn from leaves of seasons that have not all happened yet. The air smells of pine cones and patience. He does not rush, and somehow, here, neither do you.",
+      ],
       scenery: ['fire'],
       items: [],
       exits: { west: 'mossy_clearing' },
@@ -311,14 +331,18 @@
         const out = [];
         out.push(room('— Echo Spring —'));
         if (!state.visits.echo_spring) {
-          out.push(line("A spring rises in a perfect ring of stones. The melody you heard from the brook is here, clearer now: four ascending notes, repeating into themselves."));
-          out.push(line("Something is in the water that is not quite water."));
+          out.push(line("A spring rises at the centre of a perfect ring of stones, clear over clear, as if the water were only pretending to be water. The melody you heard from the brook is here and unmistakable now: four ascending notes, repeating endlessly into themselves."));
+          out.push(line("Something moves in the water that is not quite water."));
         } else {
           out.push(line("The ring. The four notes. The shape in the water."));
         }
         out.push(dim("The brook is east."));
         return out;
       },
+      ambient: [
+        "You crouch by the ring of stones and grow quiet. The spring lifts from its centre without a single ripple, patient and bottomless.",
+        "The four notes climb out of it, low, lower, low, high, and begin again before you can quite decide how they made you feel. Below the surface something turns that is shaped a little too much like a face.",
+      ],
       scenery: ['spring'],
       items: [],
       exits: { east: 'brook_crossing' },
@@ -331,7 +355,7 @@
         const out = [];
         out.push(room('— The Oracle Stone —'));
         if (!state.visits.oracle_stone) {
-          out.push(line("A standing stone taller than you, marked with worn glyphs. The air around it feels old. You sense it has questions to ask, or to answer."));
+          out.push(line("A standing stone taller than you, marked with worn glyphs that crawl the instant your eye leaves them and are perfectly still the moment you look back. The air around it is older than the rest of the woods, the way the air in an empty church is older than the street outside. You sense it has questions to ask, or to answer, and is in no hurry about either."));
         } else {
           out.push(line("The standing stone. The watching glyphs."));
         }
@@ -341,6 +365,10 @@
         out.push(dim("The brook is south."));
         return out;
       },
+      ambient: [
+        "You walk the slow circle of the standing stone. The glyphs shift at the corner of your sight and settle whenever you face them, which is its own kind of answer.",
+        "The quiet here has weight to it. The stone has been waiting a very long time, you feel, and would not mind waiting a great deal longer.",
+      ],
       scenery: ['stone'],
       items: [],
       exits: { south: 'brook_crossing' },
@@ -354,8 +382,8 @@
         const out = [];
         out.push(room('— Sunken Workshop —'));
         if (!state.visits.sunken_workshop) {
-          out.push(line("A workshop sunken into the earth, roof half-collapsed. Vines thread through ornate furniture half-buried in moss."));
-          out.push(line("On a long workbench, a small carved chest sits as if it had been left there yesterday."));
+          out.push(line("A workshop sunk into the earth at a tired angle, half its roof open to the trees and the other half still holding the smell of sawdust that should have faded a lifetime ago. Vines thread through ornate furniture half-buried in moss, as though the forest had once sat down here to learn the trade."));
+          out.push(line("On a long workbench, a small carved chest sits as if it had been set down only yesterday, too clean for all the years around it."));
         } else {
           out.push(line("Sunken room. Ornate ghosts of chairs. The workbench. The chest."));
         }
@@ -365,6 +393,10 @@
         out.push(dim("The pine grove is south."));
         return out;
       },
+      ambient: [
+        "You let your eyes adjust to the green dark. The room slumps around you, ruined chairs and ruined shelves, every joint of them stitched shut with vine.",
+        "Sawdust ghosts the air, faint and impossible. In the middle of the wreck the carved chest waits, untouched by the rot, patient as the hand that must once have made it.",
+      ],
       scenery: ['workbench', 'carved_chest'],
       items: [],
       exits: { south: 'pine_grove' },
@@ -809,7 +841,24 @@
     return out;
   }
 
+  // A slower, deeper read of the current place — pure atmosphere, no item
+  // list. Each location carries an `ambient` array of lines for this.
+  function ambientLines(state) {
+    const loc = LOCATIONS[state.location];
+    if (loc.requiresLight && state.resources.daylight <= 0 && !has(state, 'lit_lantern')) {
+      return [dim("it is too dark to take in much more than shapes and the cold.")];
+    }
+    const lines = loc.ambient || [];
+    if (!lines.length) return [line("you take a slower look. the woods give up nothing new just now.")];
+    return lines.map(t => line(t));
+  }
+
   function handleLook(rest, state) {
+    // "look around" / "look about" → the deeper, ambient read of the scene.
+    if (rest.length && (rest[0] === 'around' || rest[0] === 'about' || rest[0] === 'round')) {
+      tickResources(state, { stamina: 1, daylight: 1 });
+      return { lines: ambientLines(state), state };
+    }
     if (rest.length === 0) {
       tickResources(state, { stamina: 1, daylight: 1 });
       const out = emitLocation(state);
@@ -1049,9 +1098,13 @@
   }
 
   function handleInventory(rest, state) {
-    if (state.inventory.length === 0) return { lines: [line("you carry nothing.")], state };
-    const out = [line("you carry:")];
+    if (state.inventory.length === 0) {
+      return { lines: [line("your hands are empty. your pockets, emptier.")], state };
+    }
+    const n = state.inventory.length;
+    const out = [room('· what you carry ·')];
     state.inventory.forEach(id => out.push(line("  · " + ITEMS[id].name)));
+    out.push(dim("(" + n + (n === 1 ? " thing" : " things") + ".)"));
     return { lines: out, state };
   }
 
@@ -1066,6 +1119,64 @@
       line("daylight: " + bar(r.daylight)),
       dim("turn " + state.meta.turnCount + " · location: " + LOCATIONS[state.location].title),
     ], state };
+  }
+
+  // ── Minimap ──────────────────────────────────────────────────
+  // Short labels for the map cells. Anything not yet visited renders
+  // as dots, so the map doubles as a record of where you have been.
+  const MAP_SHORT = {
+    edge_of_woods: 'edge',
+    mossy_clearing: 'moss',
+    brook_crossing: 'brook',
+    pine_grove: 'pine',
+    hermit_hollow: 'hermit',
+    echo_spring: 'spring',
+    oracle_stone: 'oracle',
+    sunken_workshop: 'workshop',
+  };
+  // A 12-char cell: "[ label__ ]". Current location uses < > instead of [ ].
+  // Only ever called for rooms the player has visited.
+  function mapNode(id, state) {
+    const here = state.location === id;
+    let label = (MAP_SHORT[id] || id).slice(0, 8);
+    label = label + ' '.repeat(8 - label.length);
+    return (here ? '<' : '[') + ' ' + label + ' ' + (here ? '>' : ']');
+  }
+  // Place [col, text] pieces onto one row, padding gaps with spaces.
+  function placeRow(placements) {
+    let row = '';
+    placements.slice().sort((a, b) => a[0] - b[0]).forEach(p => {
+      if (row.length < p[0]) row += ' '.repeat(p[0] - row.length);
+      row += p[1];
+    });
+    return row;
+  }
+  function handleMap(rest, state) {
+    const seen = id => !!state.visits[id];
+    // A room cell only if visited; a connector only if both ends are visited.
+    // So the map reveals nothing the player has not already walked to.
+    const nd = (col, id) => seen(id) ? [col, mapNode(id, state)] : null;
+    const conn = (col, text, a, b) => (seen(a) && seen(b)) ? [col, text] : null;
+    const compact = arr => arr.filter(Boolean);
+    let rows = [
+      [nd(22, 'oracle_stone')],
+      [conn(28, '|', 'oracle_stone', 'brook_crossing')],
+      [nd(2, 'sunken_workshop'), nd(22, 'brook_crossing'), conn(34, '------', 'brook_crossing', 'echo_spring'), nd(40, 'echo_spring')],
+      [conn(8, '|', 'sunken_workshop', 'pine_grove'), conn(28, '|', 'brook_crossing', 'mossy_clearing')],
+      [nd(2, 'pine_grove'), conn(14, '--------', 'pine_grove', 'mossy_clearing'), nd(22, 'mossy_clearing'), conn(34, '------', 'mossy_clearing', 'hermit_hollow'), nd(40, 'hermit_hollow')],
+      [conn(28, '|', 'mossy_clearing', 'edge_of_woods')],
+      [nd(22, 'edge_of_woods')],
+    ].map(r => placeRow(compact(r)));
+    // Trim blank rows from the top and bottom so the map stays compact.
+    while (rows.length && rows[0].trim() === '') rows.shift();
+    while (rows.length && rows[rows.length - 1].trim() === '') rows.pop();
+
+    const out = [room('· the woods, so far ·'), blank()];
+    rows.forEach(r => out.push(line(r, 'room', true)));
+    out.push(blank());
+    out.push(dim('< > here   [ ] walked'));
+    out.push(dim('you are at: ' + LOCATIONS[state.location].title + '.'));
+    return { lines: out, state };
   }
 
   function handleRest(rest, state) {
@@ -1142,7 +1253,8 @@
       hbar('┌', '┬', '┐'),
       row('action',              'what it does'),
       hbar('├', '┼', '┤'),
-      row('look [at X]',         'look around or examine something'),
+      row('look [at X]',         'examine the scene or a thing'),
+      row('look around',         'take the place in slowly'),
       row('take X · drop X',     'pick up or set down an item'),
       row('use X on Y',          'combine two items'),
       row('talk to X',           'greet a character'),
@@ -1150,6 +1262,7 @@
       row('give X to Y',         'offer an item to a character'),
       row('go <dir> · n s e w',  'move in a direction'),
       row('inventory · i',       'list what you carry'),
+      row('map',                 'sketch the woods you have walked'),
       row('stats',               'show stamina, daylight, turn'),
       row('listen · smell',      'perceive in another way'),
       row('rest · sleep · wait', 'pass time, recover stamina'),
@@ -1187,6 +1300,7 @@
     reg(handleGive,      'give', 'offer', 'hand');
     reg(handleGo,        'go', 'walk', 'head', 'enter', 'follow', 'cross', 'leave', 'north', 'south', 'east', 'west', 'n', 's', 'e', 'w');
     reg(handleInventory, 'inventory', 'inv', 'i');
+    reg(handleMap,       'map');
     reg(handleStats,     'stats', 'status', 'state');
     reg(handleRest,      'rest', 'sit');
     reg(handleSleep,     'sleep');
@@ -1216,7 +1330,6 @@
     let verb = tokens[0];
     let rest = tokens.slice(1);
     if ((verb === 'pick' || verb === 'get') && rest[0] === 'up') rest = rest.slice(1);
-    if (verb === 'look' && (rest[0] === 'around')) rest = rest.slice(1);
 
     // Bare directional input (e.g. "north", "n") → go.
     if (rest.length === 0 && ['north','south','east','west','n','s','e','w'].indexOf(verb) !== -1) {

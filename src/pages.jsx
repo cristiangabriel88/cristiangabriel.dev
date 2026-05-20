@@ -403,7 +403,7 @@ function AboutPage({ tweaks }) {
                 "a",
                 {
                   className: "timeline-year",
-                  href: "old%20design/index.html",
+                  href: "archive/old%20design/index.html",
                   target: "_blank",
                   rel: "noopener",
                 },

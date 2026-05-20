@@ -87,19 +87,21 @@ function Sidebar({
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
   return React.createElement('aside', {
     className: 'sidebar'
-  }, React.createElement('div', {
-    className: 'brand'
-  },
-  // Asymmetric leaf-mark sigil — modern, minimal, logo-style
-  React.createElement('a', {
+  }, React.createElement('a', {
+    // The whole brand block (mark + name + role) is one home link, so the
+    // entire top-left corner is a generous click target back to home.
+    className: 'brand',
     href: '#',
-    className: 'brand-mark',
     onClick: e => {
       e.preventDefault();
       if (onNav) onNav('home');
     },
     'aria-label': 'Cristian Gabriel, Home',
     title: 'Home'
+  },
+  // Asymmetric leaf-mark sigil — modern, minimal, logo-style
+  React.createElement('span', {
+    className: 'brand-mark'
   }, React.createElement('svg', {
     viewBox: '0 0 40 56',
     width: 44,
@@ -325,12 +327,9 @@ function BotanicalAnchor({
 function PageFooter({
   page
 }) {
-  const year = new Date().getFullYear();
   return React.createElement('div', {
     className: 'footer'
-  }, React.createElement('span', null, '© 2021–', year), React.createElement('span', {
-    className: 'sep'
-  }, '·'), React.createElement('span', {
+  }, React.createElement('span', {
     className: 'ssh-hint',
     style: {
       color: 'var(--forest)',
