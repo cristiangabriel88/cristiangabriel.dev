@@ -16,7 +16,18 @@ const PIX_COLORS = {
   'p': '#C7A878',
   'r': '#cf6a5b',
   'b': '#3a3a3a',
-  's': '#DFEFD2'
+  's': '#DFEFD2',
+  // ── Idle-garden plant palette (fixed hues so the plants read the same in
+  //    light + dark themes; only used by the procedural plants below). ──
+  'k': '#3B5E22', // stem / dark leaf
+  'm': '#4E7A30', // mid green
+  'g': '#6FA84A', // leaf green
+  'y': '#F2D45C', // flower centre / dandelion
+  'f': '#E59ABF', // petal (pink)
+  'v': '#C9A3E0', // petal (lilac)
+  'w': '#F7EFE0', // petal (cream) / seed puff
+  't': '#6B5436', // soil
+  'u': '#8A6A42' // soil highlight
 };
 function PixelGrid({
   rows,

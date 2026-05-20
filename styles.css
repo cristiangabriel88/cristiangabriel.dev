@@ -946,6 +946,51 @@ a.timeline-year:hover {
 }
 .pixel-character.hidden { opacity: 0; }
 
+/* ---------- Idle garden ---------- */
+/* A screen-wide strip of pixel plants pinned to the bottom edge. The layer
+   itself has no height (so it never blocks anything); each plant is absolutely
+   placed and grows upward from the soil line. */
+.idle-garden {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.idle-plant {
+  position: absolute;
+  bottom: -2px;
+  transform: translateX(-50%);
+}
+/* Always-on breeze: a small rotation about the plant's base. Kept separate
+   from the reveal so growth and sway never interfere. */
+.idle-plant-sway {
+  transform-origin: bottom center;
+  animation: idleSway var(--sway-dur, 5s) ease-in-out var(--sway-delay, 0s) infinite alternate;
+}
+@keyframes idleSway {
+  from { transform: rotate(calc(var(--sway-deg, 2deg) * -1)); }
+  to   { transform: rotate(var(--sway-deg, 2deg)); }
+}
+/* The reveal clips the plant up from the soil line; toggling `.grown` on the
+   parent grows it, removing it retreats it back into the ground. Each plant
+   sets its own --rev-dur / --rev-delay (slow + randomized) so the garden
+   emerges in irregular bursts rather than a uniform sweep. */
+.idle-plant-reveal {
+  clip-path: inset(100% 0 0 0);
+  opacity: 0;
+  image-rendering: pixelated;
+  transition:
+    clip-path var(--rev-dur, 8s) cubic-bezier(0.33, 0.4, 0.2, 1) var(--rev-delay, 0s),
+    opacity calc(var(--rev-dur, 8s) * 0.5) ease var(--rev-delay, 0s);
+}
+.idle-plant.grown .idle-plant-reveal {
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
+}
+
 /* ---------- Terminal ---------- */
 .terminal-backdrop {
   position: fixed;
@@ -1253,4 +1298,8 @@ a.timeline-year:hover {
   .pixel-character { display: none; }
   /* Availability dot keeps pulsing — intentional override. */
   .hero-meta .status-dot { animation-duration: 2.2s !important; }
+  /* The idle garden is opt-in delight that should keep its full grow + sway
+     even under reduced-motion (intentional override). */
+  .idle-plant-sway { animation-duration: var(--sway-dur, 5s) !important; }
+  .idle-plant-reveal { transition-duration: var(--rev-dur, 8s) !important; }
 }

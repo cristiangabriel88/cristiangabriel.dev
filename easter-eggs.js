@@ -1,9 +1,10 @@
 (function () {
-/* global React, CHARACTER_FRAMES, PixelGrid */
+/* global React, CHARACTER_FRAMES, PixelGrid, document */
 // ─────────────────────────────────────────────────────────────
 // Easter eggs:
 //  1. Leaf particles drift from cursor
 //  2. Tiny pixel character walks along bottom of viewport
+//  2½. Idle garden — pixel plants grow from the bottom after 10s of stillness
 //  3. Terminal overlay (type "cg" to open)
 //  4. Mini-game (catch falling leaves) — launched from terminal
 // ─────────────────────────────────────────────────────────────
@@ -210,6 +211,282 @@ function PixelCharacter({
     rows: CHARACTER_FRAMES[frame],
     scale: 3
   }));
+}
+
+// ─────────── 2½. Idle garden ───────────
+// After 10s of stillness, leafy pixel plants grow slowly up from the bottom
+// edge in irregular packs and sway in a gentle breeze. The moment the visitor
+// moves, types, scrolls or taps, the whole garden retreats back into the soil.
+//
+// Each plant is procedurally grown into a small pixel grid (stem → foliage →
+// optional flower) and handed to <PixelGrid>. Growth + retreat are pure CSS: a
+// `clip-path` inset reveals the plant from the soil line up, with each plant on
+// its own slow, randomized timer so they emerge in bursts. Sway is a separate,
+// always-on CSS rotation about each plant's base, so it never fights the reveal.
+
+function rint(a, b) {
+  return a + Math.floor(Math.random() * (b - a + 1));
+}
+function rfloat(a, b) {
+  return a + Math.random() * (b - a);
+}
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Paint one broad leaf: a pointed lens that's fattest in the middle, drawn
+// from the stem outward along (side, slope). `edge` shades the rim so leaves
+// read as foliage rather than flat blocks.
+function drawLeaf(set, x0, y0, side, len, slope, col, edge) {
+  for (let j = 0; j <= len; j++) {
+    const px = x0 + side * j;
+    const py = y0 + slope * j;
+    const w = len > 1 ? Math.round(Math.sin(Math.PI * (j / len)) * 1.7) : 0;
+    for (let k = -w; k <= w; k++) {
+      set(px, py + k, w > 0 && Math.abs(k) === w ? edge : col);
+    }
+  }
+}
+
+// Grow one plant into an array of pixel rows (legend lives in pixel-art.js:
+// k stem · m mid-green · g leaf · y centre · f/v/w petals · t/u soil).
+// Biased toward leafy foliage (leaves, ferns, grass) over bare stems.
+function makePlant() {
+  const W = 27; // wide enough for long leaves either side of a centred stem
+  const cx = (W - 1) / 2;
+  const variety = pick(['leafy', 'leafy', 'leafy', 'fern', 'fern', 'grass', 'grass', 'flower', 'daisy', 'bud']);
+  const hasHead = variety === 'flower' || variety === 'daisy' || variety === 'bud';
+  const H = rint(hasHead ? 14 : 9, 40); // wide spread of lengths
+  const grid = [];
+  for (let y = 0; y < H; y++) grid.push(new Array(W).fill(' '));
+  const set = (x, y, ch, force) => {
+    x = Math.round(x);
+    y = Math.round(y);
+    if (x < 0 || x >= W || y < 0 || y >= H) return;
+    if (force || grid[y][x] === ' ') grid[y][x] = ch;
+  };
+
+  // A little soil mound at the base — first thing to surface as it grows.
+  for (let dx = -2; dx <= 2; dx++) set(cx + dx, H - 1, 't', true);
+  set(cx - 3, H - 1, 'u');
+  set(cx + 3, H - 1, 'u');
+  set(cx - 1, H - 2, 'u');
+  set(cx + 1, H - 2, 'u');
+
+  if (variety === 'grass') {
+    // A full tuft of curving blades, varied heights, no flower.
+    const blades = rint(6, 12);
+    for (let b = 0; b < blades; b++) {
+      const bh = rint(Math.floor(H * 0.4), H - 2);
+      const baseX = cx + rfloat(-5, 5);
+      const lean = rfloat(1.2, 5.5) * (Math.random() < 0.5 ? -1 : 1);
+      const col = pick(['g', 'g', 'm', 'k']);
+      for (let y = H - 2; y >= H - 1 - bh; y--) {
+        const t = (H - 2 - y) / (bh - 1 || 1);
+        const bx = baseX + Math.pow(t, 1.7) * lean;
+        set(bx, y, col, true);
+        if (t > 0.15 && t < 0.8) set(bx + (lean > 0 ? -1 : 1), y, col);
+      }
+    }
+    return grid.map(r => r.join(''));
+  }
+
+  // Curved stem / rachis, from soil up to the head zone.
+  const topY = hasHead ? 3 : 1;
+  const bend = rfloat(0, 4);
+  const waves = rfloat(0.4, 1.4);
+  const phase = rfloat(0, Math.PI * 2);
+  const stemX = new Array(H);
+  for (let y = H - 2; y >= topY; y--) {
+    const t = (H - 2 - y) / (H - 2 - topY || 1); // 0 base · 1 tip
+    const x = cx + Math.sin(t * Math.PI * waves + phase) * bend * t;
+    stemX[y] = x;
+    set(x, y, 'k', true);
+    if (variety !== 'fern' && t < 0.5) set(x - 1, y, 'k'); // thicker lower stem
+  }
+  const headX = stemX[topY] != null ? stemX[topY] : cx;
+
+  if (variety === 'fern') {
+    // Dense leaflets on both sides of the rachis, longest near the base and
+    // tapering to the tip — a classic frond.
+    for (let y = H - 2; y >= topY; y--) {
+      if (stemX[y] == null) continue;
+      const t = (H - 2 - y) / (H - 2 - topY || 1);
+      const len = Math.max(1, Math.round((1 - t) * 5));
+      drawLeaf(set, stemX[y], y, 1, len, -0.5, 'g', 'm');
+      drawLeaf(set, stemX[y], y, -1, len, -0.5, 'g', 'm');
+    }
+    set(headX, topY - 1, 'g');
+    return grid.map(r => r.join(''));
+  }
+
+  // Leafy stem: broad leaves crowding up the stem, alternating sides and
+  // larger toward the base, with frequent paired leaves for a full bush.
+  const nodes = Math.max(3, Math.floor((H - topY) / 2));
+  for (let i = 0; i < nodes; i++) {
+    const ly = Math.round(H - 2 - i * 2 - rfloat(0, 0.7));
+    if (ly < topY || stemX[ly] == null) continue;
+    const t = (H - 2 - ly) / (H - 2 - topY || 1);
+    const len = Math.max(2, Math.round((1 - t) * 6) + 1);
+    const side = i % 2 === 0 ? 1 : -1;
+    const slope = -rfloat(0.2, 0.6);
+    drawLeaf(set, stemX[ly], ly, side, len, slope, 'g', 'm');
+    if (Math.random() < 0.6) drawLeaf(set, stemX[ly], ly, -side, Math.max(2, len - 1), slope, 'g', 'm');
+  }
+
+  // Flower / seed head, anchored just above the stem tip.
+  const ty = topY - 1;
+  if (variety === 'flower') {
+    const petal = pick(['f', 'v', 'w', 'y']);
+    set(headX, ty, 'y', true);
+    set(headX - 1, ty, petal, true);
+    set(headX + 1, ty, petal, true);
+    set(headX, ty - 1, petal, true);
+    set(headX, ty + 1, petal, true);
+    set(headX - 1, ty - 1, petal);
+    set(headX + 1, ty - 1, petal);
+    set(headX - 1, ty + 1, petal);
+    set(headX + 1, ty + 1, petal);
+  } else if (variety === 'daisy') {
+    set(headX, ty, 'y', true); // centre
+    [[0, -2], [0, 2], [-2, 0], [2, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([dx, dy]) => set(headX + dx, ty + dy, 'w', true));
+  } else if (variety === 'bud') {
+    const tip = pick(['f', 'v', 'w']);
+    set(headX, ty - 1, tip, true);
+    set(headX, ty, 'g', true);
+    set(headX - 1, ty, 'm');
+    set(headX + 1, ty, 'm');
+    set(headX, ty + 1, 'm', true);
+  }
+
+  return grid.map(r => r.join(''));
+}
+
+// Build one plant placed at viewport x. Growth is deliberately slow and each
+// plant gets its own duration + delay so the garden emerges irregularly rather
+// than as a tidy left-to-right sweep. Retreat is a touch quicker but still soft.
+function makePlantObj(x) {
+  return {
+    x,
+    rows: makePlant(),
+    scale: rint(3, 4),
+    swayDur: rfloat(4, 8),
+    swayDelay: -rfloat(0, 8),
+    swayDeg: rfloat(1.2, 3),
+    growDur: rfloat(6, 13),
+    growDelay: rfloat(0, 8),
+    retreatDur: rfloat(2.5, 5),
+    retreatDelay: rfloat(0, 2.5)
+  };
+}
+
+// Lay plants out in irregular packs separated by bare gaps, rather than evenly
+// spaced. A pack is a few plants crowded together (overlapping into a clump);
+// between packs there's a wide stretch of empty soil.
+function makePlantSet(width) {
+  const plants = [];
+  let x = rfloat(-12, 36);
+  while (x < width + 12) {
+    const packSize = rint(1, 5);
+    for (let p = 0; p < packSize && x < width + 12; p++) {
+      plants.push(makePlantObj(x));
+      x += rfloat(16, 44); // tight, overlapping spacing inside a pack
+    }
+    x += rfloat(60, 260); // wide empty gap before the next pack
+  }
+  return plants;
+}
+
+function IdleGarden({
+  enabled = true,
+  paused = false
+}) {
+  const [active, setActive] = useState(false);
+  const [plants, setPlants] = useState(() => enabled ? makePlantSet(window.innerWidth) : []);
+
+  // ###### IDLE WATCH ######
+  // Re-arm a 10s timer on any interaction; firing it grows the garden. Any
+  // interaction while grown retreats it. Backgrounded tabs retreat immediately.
+  useEffect(() => {
+    if (!enabled) return;
+    if (paused) {
+      setActive(false);
+      return;
+    }
+    let timer;
+    const arm = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setActive(true), 10000);
+    };
+    const onActivity = () => {
+      setActive(false);
+      arm();
+    };
+    const onVisibility = () => {
+      if (document.hidden) {
+        clearTimeout(timer);
+        setActive(false);
+      } else {
+        arm();
+      }
+    };
+    const evs = ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart', 'scroll'];
+    evs.forEach(e => window.addEventListener(e, onActivity, {
+      passive: true
+    }));
+    document.addEventListener('visibilitychange', onVisibility);
+    arm();
+    return () => {
+      clearTimeout(timer);
+      evs.forEach(e => window.removeEventListener(e, onActivity));
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [enabled, paused]);
+
+  // Re-flow the garden to a new viewport width (debounced).
+  useEffect(() => {
+    if (!enabled) return;
+    let t;
+    const onResize = () => {
+      clearTimeout(t);
+      t = setTimeout(() => setPlants(makePlantSet(window.innerWidth)), 250);
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [enabled]);
+
+  if (!enabled) return null;
+  return React.createElement('div', {
+    className: 'idle-garden',
+    'aria-hidden': 'true'
+  }, plants.map((p, i) => React.createElement('div', {
+    key: i,
+    className: 'idle-plant' + (active ? ' grown' : ''),
+    style: {
+      left: p.x + 'px'
+    }
+  }, React.createElement('div', {
+    className: 'idle-plant-sway',
+    style: {
+      '--sway-dur': p.swayDur + 's',
+      '--sway-delay': p.swayDelay + 's',
+      '--sway-deg': p.swayDeg + 'deg'
+    }
+  }, React.createElement('div', {
+    className: 'idle-plant-reveal',
+    // Each plant carries its own slow, randomized grow/retreat timing so the
+    // garden emerges in irregular bursts rather than a uniform sweep.
+    style: {
+      '--rev-dur': (active ? p.growDur : p.retreatDur) + 's',
+      '--rev-delay': (active ? p.growDelay : p.retreatDelay) + 's'
+    }
+  }, React.createElement(PixelGrid, {
+    rows: p.rows,
+    scale: p.scale
+  }))))));
 }
 
 // ─────────── 3. Terminal + 4. Mini-game ───────────
@@ -1249,6 +1526,7 @@ function useKonamiCode(onMatch) {
 Object.assign(window, {
   LeafParticles,
   PixelCharacter,
+  IdleGarden,
   Terminal,
   useSecretShortcut,
   useKonamiCode

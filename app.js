@@ -2,7 +2,7 @@
 /* global React, ReactDOM,
    Sidebar, TopNav, BotanicalAnchor, PageFooter,
    HomePage, AboutPage, ProjectsPage,
-   LeafParticles, PixelCharacter, Terminal,
+   LeafParticles, PixelCharacter, IdleGarden, Terminal,
    useSecretShortcut, useKonamiCode,
    useTweaks, TweaksPanel, TweakSection, TweakColor, TweakSlider, TweakToggle,
    PixelGrid, SPRITES
@@ -23,6 +23,7 @@ const TWEAK_DEFAULTS = {
   showPixelArt: true,
   showPixelCharacter: true,
   showLeafParticles: true,
+  showIdleGarden: true,
   soundEnabled: false
 };
 const ACCENT_PALETTES = [['#2D5016', '#7AA355', '#B5DFAA'],
@@ -75,6 +76,13 @@ function App() {
       window.removeEventListener('popstate', sync);
     };
   }, []);
+
+  // The three pages stay mounted (display toggled via `hidden`), so the window
+  // scroll position would otherwise carry over from the previous page and leave
+  // you partway down the new one. Reset to the top on every page change.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
   const [termOpen, setTermOpen] = useState(false);
   const [autoLaunchGame, setAutoLaunchGame] = useState(false);
   const [tweaksOpen, setTweaksOpen] = useState(false);
@@ -182,6 +190,13 @@ function App() {
   // Walking pixel character disabled — uncomment to bring it back:
   // t.showPixelCharacter && React.createElement(PixelCharacter,  { enabled: true }),
 
+  // Idle garden — pixel plants grow from the bottom after 10s of stillness.
+  // Paused (retreats) while the terminal or tweaks panel is open.
+  t.showIdleGarden && React.createElement(IdleGarden, {
+    enabled: true,
+    paused: termOpen || tweaksOpen
+  }),
+
   React.createElement(Terminal, {
     open: termOpen,
     onClose: closeTerminal,
@@ -222,6 +237,10 @@ function App() {
     label: 'Leaf particles on cursor',
     value: t.showLeafParticles,
     onChange: v => setTweak('showLeafParticles', v)
+  }), React.createElement(TweakToggle, {
+    label: 'Idle garden (grows after 10s)',
+    value: t.showIdleGarden,
+    onChange: v => setTweak('showIdleGarden', v)
   }), React.createElement(TweakToggle, {
     label: 'Sound effects (opt-in)',
     value: t.soundEnabled,
