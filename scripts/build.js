@@ -13,6 +13,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { toCreate, normalize } = require('./jsx-tools');
 const { ENTRIES } = require('./jsx-entries');
+const { writeFeed } = require('./build-feed');
 
 const ROOT = path.resolve(__dirname, '..');
 const CHECK = process.argv.includes('--check');
@@ -55,3 +56,7 @@ html = html.replace(/\b(src|href)="([^"?:]+\.(?:js|css))(\?v=[^"]*)?"/g, (m, att
 });
 fs.writeFileSync(indexPath, html.replace(/\r\n/g, '\n'));
 console.log('stamped cache-busting hashes in index.html');
+
+// ---- RSS feed (rec 6.7): regenerate feed.xml from the changelog ----
+writeFeed();
+console.log('built feed.xml');

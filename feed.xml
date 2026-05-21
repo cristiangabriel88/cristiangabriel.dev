@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cristian Gabriel · Changelog</title>
+    <link>https://cristiangabriel.dev/</link>
+    <atom:link href="https://cristiangabriel.dev/feed.xml" rel="self" type="application/rss+xml" />
+    <description>Small updates to cristiangabriel.dev.</description>
+    <language>en</language>
+    <lastBuildDate>Wed, 20 May 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>The whole top-left brand is now a single home link.</title>
+      <link>https://cristiangabriel.dev/</link>
+      <guid isPermaLink="false">https://cristiangabriel.dev/#changelog-2026-05-20</guid>
+      <pubDate>Wed, 20 May 2026 12:00:00 GMT</pubDate>
+      <description>The whole top-left brand is now a single home link.</description>
+    </item>
+    <item>
+      <title>Added dark mode, the tweaks panel, and the ssh terminal.</title>
+      <link>https://cristiangabriel.dev/</link>
+      <guid isPermaLink="false">https://cristiangabriel.dev/#changelog-2026-05-19</guid>
+      <pubDate>Tue, 19 May 2026 12:00:00 GMT</pubDate>
+      <description>Added dark mode, the tweaks panel, and the ssh terminal.</description>
+    </item>
+    <item>
+      <title>Rebuilt the site on a parchment + forest design.</title>
+      <link>https://cristiangabriel.dev/</link>
+      <guid isPermaLink="false">https://cristiangabriel.dev/#changelog-2026-05-01</guid>
+      <pubDate>Fri, 01 May 2026 12:00:00 GMT</pubDate>
+      <description>Rebuilt the site on a parchment + forest design.</description>
+    </item>
+  </channel>
+</rss>

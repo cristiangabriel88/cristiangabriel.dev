@@ -15,71 +15,78 @@
   function LeafParticles({ enabled = true }) {
     const layerRef = useRef(null);
     const particlesRef = useRef([]);
-    const lastEmitRef = useRef(0);
     const rafRef = useRef(null);
     useEffect(() => {
       if (!enabled) return;
       const layer = layerRef.current;
       if (!layer) return;
-      let pos = {
-        x: -100,
-        y: -100,
-      };
+      // Same spawn rate and physics as before — only the per-leaf cost changed:
+      //  • The leaf SVG is built ONCE and cloned per spawn (cloneNode), instead
+      //    of re-parsing an innerHTML string for every leaf. That string parse +
+      //    style recalc was the intermittent hitch.
+      //  • The leaf element is created in the rAF loop, not in the mousemove
+      //    handler, so pointer events never do DOM work and never stall. The
+      //    mousemove handler only records the latest position; spawning stays
+      //    gated to the original 180ms cadence and only fires while moving.
+      const tmpl = document.createElement("div");
+      tmpl.innerHTML =
+        '<svg viewBox="0 0 16 16" width="100%" height="100%">' +
+        '<path d="M8 1 C 13 4, 14 10, 8 15 C 2 10, 3 4, 8 1 Z" opacity="0.85"/>' +
+        '<path d="M8 1 L 8 15" stroke-width="0.8"/>' +
+        "</svg>";
+      const leafSvg = tmpl.firstChild;
+
+      let pos = { x: -100, y: -100 };
+      let moved = false; // only emit on frames where the cursor actually moved
       function onMove(e) {
-        pos = {
-          x: e.clientX,
-          y: e.clientY,
-        };
-        const now = performance.now();
-        // Halved spawn rate (was 90ms) — 50% fewer leaves on the cursor trail.
-        if (now - lastEmitRef.current > 180) {
-          lastEmitRef.current = now;
-          spawn(pos.x, pos.y, 1);
-        }
+        pos.x = e.clientX;
+        pos.y = e.clientY;
+        moved = true;
       }
-      // Per-particle SVG markup is identical except for the leaf color tints,
-      // so we keep it as a template string and substitute in `spawn`.
-      function spawn(x, y, intensity = 1) {
-        for (let i = 0; i < intensity; i++) {
-          const el = document.createElement("div");
-          el.className = "leaf";
-          const hue = 80 + Math.random() * 30;
-          const sat = 30 + Math.random() * 25;
-          const lite = 35 + Math.random() * 15;
-          const size = 8 + Math.random() * 10;
-          const left = x - size / 2;
-          const top = y - size / 2;
-          // Single style write — cheaper than four separate property assignments,
-          // and avoids any chance of a style recalc between them.
-          el.style.cssText = `width:${size}px;height:${size}px;left:${left}px;top:${top}px`;
-          el.innerHTML = `<svg viewBox="0 0 16 16" width="100%" height="100%">
-          <path d="M8 1 C 13 4, 14 10, 8 15 C 2 10, 3 4, 8 1 Z" fill="hsl(${hue},${sat}%,${lite}%)" opacity="0.85"/>
-          <path d="M8 1 L 8 15" stroke="hsl(${hue},${sat}%,${lite - 12}%)" stroke-width="0.8" />
-        </svg>`;
-          layer.appendChild(el);
-          particlesRef.current.push({
-            el,
-            x,
-            y,
-            // Transform baseline = un-shifted spawn coords. The CSS left/top is
-            // offset by -size/2 to center the leaf on the cursor; using that as
-            // the translate baseline made every leaf jump by (size/2, size/2)
-            // on its first frame.
-            ox: x,
-            oy: y,
-            vx: (Math.random() - 0.5) * 1.6,
-            vy: 0.3 + Math.random() * 1.2,
-            rot: Math.random() * 360,
-            vr: (Math.random() - 0.5) * 8,
-            life: 0,
-            maxLife: 1500 + Math.random() * 1200,
-            sway: Math.random() * Math.PI * 2,
-            swayFreq: 0.002 + Math.random() * 0.003,
-          });
-        }
+      function spawn(x, y) {
+        const el = document.createElement("div");
+        el.className = "leaf";
+        const hue = 80 + Math.random() * 30;
+        const sat = 30 + Math.random() * 25;
+        const lite = 35 + Math.random() * 15;
+        const size = 8 + Math.random() * 10;
+        const left = x - size / 2;
+        const top = y - size / 2;
+        el.style.cssText = `width:${size}px;height:${size}px;left:${left}px;top:${top}px`;
+        const svg = leafSvg.cloneNode(true);
+        svg.children[0].setAttribute("fill", `hsl(${hue},${sat}%,${lite}%)`);
+        svg.children[1].setAttribute("stroke", `hsl(${hue},${sat}%,${lite - 12}%)`);
+        el.appendChild(svg);
+        layer.appendChild(el);
+        particlesRef.current.push({
+          el,
+          x,
+          y,
+          // Transform baseline = un-shifted spawn coords. The CSS left/top is
+          // offset by -size/2 to center the leaf on the cursor; using that as
+          // the translate baseline made every leaf jump by (size/2, size/2)
+          // on its first frame.
+          ox: x,
+          oy: y,
+          vx: (Math.random() - 0.5) * 1.6,
+          vy: 0.3 + Math.random() * 1.2,
+          rot: Math.random() * 360,
+          vr: (Math.random() - 0.5) * 8,
+          life: 0,
+          maxLife: 1500 + Math.random() * 1200,
+          sway: Math.random() * Math.PI * 2,
+          swayFreq: 0.002 + Math.random() * 0.003,
+        });
       }
       let last = performance.now();
+      let lastEmit = 0;
       function tick(now) {
+        // Halved spawn rate (was 90ms) — 50% fewer leaves on the cursor trail.
+        if (moved && now - lastEmit > 180) {
+          lastEmit = now;
+          moved = false;
+          spawn(pos.x, pos.y);
+        }
         // Clamp dt: after a long frame gap (tab blur, GC pause, scroll jank)
         // the next dt can be hundreds of ms, which makes particles teleport.
         // 50ms is a 20fps floor — the motion slows briefly instead of jumping.
