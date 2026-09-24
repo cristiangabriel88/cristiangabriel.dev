@@ -252,6 +252,14 @@
     tweaks
   }) {
     const projects = [{
+      name: "Light & Matter",
+      tagline: "A single-page portfolio for handmade lamps built from driftwood, walnut and salvaged engine parts.",
+      tech: ["HTML", "CSS", "JavaScript"],
+      url: "light-and-matter.html",
+      cta: "See the project",
+      thumb: "resources/images/Projects/light-and-matter.jpg",
+      thumbLabel: "LIGHT & MATTER"
+    }, {
       name: "tapedeck.local",
       tagline: "A local-first web audio extractor. Pulls audio as MP3, M4A, Opus, WAV, or FLAC, all on your machine, locally and privately.",
       tech: ["Python", "Flask", "yt-dlp"],

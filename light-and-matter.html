@@ -1,0 +1,3977 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<title>Light &amp; Matter</title>
+	<link rel="icon" type="image/svg+xml" href="light-and-matter/assets/favicon.svg">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&family=Lexend:wght@300;400;500;600&display=swap">
+	<style>
+		:root {
+			--radius: 14px;
+			--paper: #FCFCFA;
+			--panel: #F3F2ED;
+			--panel-2: #EBEAE4;
+			--ink: #14181A;
+			--ink-2: #555D5B;
+			--ink-3: #8B938E;
+			--rule: #E3E5E0;
+			--rule-2: #D2D5CF;
+			--glow: #D8862A;
+			--glow-2: #F7CE83;
+			--wood-1: #E3C89C;
+			--wood-2: #B98F52;
+			--wood-3: #8A6532;
+			--metal-1: #C8CCCD;
+			--metal-2: #8A9196;
+			--rope: #C9B892;
+			--f-display: "Syne", "Helvetica Neue", Helvetica, Arial, sans-serif;
+			--f-body: "Newsreader", Georgia, "Times New Roman", serif;
+			--f-label: "Lexend", "Helvetica Neue", Helvetica, Arial, sans-serif;
+			--gutter: clamp(20px, 5vw, 64px);
+			--ease: cubic-bezier(.22, .72, .2, 1);
+		}
+
+		* {
+			box-sizing: border-box
+		}
+
+		body {
+			margin: 0;
+			background: var(--paper);
+			color: var(--ink);
+			font-family: var(--f-body);
+			font-size: clamp(16px, 0.55vw + 14.4px, 19px);
+			line-height: 1.62;
+			font-weight: 300;
+			-webkit-font-smoothing: antialiased;
+			overflow-x: hidden;
+		}
+
+		html {
+			scroll-behavior: smooth;
+			-webkit-tap-highlight-color: transparent
+		}
+
+		/* where the wheel moves one section at a time, no rubber-band bounce; touch keeps its native bounce */
+		@media (min-width:820px) and (min-height:620px) {
+			html {
+				overscroll-behavior-y: none
+			}
+		}
+
+		img,
+		svg {
+			max-width: 100%
+		}
+
+		::selection {
+			background: var(--glow-2);
+			color: var(--ink)
+		}
+
+		h1,
+		h2,
+		h3 {
+			font-family: var(--f-display);
+			font-weight: 700;
+			letter-spacing: -.022em;
+			text-wrap: balance;
+			margin: 0
+		}
+
+		h1 {
+			font-size: clamp(38px, 7.4vw, 86px);
+			line-height: .98;
+			letter-spacing: -.038em
+		}
+
+		h2 {
+			font-size: clamp(27px, 3.8vw, 50px);
+			line-height: 1.04
+		}
+
+		h3 {
+			font-size: clamp(17px, 1.3vw, 21px);
+			line-height: 1.2;
+			letter-spacing: -.012em
+		}
+
+		p {
+			margin: 0
+		}
+
+		a {
+			color: inherit
+		}
+
+		.eyebrow {
+			font-family: var(--f-label);
+			font-size: 11px;
+			font-weight: 500;
+			line-height: 1.4;
+			letter-spacing: .17em;
+			text-transform: uppercase;
+			color: var(--ink-3);
+			margin: 0
+		}
+
+		.lede {
+			font-size: clamp(17px, .7vw + 15px, 22px);
+			line-height: 1.55;
+			color: var(--ink-2);
+			max-width: 36ch
+		}
+
+		.mono-xs {
+			font-family: var(--f-label);
+			font-size: 11px;
+			letter-spacing: .09em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		em {
+			font-style: italic;
+			color: var(--ink)
+		}
+
+		.slide {
+			min-height: 100svh;
+			display: flex;
+			align-items: center;
+			padding-block: clamp(84px, 10vh, 132px);
+			padding-inline: var(--gutter);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.wrap {
+			width: 100%;
+			max-width: 1080px;
+			margin-inline: auto;
+			position: relative;
+			z-index: 2
+		}
+
+		/* ---------- full-bleed photographic grounds ---------- */
+		.bg {
+			position: absolute;
+			inset: 0;
+			z-index: 0;
+			pointer-events: none
+		}
+
+		.bg img,
+		.bg video {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block
+		}
+
+		.bg::after {
+			content: "";
+			position: absolute;
+			inset: 0
+		}
+
+		#intro .bg img,
+		#intro .bg video {
+			object-position: 58% 62%
+		}
+
+		#intro .bg::after {
+			background:
+				linear-gradient(180deg, var(--paper) 0%, rgba(252, 252, 250, 0) 22%, rgba(252, 252, 250, 0) 76%, var(--paper) 100%),
+				linear-gradient(100deg, rgba(252, 252, 250, .975) 0%, rgba(252, 252, 250, .94) 36%, rgba(252, 252, 250, .66) 60%, rgba(252, 252, 250, .44) 100%);
+		}
+
+		#contact .bg video {
+			object-position: 50% 70%
+		}
+
+		#contact .bg::after {
+			background:
+				linear-gradient(180deg, var(--paper) 0%, rgba(252, 252, 250, 0) 16%, rgba(252, 252, 250, 0) 62%, rgba(252, 252, 250, .55) 88%, rgba(252, 252, 250, .8) 100%),
+				linear-gradient(90deg, rgba(252, 252, 250, .8) 0%, rgba(252, 252, 250, .55) 42%, rgba(252, 252, 250, .12) 100%);
+		}
+
+		#workshop .bg img {
+			object-position: 50% 68%
+		}
+
+		#workshop .bg::after {
+			background:
+				linear-gradient(180deg, var(--paper) 0%, rgba(252, 252, 250, .9) 30%, rgba(252, 252, 250, .9) 70%, var(--paper) 100%),
+				linear-gradient(90deg, rgba(252, 252, 250, .96) 0%, rgba(252, 252, 250, .86) 55%, rgba(252, 252, 250, .72) 100%);
+		}
+
+		/* ---------- fixed chrome ---------- */
+		.progress {
+			position: fixed;
+			left: 0;
+			right: 0;
+			top: env(safe-area-inset-top, 0px);
+			height: 2px;
+			background: var(--rule);
+			z-index: 60
+		}
+
+		.progress span {
+			display: block;
+			height: 100%;
+			background: var(--glow);
+			transform: scaleX(0);
+			transform-origin: 0 0;
+			will-change: transform
+		}
+
+		.rail {
+			position: fixed;
+			left: 18px;
+			top: 0;
+			bottom: 0;
+			z-index: 55;
+			display: none;
+			flex-direction: column;
+			justify-content: space-between;
+			align-items: center;
+			padding-block: 28px;
+			pointer-events: none
+		}
+
+		.rail b,
+		.rail span {
+			writing-mode: vertical-rl;
+			font-family: var(--f-label);
+			font-size: 10px;
+			font-weight: 500;
+			letter-spacing: .26em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		.rail span {
+			color: var(--ink);
+			font-variant-numeric: tabular-nums;
+			letter-spacing: .18em
+		}
+
+		.dots {
+			position: fixed;
+			right: 20px;
+			top: 50%;
+			transform: translateY(-50%);
+			z-index: 55;
+			display: none;
+			flex-direction: column;
+			gap: 13px;
+			align-items: flex-end
+		}
+
+		.dots button {
+			-webkit-appearance: none;
+			appearance: none;
+			background: transparent;
+			border: 1px solid var(--rule-2);
+			width: 9px;
+			height: 9px;
+			padding: 0;
+			border-radius: 99px;
+			cursor: pointer;
+			position: relative;
+			transition: height .45s var(--ease), background .3s, border-color .3s;
+			box-shadow: 0 0 0 3px rgba(252, 252, 250, .55)
+		}
+
+		.dots button:hover {
+			border-color: var(--ink-3)
+		}
+
+		.dots button[aria-current="true"] {
+			height: 26px;
+			background: var(--glow);
+			border-color: var(--glow)
+		}
+
+		.dots button::after {
+			content: attr(data-label);
+			position: absolute;
+			right: 17px;
+			top: 50%;
+			transform: translateY(-50%);
+			font-family: var(--f-label);
+			font-size: 10px;
+			letter-spacing: .14em;
+			text-transform: uppercase;
+			color: var(--ink);
+			white-space: nowrap;
+			background: var(--paper);
+			padding: 3px 7px;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity .25s var(--ease)
+		}
+
+		.dots button:hover::after,
+		.dots button:focus-visible::after {
+			opacity: 1
+		}
+
+		@media (min-width:860px) {
+			.dots {
+				display: flex
+			}
+		}
+
+		@media (min-width:1300px) {
+			.rail {
+				display: flex
+			}
+		}
+
+		.lang {
+			position: absolute;
+			top: calc(env(safe-area-inset-top, 0px) + 14px);
+			right: var(--gutter);
+			z-index: 56;
+			display: flex;
+			align-items: center;
+			gap: 2px;
+			font-family: var(--f-label);
+			font-size: 11px;
+			letter-spacing: .14em;
+			color: var(--ink-3)
+		}
+
+		.lang button {
+			-webkit-appearance: none;
+			appearance: none;
+			background: none;
+			border: 0;
+			padding: 10px 6px;
+			font: inherit;
+			letter-spacing: inherit;
+			color: var(--ink-3);
+			cursor: pointer;
+			transition: color .3s var(--ease)
+		}
+
+		.lang button:hover {
+			color: var(--ink)
+		}
+
+		.lang button[aria-pressed="true"] {
+			color: var(--ink);
+			text-decoration: underline;
+			text-decoration-color: var(--glow);
+			text-underline-offset: 5px
+		}
+
+		:where(a, button):focus-visible {
+			outline: 2px solid var(--glow);
+			outline-offset: 3px;
+			border-radius: 2px
+		}
+
+		/* ---------- motion ---------- */
+		.rv {
+			opacity: 0;
+			transform: translate3d(0, 22px, 0);
+			transition: opacity .85s var(--ease), transform .85s var(--ease);
+			transition-delay: calc(var(--d, 0)*90ms);
+			will-change: opacity, transform;
+			backface-visibility: hidden
+		}
+
+		.rv.in {
+			opacity: 1;
+			transform: none
+		}
+
+		.rv.settled {
+			will-change: auto
+		}
+
+		@keyframes rise {
+			from {
+				opacity: 0;
+				transform: translateY(16px)
+			}
+
+			to {
+				opacity: 1;
+				transform: none
+			}
+		}
+
+		.hero-el {
+			animation: rise .95s var(--ease) both;
+			animation-delay: calc(var(--d, 0)*110ms)
+		}
+
+		@keyframes breathe {
+
+			0%,
+			100% {
+				opacity: .82
+			}
+
+			50% {
+				opacity: 1
+			}
+		}
+
+		.lamp-glow {
+			animation: breathe 7s ease-in-out infinite
+		}
+
+		/* ---------- hero ---------- */
+		#intro .wrap {
+			display: grid;
+			grid-template-columns: 1.18fr .82fr;
+			gap: clamp(24px, 5vw, 72px);
+			align-items: center
+		}
+
+		.hero-copy {
+			display: flex;
+			flex-direction: column;
+			gap: 26px;
+			align-items: flex-start
+		}
+
+		.hero-sub {
+			max-width: 44ch;
+			color: var(--ink-2);
+			font-size: clamp(16px, .35vw + 15px, 18.5px)
+		}
+
+		.hero-photo {
+			position: relative;
+			aspect-ratio: 3/4;
+			overflow: hidden;
+			border-radius: var(--radius);
+			background: var(--panel)
+		}
+
+		.hero-photo img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			object-position: 52% 38%;
+			display: block
+		}
+
+		/* the hero carousel: each new photograph is uncovered left to right by a soft-edged blind */
+		.hero-open {
+			position: absolute;
+			inset: 0;
+			display: block;
+			padding: 0;
+			border: 0;
+			background: none;
+			cursor: pointer;
+			overflow: hidden
+		}
+
+		.hero-open:focus-visible {
+			outline: 2px solid var(--ink);
+			outline-offset: -4px
+		}
+
+		.hero-open img {
+			position: absolute;
+			inset: 0;
+			transform-origin: 50% 60%
+		}
+
+		.hero-open img.leaving {
+			transition: transform 1.3s cubic-bezier(.77, 0, .18, 1), filter 1.3s cubic-bezier(.77, 0, .18, 1);
+			transform: translateX(5%) scale(1.02);
+			filter: brightness(.7)
+		}
+
+		.hero-open img.entering {
+			-webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
+			mask-image: linear-gradient(to right, #000 82%, transparent);
+			-webkit-mask-repeat: no-repeat;
+			mask-repeat: no-repeat;
+			-webkit-mask-position: 0 0;
+			mask-position: 0 0;
+			-webkit-mask-size: 0% 100%;
+			mask-size: 0% 100%;
+			transform: scale(1.08)
+		}
+
+		.hero-open img.entering.go {
+			transition: -webkit-mask-size 1.3s cubic-bezier(.77, 0, .18, 1), mask-size 1.3s cubic-bezier(.77, 0, .18, 1), transform 2.2s var(--ease);
+			-webkit-mask-size: 125% 100%;
+			mask-size: 125% 100%;
+			transform: none
+		}
+
+		.hero-open {
+			touch-action: pan-y;
+			-webkit-user-select: none;
+			user-select: none
+		}
+
+		.hero-open.dragging {
+			cursor: grabbing
+		}
+
+		.hero-photo .photo-tag {
+			z-index: 2;
+			pointer-events: none
+		}
+
+		.hero-photo .photo-tag span {
+			display: inline-block;
+			transition: opacity .45s var(--ease), transform .45s var(--ease)
+		}
+
+		.hero-photo .photo-tag.swap span {
+			opacity: 0;
+			transform: translateY(4px)
+		}
+
+		.photo-tag {
+			position: absolute;
+			left: 0;
+			bottom: 0;
+			border-top-right-radius: 8px;
+			background: var(--paper);
+			padding: 8px 12px;
+			font-family: var(--f-label);
+			font-size: 10px;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--ink-2)
+		}
+
+		.actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px
+		}
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 9px;
+			text-decoration: none;
+			font-family: var(--f-label);
+			font-size: 11px;
+			letter-spacing: .14em;
+			text-transform: uppercase;
+			padding: 13px 20px;
+			border: 1px solid var(--ink);
+			color: var(--paper);
+			background: var(--ink);
+			transition: background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease), transform .3s var(--ease);
+			cursor: pointer
+		}
+
+		.btn:hover {
+			background: var(--glow);
+			border-color: var(--glow);
+			color: #1A1206
+		}
+
+		.btn:active {
+			transform: scale(.97);
+			transition-duration: .08s
+		}
+
+		.btn.ghost {
+			background: rgba(252, 252, 250, .7);
+			color: var(--ink);
+			border-color: var(--rule-2)
+		}
+
+		.btn.ghost:hover {
+			border-color: var(--ink);
+			background: rgba(252, 252, 250, .95);
+			color: var(--ink)
+		}
+
+		.hint {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			color: var(--ink-3);
+			font-family: var(--f-label);
+			font-size: 10.5px;
+			letter-spacing: .13em;
+			text-transform: uppercase
+		}
+
+		.key {
+			border: 1px solid var(--rule-2);
+			padding: 2px 6px;
+			border-radius: 3px;
+			font-size: 10px;
+			color: var(--ink-2);
+			background: rgba(252, 252, 250, .7)
+		}
+
+		/* ---------- shared blocks ---------- */
+		.head {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			margin-bottom: clamp(30px, 4.6vh, 54px)
+		}
+
+		.cols-3 {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: clamp(22px, 3.4vw, 48px)
+		}
+
+		.mat {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			padding-top: 18px;
+			border-top: 1px solid var(--ink)
+		}
+
+		.mat h3 {
+			font-size: clamp(19px, 1.5vw, 24px)
+		}
+
+		.mat p {
+			color: var(--ink-2);
+			font-size: 16.5px
+		}
+
+		.spec-list {
+			list-style: none;
+			margin: 2px 0 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 7px
+		}
+
+		.spec-list li {
+			font-family: var(--f-label);
+			font-size: 11.5px;
+			line-height: 1.5;
+			color: var(--ink-2);
+			display: flex;
+			gap: 9px;
+			align-items: baseline
+		}
+
+		.spec-list li::before {
+			content: "";
+			flex: 0 0 5px;
+			height: 1px;
+			background: var(--rule-2);
+			transform: translateY(-4px)
+		}
+
+		/* ---------- collection: card stacks ---------- */
+		.lots {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: clamp(18px, 2.6vw, 38px)
+		}
+
+		.lot {
+			display: flex;
+			flex-direction: column
+		}
+
+		.stack {
+			position: relative;
+			display: block;
+			width: 100%;
+			aspect-ratio: 4/5;
+			padding: 0;
+			border: 0;
+			background: none;
+			cursor: pointer;
+			font: inherit;
+			color: inherit;
+			-webkit-tap-highlight-color: transparent
+		}
+
+		.stack:focus-visible {
+			outline: none
+		}
+
+		.sheet {
+			position: absolute;
+			inset: 0;
+			border-radius: var(--radius);
+			overflow: hidden;
+			background: var(--panel);
+			transform-origin: 50% 100%;
+			pointer-events: none;
+			transition: transform .75s var(--ease), filter .75s var(--ease), box-shadow .75s var(--ease)
+		}
+
+		.sheet img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+			transition: transform 1.2s var(--ease)
+		}
+
+		.sheet.s0 {
+			z-index: 3;
+			box-shadow: 0 1px 2px rgba(20, 24, 26, .06), 0 14px 30px -20px rgba(20, 24, 26, .45)
+		}
+
+		.sheet.s1 {
+			z-index: 2;
+			transform: translateY(-8.8%) scale(.94);
+			filter: brightness(.9) saturate(.85);
+			box-shadow: 0 8px 20px -16px rgba(20, 24, 26, .4)
+		}
+
+		.sheet.s2 {
+			z-index: 1;
+			transform: translateY(-17.6%) scale(.88);
+			filter: brightness(.8) saturate(.75)
+		}
+
+		.stack:hover .s0,
+		.stack:focus-visible .s0 {
+			transform: rotate(-1.8deg) translate(-2%, -1.5%);
+			box-shadow: 0 2px 4px rgba(20, 24, 26, .06), 0 26px 44px -22px rgba(20, 24, 26, .55)
+		}
+
+		.stack:hover .s1,
+		.stack:focus-visible .s1 {
+			transform: rotate(2.4deg) translate(2%, -3%) scale(.97);
+			filter: brightness(.96) saturate(.95)
+		}
+
+		.stack:hover .s2,
+		.stack:focus-visible .s2 {
+			transform: rotate(4.2deg) translate(2.5%, -4.5%) scale(.95);
+			filter: brightness(.9) saturate(.9)
+		}
+
+		.stack:hover .s0 img {
+			transform: scale(1.035)
+		}
+
+		.stack:focus-visible .s0 {
+			outline: 2px solid var(--glow);
+			outline-offset: 3px
+		}
+
+		.sheet.drawn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--panel)
+		}
+
+		.sheet.drawn svg {
+			width: 100%;
+			height: 100%;
+			display: block
+		}
+
+		.sheet.s1.drawn,
+		.sheet.s2.drawn {
+			background: var(--panel-2)
+		}
+
+		.sheet .stamp,
+		.card .stamp {
+			position: absolute;
+			top: 11px;
+			left: 13px;
+			font-family: var(--f-label);
+			font-size: 9.5px;
+			letter-spacing: .13em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		.stack:hover .lamp-glow {
+			opacity: 1;
+			animation: none
+		}
+
+		.cue {
+			position: absolute;
+			left: 10px;
+			bottom: 10px;
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 6px 10px 6px 9px;
+			border-radius: 99px;
+			background: rgba(252, 252, 250, .9);
+			backdrop-filter: blur(6px);
+			font-family: var(--f-label);
+			font-size: 9.5px;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--ink-2);
+			transition: background .4s var(--ease), color .4s var(--ease)
+		}
+
+		.cue b {
+			font-weight: 500;
+			color: var(--ink)
+		}
+
+		.cue::after {
+			content: "\2192";
+			max-width: 0;
+			overflow: hidden;
+			opacity: 0;
+			transition: max-width .45s var(--ease), opacity .45s var(--ease)
+		}
+
+		.stack:hover .cue {
+			background: rgba(235, 234, 228, .96);
+			color: var(--ink-2)
+		}
+
+		.stack:hover .cue b {
+			color: var(--ink)
+		}
+
+		.stack:hover .cue::after {
+			max-width: 14px;
+			opacity: 1
+		}
+
+		.price s {
+			color: var(--ink-3);
+			text-decoration-thickness: 1px
+		}
+
+		/* the "sold" band across the corner */
+		.band {
+			position: absolute;
+			z-index: 4;
+			top: 26px;
+			right: -46px;
+			width: 180px;
+			padding: 7px 0 6px;
+			transform: rotate(45deg);
+			text-align: center;
+			font-family: var(--f-label);
+			font-size: 10px;
+			font-weight: 500;
+			letter-spacing: .42em;
+			text-indent: .42em;
+			text-transform: uppercase;
+			color: #2A1D08;
+			background: linear-gradient(100deg, #8A7038 0%, #C9A964 22%, #F1DDA6 42%, #C9A964 62%, #8A7038 100%);
+			background-size: 220% 100%;
+			background-position: 100% 0;
+			box-shadow: 0 8px 16px -8px rgba(20, 24, 26, .55), inset 0 1px 0 rgba(255, 244, 214, .55);
+			transition: background-position 1.2s var(--ease)
+		}
+
+		.band::before,
+		.band::after {
+			content: "";
+			position: absolute;
+			left: 0;
+			right: 0;
+			height: 1px;
+			background: rgba(42, 29, 8, .28)
+		}
+
+		.band::before {
+			top: 3px
+		}
+
+		.band::after {
+			bottom: 3px
+		}
+
+		.stack:hover .band {
+			background-position: 0 0
+		}
+
+		.card .band {
+			top: 30px;
+			right: -50px;
+			width: 200px;
+			font-size: 11px
+		}
+
+		/* ---------- collection: the photo deck ---------- */
+		.lb {
+			position: fixed;
+			inset: 0;
+			z-index: 100;
+			display: grid;
+			place-items: center;
+			visibility: hidden;
+			pointer-events: none;
+			transition: visibility 0s linear .6s
+		}
+
+		.lb.open {
+			visibility: visible;
+			pointer-events: auto;
+			transition: none
+		}
+
+		.lb-scrim {
+			position: absolute;
+			inset: 0;
+			background: rgba(20, 24, 26, .55);
+			-webkit-backdrop-filter: blur(12px) saturate(.85);
+			backdrop-filter: blur(12px) saturate(.85);
+			opacity: 0;
+			transition: opacity .55s var(--ease)
+		}
+
+		.lb.open .lb-scrim {
+			opacity: 1
+		}
+
+		.lb-panel {
+			position: relative;
+			width: min(1180px, calc(100vw - 2*var(--gutter)));
+			height: min(780px, calc(100svh - 56px));
+			background: var(--paper);
+			border-radius: 22px;
+			overflow: hidden;
+			display: grid;
+			grid-template-columns: minmax(0, 1.45fr) minmax(300px, .7fr);
+			box-shadow: 0 40px 90px -40px rgba(0, 0, 0, .6);
+			opacity: 0;
+			transform: translateY(28px) scale(.975);
+			transition: opacity .55s var(--ease), transform .7s var(--ease)
+		}
+
+		.lb.open .lb-panel {
+			opacity: 1;
+			transform: none
+		}
+
+		.lb-deck {
+			position: relative;
+			overflow: hidden;
+			background: radial-gradient(120% 90% at 50% 45%, var(--panel) 0%, var(--panel-2) 100%);
+			touch-action: pan-y;
+			cursor: grab
+		}
+
+		.lb-deck.dragging {
+			cursor: grabbing
+		}
+
+		.card {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			border-radius: 12px;
+			overflow: hidden;
+			background: var(--paper);
+			user-select: none;
+			-webkit-user-select: none;
+			will-change: transform;
+			box-shadow: 0 2px 6px rgba(20, 24, 26, .08), 0 34px 60px -34px rgba(20, 24, 26, .55);
+			transition: transform .7s var(--ease), opacity .55s var(--ease), filter .7s var(--ease)
+		}
+
+		.card img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+			pointer-events: none;
+			-webkit-user-drag: none
+		}
+
+		.card.drawn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--panel)
+		}
+
+		.card.drawn svg {
+			width: 82%;
+			height: 82%
+		}
+
+		.card.drawn .stamp {
+			top: 14px;
+			left: 16px
+		}
+
+		.card.drawn .view {
+			position: absolute;
+			left: 16px;
+			bottom: 14px;
+			font-family: var(--f-label);
+			font-size: 10px;
+			letter-spacing: .13em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		.card.tossing {
+			transition: transform .42s cubic-bezier(.5, 0, .75, .35), opacity .42s ease-in
+		}
+
+		.card.held {
+			transition: none
+		}
+
+		/* a let-go photo springs back to the pile, overshooting a touch before it settles */
+		.card.settling {
+			transition: transform .8s cubic-bezier(.34, 1.4, .56, 1), opacity .55s var(--ease), filter .7s var(--ease)
+		}
+
+		.lb-info {
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+			padding: clamp(28px, 3.4vw, 46px) clamp(24px, 3vw, 40px) clamp(24px, 3vw, 34px);
+			overflow-y: auto
+		}
+
+		.lb-info h2 {
+			font-size: clamp(28px, 3vw, 42px)
+		}
+
+		.lb-price {
+			display: flex;
+			align-items: baseline;
+			gap: 12px;
+			flex-wrap: wrap
+		}
+
+		.lb-status {
+			font-family: var(--f-label);
+			font-size: 10.5px;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		.lb-status.sold {
+			color: #8A7038
+		}
+
+		.lb-desc {
+			color: var(--ink-2);
+			font-size: 16px;
+			line-height: 1.55
+		}
+
+		.lb-specs dd {
+			font-size: 14.5px
+		}
+
+		.lb-more {
+			align-self: flex-start;
+			font-family: var(--f-label);
+			font-size: 11px;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			text-decoration: none;
+			color: var(--ink);
+			padding-bottom: 3px;
+			border-bottom: 1px solid var(--glow)
+		}
+
+		.lb-more[hidden] {
+			display: none
+		}
+
+		.lb-foot {
+			margin-top: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			padding-top: 18px;
+			border-top: 1px solid var(--rule)
+		}
+
+		.lb-cap {
+			font-size: 15px;
+			color: var(--ink-2);
+			min-height: 3em;
+			line-height: 1.45;
+			transition: opacity .3s var(--ease)
+		}
+
+		.lb-cap b {
+			display: block;
+			font-family: var(--f-label);
+			font-weight: 500;
+			font-size: 10.5px;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--ink);
+			margin-bottom: 3px
+		}
+
+		.lb-nav {
+			display: flex;
+			align-items: center;
+			gap: 10px
+		}
+
+		.lb-count {
+			margin-right: auto;
+			font-family: var(--f-label);
+			font-size: 12px;
+			color: var(--ink);
+			font-variant-numeric: tabular-nums;
+			letter-spacing: .06em
+		}
+
+		.lb-count span {
+			color: var(--ink-3)
+		}
+
+		.lb-btn,
+		.lb-close {
+			-webkit-appearance: none;
+			appearance: none;
+			display: grid;
+			place-items: center;
+			width: 44px;
+			height: 44px;
+			border-radius: 99px;
+			border: 1px solid var(--rule-2);
+			background: var(--paper);
+			color: var(--ink);
+			font-size: 17px;
+			line-height: 1;
+			cursor: pointer;
+			transition: background .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease), transform .3s var(--ease)
+		}
+
+		.lb-btn:hover {
+			background: var(--ink);
+			border-color: var(--ink);
+			color: var(--paper)
+		}
+
+		.lb-btn:active {
+			transform: scale(.94)
+		}
+
+		.lb-close {
+			position: absolute;
+			top: 14px;
+			right: 14px;
+			z-index: 5;
+			font-size: 22px;
+			background: rgba(252, 252, 250, .85)
+		}
+
+		.lb-close:hover {
+			border-color: var(--ink)
+		}
+
+		/* ---------- focus ---------- */
+		#arc .wrap {
+			display: grid;
+			grid-template-columns: .92fr 1.08fr;
+			gap: clamp(28px, 5vw, 72px);
+			align-items: center
+		}
+
+		.focus-photo {
+			aspect-ratio: 3/4;
+			overflow: hidden;
+			border-radius: var(--radius);
+			background: var(--panel)
+		}
+
+		.focus-photo img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			object-position: 52% 40%;
+			display: block
+		}
+
+		.feature-copy {
+			display: flex;
+			flex-direction: column;
+			gap: 22px
+		}
+
+		.dl {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			gap: 0 clamp(18px, 3vw, 40px);
+			margin: 0
+		}
+
+		.dl dt {
+			font-family: var(--f-label);
+			font-size: 10.5px;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--ink-3);
+			padding: 10px 0;
+			border-top: 1px solid var(--rule);
+			white-space: nowrap
+		}
+
+		.dl dd {
+			margin: 0;
+			padding: 10px 0;
+			border-top: 1px solid var(--rule);
+			font-size: 15.5px;
+			color: var(--ink-2)
+		}
+
+		.dl dd b {
+			font-weight: 400;
+			color: var(--ink);
+			font-family: var(--f-label);
+			font-size: 13px;
+			font-variant-numeric: tabular-nums
+		}
+
+		/* ---------- workbook (drawings) ---------- */
+		.grid-3 {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: clamp(18px, 2.4vw, 34px)
+		}
+
+		.piece {
+			display: flex;
+			flex-direction: column
+		}
+
+		.tile {
+			aspect-ratio: 4/4.4;
+			width: 100%;
+			background: var(--panel);
+			border-radius: var(--radius);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			overflow: hidden;
+			position: relative;
+			transition: background .5s var(--ease)
+		}
+
+		.piece:hover .tile {
+			background: var(--panel-2)
+		}
+
+		.piece:hover .lamp-glow {
+			opacity: 1;
+			animation: none
+		}
+
+		.tile svg {
+			width: 100%;
+			height: 100%;
+			display: block
+		}
+
+		.tile .stamp {
+			position: absolute;
+			top: 10px;
+			left: 12px;
+			font-family: var(--f-label);
+			font-size: 9.5px;
+			letter-spacing: .13em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		.piece-meta {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+			padding-top: 13px;
+			margin-top: 13px;
+			border-top: 1px solid var(--rule)
+		}
+
+		.piece-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: baseline;
+			gap: 12px
+		}
+
+		.piece-row h3 {
+			font-size: 18px
+		}
+
+		.price {
+			font-family: var(--f-label);
+			font-size: 12.5px;
+			color: var(--ink);
+			font-variant-numeric: tabular-nums;
+			white-space: nowrap
+		}
+
+		.piece-desc {
+			font-size: 14.5px;
+			color: var(--ink-2);
+			line-height: 1.45
+		}
+
+		.dims {
+			font-family: var(--f-label);
+			font-size: 10.5px;
+			letter-spacing: .07em;
+			color: var(--ink-3);
+			text-transform: uppercase
+		}
+
+		/* ---------- steps ---------- */
+		.steps {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: clamp(20px, 3vw, 44px) clamp(22px, 3.4vw, 52px)
+		}
+
+		.step {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			gap: 0 16px;
+			align-items: start;
+			padding-top: 16px;
+			border-top: 1px solid var(--rule)
+		}
+
+		.step .num {
+			font-family: var(--f-label);
+			font-size: 11px;
+			font-weight: 500;
+			color: var(--glow);
+			letter-spacing: .05em;
+			padding-top: 3px;
+			font-variant-numeric: tabular-nums
+		}
+
+		.step-body {
+			display: flex;
+			flex-direction: column;
+			gap: 7px
+		}
+
+		.step h3 {
+			font-size: 17px
+		}
+
+		.step p {
+			font-size: 14.5px;
+			color: var(--ink-2);
+			line-height: 1.5
+		}
+
+		.step .when {
+			font-family: var(--f-label);
+			font-size: 10.5px;
+			letter-spacing: .08em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		/* ---------- workshop ---------- */
+		#workshop .wrap {
+			display: grid;
+			grid-template-columns: 1.12fr .88fr;
+			gap: clamp(28px, 5vw, 72px);
+			align-items: center
+		}
+
+		.statement {
+			display: flex;
+			flex-direction: column;
+			gap: 20px
+		}
+
+		.statement p:not(.eyebrow) {
+			color: var(--ink-2);
+			font-size: clamp(16px, .4vw + 15px, 18.5px)
+		}
+
+		.facts {
+			display: flex;
+			flex-direction: column;
+			margin: 0
+		}
+
+		.fact {
+			display: flex;
+			justify-content: space-between;
+			align-items: baseline;
+			gap: 16px;
+			padding: 12px 0;
+			border-top: 1px solid var(--rule-2)
+		}
+
+		.fact:last-child {
+			border-bottom: 1px solid var(--rule-2)
+		}
+
+		.fact dt {
+			font-size: 15px;
+			color: var(--ink-2)
+		}
+
+		.fact dd {
+			margin: 0;
+			font-family: var(--f-label);
+			font-size: 12.5px;
+			color: var(--ink);
+			text-align: right;
+			font-variant-numeric: tabular-nums
+		}
+
+		/* ---------- commissions ---------- */
+		#commissions .steps {
+			grid-template-columns: repeat(3, 1fr)
+		}
+
+		.note {
+			margin-top: clamp(26px, 4vh, 44px);
+			padding: 22px 24px;
+			background: var(--panel);
+			display: flex;
+			gap: 18px;
+			align-items: flex-start;
+			flex-wrap: wrap
+		}
+
+		.note p {
+			font-size: 16px;
+			color: var(--ink-2);
+			max-width: 56ch
+		}
+
+		.note .mono-xs {
+			white-space: nowrap;
+			padding-top: 4px
+		}
+
+		/* ---------- contact ---------- */
+		/* one screen, like every other section: nothing here grows past the viewport height */
+		#contact {
+			align-items: flex-end;
+			padding-bottom: clamp(36px, 6vh, 72px)
+		}
+
+		#contact .wrap {
+			display: flex;
+			flex-direction: column;
+			gap: clamp(20px, 4.5vh, 56px)
+		}
+
+		.contact-grid {
+			display: grid;
+			grid-template-columns: 1.2fr .8fr .8fr;
+			gap: clamp(22px, 3.4vw, 48px);
+			align-items: start
+		}
+
+		.contact-block {
+			display: flex;
+			flex-direction: column;
+			gap: 9px
+		}
+
+		.contact-block a {
+			font-size: 16.5px;
+			text-decoration: none;
+			color: var(--ink);
+			background-image: linear-gradient(var(--glow), var(--glow));
+			background-size: 0% 1px;
+			background-repeat: no-repeat;
+			background-position: 0 100%;
+			transition: background-size .4s var(--ease);
+			padding-bottom: 2px
+		}
+
+		.contact-block a:hover {
+			background-size: 100% 1px
+		}
+
+		.contact-block p {
+			font-size: 16px;
+			color: var(--ink-2)
+		}
+
+		.contact-block p .nw {
+			white-space: nowrap
+		}
+
+		.colophon {
+			display: flex;
+			justify-content: space-between;
+			gap: 16px;
+			flex-wrap: wrap;
+			padding-top: 18px;
+			border-top: 1px solid var(--rule)
+		}
+
+		.bigmark {
+			font-family: var(--f-display);
+			font-weight: 800;
+			letter-spacing: -.045em;
+			font-size: clamp(40px, min(11.4vw, calc(47vh - 230px)), 146px);
+			line-height: .85;
+			color: var(--ink)
+		}
+
+		.bigmark .amp {
+			color: var(--glow)
+		}
+
+		/* ---------- responsive ---------- */
+		@media (max-width:980px) {
+			.lots {
+				grid-template-columns: repeat(2, 1fr);
+				row-gap: 44px
+			}
+		}
+
+		@media (max-width:820px) {
+			.lb-panel {
+				width: 100vw;
+				height: 100svh;
+				border-radius: 0;
+				grid-template-columns: 1fr;
+				grid-template-rows: minmax(0, 58%) minmax(0, 42%)
+			}
+
+			.lb-info {
+				gap: 12px;
+				padding-bottom: 0
+			}
+
+			.lb-foot {
+				position: sticky;
+				bottom: 0;
+				background: var(--paper);
+				padding-bottom: 18px;
+				margin-inline: -4px;
+				padding-inline: 4px
+			}
+		}
+
+		@media (max-width:900px) {
+
+			.cols-3,
+			.grid-3,
+			.steps {
+				grid-template-columns: repeat(2, 1fr)
+			}
+
+			#arc .wrap,
+			#workshop .wrap {
+				grid-template-columns: 1fr;
+				gap: 34px
+			}
+
+			#intro .wrap {
+				grid-template-columns: 1.3fr .7fr;
+				gap: clamp(20px, 3.5vw, 34px)
+			}
+
+			.focus-photo {
+				max-width: 420px;
+				aspect-ratio: 4/5
+			}
+
+			.contact-grid {
+				grid-template-columns: 1fr 1fr
+			}
+
+			#intro .bg::after {
+				background:
+					linear-gradient(180deg, rgba(252, 252, 250, .92) 0%, rgba(252, 252, 250, .86) 45%, rgba(252, 252, 250, .94) 78%, var(--paper) 100%)
+			}
+		}
+
+		@media (max-width:620px) {
+			/* one rhythm for every section: the same padding top and bottom, so each gap between sections matches */
+			.slide {
+				--slide-pad: clamp(48px, 7vh, 64px);
+				min-height: auto;
+				padding-block: var(--slide-pad)
+			}
+
+			/* the hero copy sits centred on the first screen, for impact on arrival */
+			#intro {
+				min-height: 100svh;
+				align-items: center;
+				padding-block: 24px
+			}
+
+			/* the collection rides up by half the empty band under the hero (measured in the script) */
+			#collection {
+				margin-top: calc(var(--hero-pull, 0px) * -1)
+			}
+
+			/* reveals on a phone: shorter travel, quicker, so content is there as fast as a thumb scrolls */
+			.rv {
+				transform: translate3d(0, 12px, 0);
+				transition-duration: .55s;
+				transition-delay: calc(var(--d, 0)*50ms)
+			}
+
+			.rv.in {
+				transform: none
+			}
+
+			.cols-3,
+			.grid-3,
+			.steps,
+			#commissions .steps,
+			.contact-grid {
+				grid-template-columns: 1fr
+			}
+
+			.grid-3 {
+				gap: 30px
+			}
+
+			.dl {
+				grid-template-columns: 1fr;
+				gap: 0
+			}
+
+			.dl dt {
+				padding-bottom: 0;
+				border-top: 1px solid var(--rule)
+			}
+
+			.dl dd {
+				padding-top: 3px;
+				border-top: 0
+			}
+
+			#intro .wrap {
+				grid-template-columns: 1fr
+			}
+
+			.hero-photo {
+				display: none
+			}
+		}
+
+		/* arrow keys mean nothing to a finger */
+		@media (hover:none) and (pointer:coarse) {
+			.hint {
+				display: none
+			}
+		}
+
+		@media (prefers-reduced-motion:reduce) {
+			html {
+				scroll-behavior: auto
+			}
+
+			*,
+			*::before,
+			*::after {
+				animation-duration: .001ms !important;
+				animation-iteration-count: 1 !important;
+				transition-duration: .001ms !important
+			}
+
+			.rv {
+				opacity: 1;
+				transform: none
+			}
+		}
+	</style>
+
+	<!-- ---------- full specification popup (standalone: opens on top of the photo deck) ---------- -->
+	<style>
+		.fs {
+			position: fixed;
+			inset: 0;
+			z-index: 110;
+			display: grid;
+			place-items: center;
+			visibility: hidden;
+			pointer-events: none;
+			transition: visibility 0s linear .6s
+		}
+
+		.fs.open {
+			visibility: visible;
+			pointer-events: auto;
+			transition: none
+		}
+
+		.fs-scrim {
+			position: absolute;
+			inset: 0;
+			background: rgba(20, 24, 26, .42);
+			-webkit-backdrop-filter: blur(8px);
+			backdrop-filter: blur(8px);
+			opacity: 0;
+			transition: opacity .5s var(--ease)
+		}
+
+		.fs.open .fs-scrim {
+			opacity: 1
+		}
+
+		.fs-panel {
+			position: relative;
+			width: min(1240px, calc(100vw - 2*var(--gutter)));
+			height: min(820px, calc(100svh - 40px));
+			background: var(--paper);
+			border-radius: 24px;
+			overflow: hidden;
+			display: grid;
+			grid-template-columns: minmax(0, 1.15fr) minmax(340px, 1fr);
+			box-shadow: 0 50px 110px -40px rgba(0, 0, 0, .7), 0 0 0 1px rgba(20, 24, 26, .06);
+			opacity: 0;
+			transform: translateY(36px) scale(.965);
+			transition: opacity .5s var(--ease), transform .7s var(--ease)
+		}
+
+		.fs.open .fs-panel {
+			opacity: 1;
+			transform: none
+		}
+
+		/* left: the carousel */
+		.fs-gallery {
+			display: grid;
+			grid-template-rows: minmax(0, 1fr) auto;
+			min-height: 0;
+			background: radial-gradient(120% 90% at 50% 40%, var(--panel) 0%, var(--panel-2) 100%)
+		}
+
+		.fs-stage {
+			position: relative;
+			overflow: hidden;
+			touch-action: pan-y;
+			cursor: grab
+		}
+
+		.fs-stage.dragging {
+			cursor: grabbing
+		}
+
+		.fs-track {
+			display: flex;
+			height: 100%;
+			will-change: transform;
+			transition: transform .65s var(--ease)
+		}
+
+		.fs-stage.dragging .fs-track {
+			transition: none
+		}
+
+		.fs-slide {
+			flex: 0 0 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: clamp(24px, 3.4vw, 48px) clamp(24px, 4vw, 64px) clamp(16px, 2vw, 24px)
+		}
+
+		.fs-slide img {
+			display: block;
+			max-width: 100%;
+			max-height: 100%;
+			width: auto;
+			height: auto;
+			border-radius: 14px;
+			box-shadow: 0 2px 6px rgba(20, 24, 26, .08), 0 34px 60px -34px rgba(20, 24, 26, .55);
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-user-drag: none;
+			pointer-events: none
+		}
+
+		.fs-drawn {
+			position: relative;
+			height: 100%;
+			max-width: 100%;
+			aspect-ratio: 4/5;
+			border-radius: 14px;
+			background: var(--paper);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 2px 6px rgba(20, 24, 26, .06), 0 34px 60px -34px rgba(20, 24, 26, .4)
+		}
+
+		.fs-drawn svg {
+			width: 78%;
+			height: 78%
+		}
+
+		.fs-drawn .stamp,
+		.fs-drawn .view {
+			position: absolute;
+			left: 16px;
+			font-family: var(--f-label);
+			font-size: 9.5px;
+			letter-spacing: .13em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		.fs-drawn .stamp {
+			top: 14px
+		}
+
+		.fs-drawn .view {
+			bottom: 14px
+		}
+
+		.fs-arrow {
+			-webkit-appearance: none;
+			appearance: none;
+			position: absolute;
+			top: 50%;
+			z-index: 2;
+			display: grid;
+			place-items: center;
+			width: 46px;
+			height: 46px;
+			margin-top: -23px;
+			border-radius: 99px;
+			border: 1px solid rgba(20, 24, 26, .1);
+			background: rgba(252, 252, 250, .82);
+			-webkit-backdrop-filter: blur(8px);
+			backdrop-filter: blur(8px);
+			color: var(--ink);
+			font-size: 17px;
+			line-height: 1;
+			cursor: pointer;
+			opacity: .75;
+			transition: opacity .3s var(--ease), background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease)
+		}
+
+		.fs-arrow.prev {
+			left: 16px
+		}
+
+		.fs-arrow.next {
+			right: 16px
+		}
+
+		.fs-stage:hover .fs-arrow,
+		.fs-arrow:focus-visible {
+			opacity: 1
+		}
+
+		.fs-arrow:hover {
+			background: var(--ink);
+			color: var(--paper)
+		}
+
+		.fs-arrow:active {
+			transform: scale(.94)
+		}
+
+		.fs-arrow[disabled] {
+			opacity: 0 !important;
+			pointer-events: none
+		}
+
+		.fs-arrow[hidden],
+		.fs-count[hidden],
+		.fs-thumbs[hidden] {
+			display: none
+		}
+
+		.fs-count {
+			position: absolute;
+			left: 18px;
+			top: 18px;
+			z-index: 2;
+			padding: 6px 11px;
+			border-radius: 99px;
+			background: rgba(252, 252, 250, .86);
+			-webkit-backdrop-filter: blur(6px);
+			backdrop-filter: blur(6px);
+			font-family: var(--f-label);
+			font-size: 11px;
+			letter-spacing: .06em;
+			font-variant-numeric: tabular-nums;
+			color: var(--ink)
+		}
+
+		.fs-count span {
+			color: var(--ink-3)
+		}
+
+		.fs-strip {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			padding: 0 clamp(24px, 4vw, 64px) clamp(20px, 2.6vw, 30px)
+		}
+
+		.fs-cap {
+			min-height: 2.9em;
+			font-size: 14.5px;
+			line-height: 1.45;
+			color: var(--ink-2);
+			text-align: center
+		}
+
+		.fs-cap b {
+			font-family: var(--f-label);
+			font-weight: 500;
+			font-size: 10.5px;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--ink);
+			margin-right: 8px
+		}
+
+		.fs-thumbs {
+			display: flex;
+			justify-content: center;
+			gap: 10px;
+			overflow-x: auto;
+			scrollbar-width: none;
+			padding: 3px
+		}
+
+		.fs-thumbs::-webkit-scrollbar {
+			display: none
+		}
+
+		.fs-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			flex: 0 0 auto;
+			width: 54px;
+			height: 68px;
+			padding: 0;
+			border: 0;
+			border-radius: 9px;
+			overflow: hidden;
+			background: var(--paper);
+			cursor: pointer;
+			opacity: .55;
+			outline: 1px solid transparent;
+			outline-offset: 2px;
+			transition: opacity .3s var(--ease), outline-color .3s var(--ease), transform .3s var(--ease)
+		}
+
+		.fs-thumb:hover {
+			opacity: .9
+		}
+
+		.fs-thumb[aria-current="true"] {
+			opacity: 1;
+			outline-color: var(--ink)
+		}
+
+		.fs-thumb img,
+		.fs-thumb svg {
+			display: block;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			pointer-events: none
+		}
+
+		/* right: the specification */
+		.fs-info {
+			display: flex;
+			flex-direction: column;
+			gap: 18px;
+			min-height: 0;
+			padding: clamp(32px, 3.8vw, 54px) clamp(26px, 3.4vw, 48px) clamp(26px, 3vw, 40px);
+			overflow-y: auto;
+			overscroll-behavior: contain
+		}
+
+		.fs-info h2 {
+			font-size: clamp(30px, 3.2vw, 46px)
+		}
+
+		.fs-price {
+			display: flex;
+			align-items: baseline;
+			gap: 12px;
+			flex-wrap: wrap
+		}
+
+		.fs-price .price {
+			font-size: 15px
+		}
+
+		.fs-status {
+			font-family: var(--f-label);
+			font-size: 10.5px;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+			color: var(--ink-3)
+		}
+
+		.fs-status.sold {
+			color: #8A7038
+		}
+
+		.fs-lede {
+			font-size: 16.5px;
+			line-height: 1.6;
+			color: var(--ink-2)
+		}
+
+		.fs-specs {
+			margin-top: 4px;
+			border-bottom: 1px solid var(--rule)
+		}
+
+		.fs-specs dd {
+			font-size: 15px
+		}
+
+		.fs-cta {
+			align-self: flex-start;
+			margin-top: auto
+		}
+
+		.fs-close {
+			-webkit-appearance: none;
+			appearance: none;
+			position: absolute;
+			top: 14px;
+			right: 14px;
+			z-index: 5;
+			display: grid;
+			place-items: center;
+			width: 44px;
+			height: 44px;
+			border-radius: 99px;
+			border: 1px solid var(--rule-2);
+			background: rgba(252, 252, 250, .88);
+			color: var(--ink);
+			font-size: 22px;
+			line-height: 1;
+			cursor: pointer;
+			transition: border-color .3s var(--ease), transform .3s var(--ease)
+		}
+
+		.fs-close:hover {
+			border-color: var(--ink);
+			transform: rotate(90deg)
+		}
+
+		@media (max-width:820px) {
+			.fs-panel {
+				width: 100vw;
+				height: 100svh;
+				border-radius: 0;
+				grid-template-columns: 1fr;
+				grid-template-rows: auto;
+				overflow-y: auto;
+				overscroll-behavior: contain
+			}
+
+			.fs-gallery {
+				height: 62svh;
+				min-height: 380px
+			}
+
+			.fs-slide {
+				padding: 56px 20px 12px
+			}
+
+			.fs-arrow {
+				opacity: 1;
+				width: 40px;
+				height: 40px;
+				margin-top: -20px
+			}
+
+			.fs-arrow.prev {
+				left: 8px
+			}
+
+			.fs-arrow.next {
+				right: 8px
+			}
+
+			.fs-strip {
+				padding: 0 20px 16px
+			}
+
+			.fs-info {
+				overflow: visible;
+				padding: 28px 20px 36px
+			}
+
+			.fs-close {
+				position: fixed
+			}
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;left:-9999px">
+		<defs>
+			<radialGradient id="g-glow">
+				<stop offset="0" stop-color="#F9D695" stop-opacity=".92" />
+				<stop offset=".42" stop-color="#D8862A" stop-opacity=".3" />
+				<stop offset="1" stop-color="#D8862A" stop-opacity="0" />
+			</radialGradient>
+			<linearGradient id="g-wood" x1="0" y1="0" x2="1" y2="0">
+				<stop offset="0" stop-color="#E7D2AC" />
+				<stop offset=".5" stop-color="#BE9558" />
+				<stop offset="1" stop-color="#84602F" />
+			</linearGradient>
+			<linearGradient id="g-metal" x1="0" y1="0" x2="1" y2="0">
+				<stop offset="0" stop-color="#D5D9DA" />
+				<stop offset=".42" stop-color="#A9AFB2" />
+				<stop offset="1" stop-color="#7C8489" />
+			</linearGradient>
+			<linearGradient id="g-brass" x1="0" y1="0" x2="1" y2="0">
+				<stop offset="0" stop-color="#E4C98B" />
+				<stop offset=".45" stop-color="#C0A05C" />
+				<stop offset="1" stop-color="#8A7038" />
+			</linearGradient>
+		</defs>
+	</svg>
+
+	<div class="progress" aria-hidden="true"><span id="bar"></span></div>
+
+	<div class="rail" aria-hidden="true">
+		<b>Light &amp; Matter</b>
+		<span id="counter">01 / 09</span>
+	</div>
+
+	<nav class="dots" id="dots" aria-label="Sections"></nav>
+
+	<div class="lang" role="group" aria-label="Language">
+		<button type="button" data-lang="en" lang="en" aria-pressed="true">EN</button><span
+			aria-hidden="true">/</span><button type="button" data-lang="ro" lang="ro" aria-pressed="false">RO</button>
+	</div>
+
+	<main>
+
+		<!-- 01 ─────────────────────────── INTRO -->
+		<section class="slide" id="intro" data-label="Intro">
+			<div class="bg" aria-hidden="true">
+				<video autoplay muted loop playsinline preload="auto" disablepictureinpicture
+					poster="light-and-matter/videos/hero-poster.jpg">
+					<source src="light-and-matter/videos/hero.webm" type="video/webm">
+					<source src="light-and-matter/videos/hero.mp4" type="video/mp4">
+				</video>
+			</div>
+			<div class="wrap">
+				<div class="hero-copy">
+					<p class="eyebrow hero-el" style="--d:0">Light &amp; Matter · handmade lighting, one of one</p>
+					<h1 class="hero-el" style="--d:1">Material.<br>Form.<br>Light.</h1>
+					<p class="hero-sub hero-el" style="--d:2">Every lamp starts as something already finished: a branch
+						the water bleached for a decade, a slice off a fallen walnut, now and then a piston or a
+						headlamp bezel that stopped being useful in 1974. I dry it, cut it, polish it, protect it with
+						special lacquer, and wire it myself as an authorized electrician.</p>
+					<div class="actions hero-el" style="--d:3">
+						<a class="btn" href="#collection">See the work</a>
+						<a class="btn ghost" href="#commissions">Commission a piece</a>
+					</div>
+					<div class="hint hero-el" style="--d:4">
+						<span class="key">&larr;</span><span class="key">&rarr;</span> to move through the studio
+					</div>
+				</div>
+				<figure class="hero-photo hero-el" style="--d:2;margin:0">
+					<button class="hero-open" type="button" aria-label="The Arc · open 4 photographs"><img
+							src="light-and-matter/assets/arc/arc-lit.jpg"
+							alt="The Arc at night, the filament lit, throwing warm light across the wall"></button>
+					<figcaption class="photo-tag" id="hero-tag"><span>The Arc · Lit</span></figcaption>
+				</figure>
+			</div>
+		</section>
+
+		<!-- 02 ─────────────────────────── COLLECTION -->
+		<section class="slide" id="collection" data-label="Collection">
+			<div class="wrap">
+				<div class="head">
+					<p class="eyebrow rv">The collection</p>
+					<h2 class="rv" style="--d:1">Each one started<br>as something else.</h2>
+					<p class="lede rv" style="--d:2">One found object per lamp, never a pair. Open a lamp to leaf
+						through its photographs.</p>
+				</div>
+				<div class="lots">
+
+					<article class="lot rv" style="--d:1" data-piece="arc">
+						<button class="stack" type="button" aria-label="The Arc · open 4 photographs">
+							<span class="sheet s0"><img src="light-and-matter/assets/arc/arc-lit.jpg"
+									alt="The Arc lit at night, amber filament bulb under a brass socket, a dotted mandala on the wall behind"><span
+									class="cue"><b>4</b> photos</span></span>
+						</button>
+						<div class="piece-meta">
+							<div class="piece-row">
+								<h3>The Arc</h3>
+							</div>
+							<p class="piece-desc">Table lamp. Weathered branch, bark-edged log slice, hemp rope.</p>
+							<p class="dims">420–480 mm · built to the branch</p>
+						</div>
+					</article>
+
+					<article class="lot rv" style="--d:2" data-piece="trumpet">
+						<button class="stack" type="button" aria-label="The Trumpet · open 3 photographs">
+							<span class="sheet s0"><img src="light-and-matter/assets/trumpet/trumpet.jpg"
+									alt="A brass trumpet standing on its bell on a round wooden plinth, lit under a pleated drum shade"><span
+									class="cue"><b>3</b> photos</span></span>
+						</button>
+						<div class="piece-meta">
+							<div class="piece-row">
+								<h3>The Trumpet</h3>
+							</div>
+							<p class="piece-desc">Table lamp. A retired B-flat trumpet stood on its bell, pleated drum
+								shade.</p>
+							<p class="dims">approx. 800 mm · one of one</p>
+						</div>
+					</article>
+
+					<article class="lot rv" style="--d:3" data-piece="conrod">
+						<button class="stack" type="button" aria-label="Conrod, sold · open 1 photograph">
+							<span class="sheet s0"><img src="light-and-matter/assets/conrod/conrod.jpg"
+									alt="A connecting rod arching up from an engine piston to a steel dome shade, lit on a wooden desk at night"><span
+									class="cue"><b>1</b> photo</span><span class="band"
+									aria-hidden="true">Sold</span></span>
+						</button>
+						<div class="piece-meta">
+							<div class="piece-row">
+								<h3>Conrod</h3><span class="price">Sold</span>
+							</div>
+							<p class="piece-desc">Desk lamp. Engine piston and connecting rod, spun steel dome.</p>
+							<p class="dims">approx. 450 mm · a twin can be made</p>
+						</div>
+					</article>
+
+					<article class="lot rv" style="--d:4" data-piece="canopy">
+						<button class="stack" type="button" aria-label="Canopy · open 1 photograph">
+							<span class="sheet s0"><img src="light-and-matter/assets/canopy/canopy.jpg"
+									alt="A connecting rod standing upright in an engine piston under a square steel shade cut with bare branches, lit on a wooden table"><span
+									class="cue"><b>1</b> photo</span></span>
+						</button>
+						<div class="piece-meta">
+							<div class="piece-row">
+								<h3>Canopy</h3>
+							</div>
+							<p class="piece-desc">Table lamp. Piston and connecting rod, square steel shade cut with
+								branches.</p>
+							<p class="dims">approx. 520 mm · in the studio</p>
+						</div>
+					</article>
+
+				</div>
+			</div>
+		</section>
+
+		<!-- 03 ─────────────────────────── MATERIALS -->
+		<section class="slide" id="materials" data-label="Materials">
+			<div class="wrap">
+				<div class="head">
+					<p class="eyebrow rv">Where it comes from</p>
+					<h2 class="rv" style="--d:1">Three sources,<br>no catalogue.</h2>
+					<p class="lede rv" style="--d:2">Nothing is bought new except the socket, the flex and the oil.
+						Everything else is found, and what it was stays visible.</p>
+				</div>
+				<div class="cols-3">
+					<div class="mat rv" style="--d:1">
+						<h3>Found wood</h3>
+						<p>Gathered by hand along riverbanks and woodlot edges, in the week after storms. Only wood that
+							is already dead and loose. Never cut, never taken off anything still living.</p>
+						<ul class="spec-list">
+							<li>Weathered hardwood branch · walnut, oak, plum</li>
+							<li>Bases are slices off a fallen trunk, bark left on</li>
+							<li>Air-dried 6–9 months, no kiln</li>
+							<li>Cracks left open, not resin-poured</li>
+						</ul>
+					</div>
+					<div class="mat rv" style="--d:2">
+						<h3>Repurposed metal</h3>
+						<p>Pulled from scrapyards and farm sheds. Degreased, wire-brushed by hand, then clear-lacquered
+							with the pitting left exactly as found. That surface took forty years to make.</p>
+						<ul class="spec-list">
+							<li>Dacia 1300 pistons, bezels, rocker arms</li>
+							<li>Tractor gearbox spindles · belt pulleys</li>
+							<li>Brass unions, copper brake line</li>
+							<li>Never sandblasted, never chromed</li>
+						</ul>
+					</div>
+					<div class="mat rv" style="--d:3">
+						<h3>Oddities</h3>
+						<p>The drawer everything else lives in. Some of it waits two years for the right piece of wood
+							to turn up, and some of it never gets used at all.</p>
+						<ul class="spec-list">
+							<li>Porcelain fuse holders, 1960s substation</li>
+							<li>Bakelite toggle switches</li>
+							<li>Brass sextant vernier plates</li>
+							<li>Telegraph insulators, lab glass</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 04 ─────────────────────────── FOCUS (commented out: now lives in the Full specification popup, #fs)
+		<section class="slide" id="arc" data-label="Specification">
+			<div class="wrap">
+				<figure class="focus-photo rv" style="margin:0">
+					<img src="light-and-matter/assets/arc/arc-room.jpg"
+						alt="The Arc photographed indoors in daylight, showing the rope, brass socket and log base"
+						loading="lazy">
+				</figure>
+				<div class="feature-copy">
+					<div class="head" style="margin-bottom:0">
+						<p class="eyebrow rv">Specification</p>
+						<h2 class="rv" style="--d:1">The Arc</h2>
+						<p class="lede rv" style="--d:2">The branch spent nine months drying in a shed before it was
+							stable enough to trust. It sits in a blind mortise cut into the log slice: no bracket, no
+							visible screw. The rope is not decoration: it carries the flex from socket to base, and it
+							is what you take hold of when you move the lamp.</p>
+					</div>
+					<dl class="dl rv" style="--d:3">
+						<dt>Height</dt>
+						<dd><b>420–480 mm</b> · base Ø 200–240 mm</dd>
+						<dt>Arm</dt>
+						<dd>Weathered hardwood branch, cured 9 months, oiled</dd>
+						<dt>Base</dt>
+						<dd>Slice off a fallen trunk, bark left on, felt-footed</dd>
+						<dt>Socket</dt>
+						<dd>Brass E27, knurled shell, key switch on the socket</dd>
+						<dt>Bulb</dt>
+						<dd><b>4 W</b> filament LED · <b>2700 K</b> · dimmable · included</dd>
+						<dt>Cord</dt>
+						<dd>2 m black braided flex in hemp rope, inline switch</dd>
+						<dt>Weight</dt>
+						<dd><b>2.1–2.8 kg</b></dd>
+						<dt>Price</dt>
+						<dd><b>€240–290</b>, depends on the branch, one of one</dd>
+					</dl>
+				</div>
+			</div>
+		</section>
+		-->
+
+		<!-- 05 ─────────────────────────── WORKBOOK (commented out)
+		<section class="slide" id="workbook" data-label="Workbook">
+			<div class="wrap">
+				<div class="head">
+					<p class="eyebrow rv">Drawn, not yet built</p>
+					<h2 class="rv" style="--d:1">From the workbook.</h2>
+					<p class="lede rv" style="--d:2">Pieces with the metal already in the shop and the wood still
+						drying. Any of the three can be built to order. The drawing is the agreement, the lamp will
+						differ where the material insists.</p>
+				</div>
+				<div class="grid-3">
+
+					<article class="piece rv" style="--d:1">
+						<div class="tile">
+							<span class="stamp">Drawing · to order</span>
+							<svg viewBox="0 0 200 230" role="img" aria-label="Drawing of the Piston No. 4 desk lamp">
+								<circle class="lamp-glow" cx="140" cy="88" r="70" fill="url(#g-glow)" />
+								<path d="M110 76 L172 76 L196 156 L92 156 Z" fill="#D8862A" opacity=".06" />
+								<path d="M100 138 L141 74" fill="none" stroke="url(#g-brass)" stroke-width="6"
+									stroke-linecap="round" />
+								<path d="M108 74 A34 26 0 0 1 174 74 Z" fill="#FFF8EB" stroke="#14181A" stroke-width="1"
+									stroke-linejoin="round" />
+								<circle cx="141" cy="80" r="7" fill="#FCE9C2" />
+								<rect x="74" y="132" width="52" height="58" rx="4" fill="url(#g-metal)" stroke="#14181A"
+									stroke-width=".9" />
+								<path d="M76 146 H124 M76 156 H124" stroke="#6E767B" stroke-width="1.4" opacity=".7" />
+								<circle cx="100" cy="176" r="6" fill="none" stroke="#6E767B" stroke-width="1.4" />
+								<rect x="52" y="190" width="96" height="8" rx="2" fill="#B9BEC0" />
+								<ellipse cx="100" cy="206" rx="62" ry="5" fill="#14181A" opacity=".05" />
+							</svg>
+						</div>
+						<div class="piece-meta">
+							<div class="piece-row">
+								<h3>Piston No. 4</h3>
+							</div>
+							<p class="piece-desc">Desk lamp. Dacia 1300 piston, hand-bent brass arm, opal half-dome.</p>
+							<p class="dims">410 × 180 mm · 4 weeks</p>
+						</div>
+					</article>
+
+					<article class="piece rv" style="--d:2">
+						<div class="tile">
+							<span class="stamp">Drawing · to order</span>
+							<svg viewBox="0 0 200 230" role="img" aria-label="Drawing of the Bezel 74 wall sconce">
+								<circle class="lamp-glow" cx="100" cy="104" r="86" fill="url(#g-glow)" />
+								<circle cx="100" cy="104" r="52" fill="none" stroke="url(#g-metal)" stroke-width="10" />
+								<circle cx="100" cy="104" r="44" fill="#FFF7E6" stroke="#E6DECB" stroke-width="1" />
+								<circle cx="100" cy="104" r="33" fill="none" stroke="#EFDFBE" stroke-width="1.1" />
+								<circle cx="100" cy="104" r="22" fill="none" stroke="#EFDFBE" stroke-width="1.1" />
+								<circle cx="100" cy="104" r="11" fill="#FBE7BC" />
+								<rect x="93" y="158" width="14" height="28" fill="url(#g-metal)" />
+								<rect x="76" y="184" width="48" height="7" rx="1.5" fill="#A9AFB2" />
+								<ellipse cx="100" cy="199" rx="50" ry="4" fill="#14181A" opacity=".05" />
+							</svg>
+						</div>
+						<div class="piece-meta">
+							<div class="piece-row">
+								<h3>Bezel &rsquo;74</h3>
+							</div>
+							<p class="piece-desc">Wall sconce. Headlamp ring off a Dacia 1300, sandblasted opal glass.
+							</p>
+							<p class="dims">Ø195 × 90 mm · 3 weeks</p>
+						</div>
+					</article>
+
+					<article class="piece rv" style="--d:3">
+						<div class="tile">
+							<span class="stamp">Drawing · to order</span>
+							<svg viewBox="0 0 200 230" role="img" aria-label="Drawing of the Spindle gear pendant">
+								<circle class="lamp-glow" cx="100" cy="164" r="70" fill="url(#g-glow)" />
+								<path d="M82 148 L118 148 L156 214 L44 214 Z" fill="#D8862A" opacity=".07" />
+								<path d="M100 14 V62" stroke="#8B938E" stroke-width="1.2" />
+								<circle cx="100" cy="86" r="26" fill="none" stroke="#9AA0A3" stroke-width="11"
+									stroke-dasharray="7 8" />
+								<circle cx="100" cy="86" r="21" fill="url(#g-metal)" stroke="#14181A"
+									stroke-width=".8" />
+								<circle cx="100" cy="86" r="7" fill="#F3F2ED" stroke="#7C8489" stroke-width="1" />
+								<path d="M64 102 L136 102 L118 148 L82 148 Z" fill="url(#g-wood)" stroke="#14181A"
+									stroke-width=".9" stroke-linejoin="round" />
+								<path d="M82 148 L118 148" stroke="#D8862A" stroke-width="1.6" opacity=".6" />
+								<circle cx="100" cy="158" r="10" fill="#FDF2D8" stroke="#14181A" stroke-width=".8" />
+							</svg>
+						</div>
+						<div class="piece-meta">
+							<div class="piece-row">
+								<h3>Spindle</h3>
+							</div>
+							<p class="piece-desc">Pendant. Tractor gearbox wheel, walnut cone turned to the tooth pitch.
+							</p>
+							<p class="dims">Ø310 × 260 mm · 5 weeks</p>
+						</div>
+					</article>
+
+				</div>
+			</div>
+		</section>
+		-->
+
+		<!-- 06 ─────────────────────────── PROCESS -->
+		<section class="slide" id="process" data-label="Process">
+			<div class="wrap">
+				<div class="head">
+					<p class="eyebrow rv">How a lamp happens</p>
+					<h2 class="rv" style="--d:1">Months of waiting,<br>two weeks of work.</h2>
+					<p class="lede rv" style="--d:2">The order matters. Skip the drying and the wood splits around the
+						socket a year later, in someone's living room.</p>
+				</div>
+				<div class="steps">
+					<div class="step rv" style="--d:1"><span class="num">01</span>
+						<div class="step-body">
+							<h3>Finding</h3>
+							<p>Walked after storms, along water and woodlot edges. Only what is already dead and loose.
+								Most of what I pick up goes back.</p>
+						</div>
+					</div>
+					<div class="step rv" style="--d:2"><span class="num">02</span>
+						<div class="step-body">
+							<h3>Curing</h3>
+							<p>Washed, bark taken back to the hard wood underneath, then stacked in an open shed with
+								air on all four sides. No kiln: kiln-dried branch wood checks along the grain.</p>
+						</div>
+					</div>
+					<div class="step rv" style="--d:3"><span class="num">03</span>
+						<div class="step-body">
+							<h3>The base</h3>
+							<p>A slice off a fallen trunk, bark left on the edge. Flattened by hand until
+								it sits on a table without a single rock.</p>
+						</div>
+					</div>
+					<div class="step rv" style="--d:1"><span class="num">04</span>
+						<div class="step-body">
+							<h3>Fitting</h3>
+							<p>The branch decides where the socket goes, not the drawing. Blind mortise into the base,
+								brass E27 with a key switch, nothing structural held by glue.</p>
+						</div>
+					</div>
+					<div class="step rv" style="--d:2"><span class="num">05</span>
+						<div class="step-body">
+							<h3>Rope and wiring</h3>
+							<p>Hemp rope spiralled from socket to base with the flex inside it. Strain relief at both
+								ends, then continuity- and insulation-tested before it leaves.</p>
+						</div>
+					</div>
+					<div class="step rv" style="--d:3"><span class="num">06</span>
+						<div class="step-body">
+							<h3>Finish</h3>
+							<p>Three coats of wood oil, 24 hours between, cut back with sandpaper. No stain, ever.
+								That honey colour is the wood and the oil, nothing else.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 07 ─────────────────────────── WORKSHOP -->
+		<section class="slide" id="workshop" data-label="Workshop">
+			<div class="bg" aria-hidden="true"><img src="light-and-matter/assets/hills.jpg" alt=""></div>
+			<div class="wrap">
+				<div class="statement">
+					<p class="eyebrow rv">The workshop</p>
+					<h2 class="rv" style="--d:1">One bench,<br>one pair of hands.</h2>
+					<p class="rv" style="--d:2">The bench is outside, under a walnut.
+						The first time a finished lamp is switched on, it is switched on in
+						the yard.</p>
+					<p class="rv" style="--d:3">I don't make series. Two lamps off the same tree will still be two
+						different lamps, and if you ask me for a matching pair I'll tell you honestly which one to take.
+						What you get is a signed piece, a written note of where every part of it came from, and someone
+						who will rewire it for you in ten years.</p>
+				</div>
+				<dl class="facts rv" style="--d:2">
+					<div class="fact">
+						<dt>Working since</dt>
+						<dd>2019</dd>
+					</div>
+					<div class="fact">
+						<dt>Identical pieces made</dt>
+						<dd>0</dd>
+					</div>
+					<div class="fact">
+						<dt>Lead time on a commission</dt>
+						<dd>3–5 weeks</dd>
+					</div>
+					<div class="fact">
+						<dt>Wired by</dt>
+						<dd>Me, authorized electrician</dd>
+					</div>
+					<div class="fact">
+						<dt>Electrical</dt>
+						<dd>230 V · 12 V · LED · E27 · E14</dd>
+					</div>
+					<div class="fact">
+						<dt>Ships</dt>
+						<dd>EU-wide, crated</dd>
+					</div>
+					<div class="fact">
+						<dt>Repairs &amp; rewiring</dt>
+						<dd>Free, for life</dd>
+					</div>
+				</dl>
+			</div>
+		</section>
+
+		<!-- 08 ─────────────────────────── COMMISSIONS -->
+		<section class="slide" id="commissions" data-label="Commissions">
+			<div class="wrap">
+				<div class="head">
+					<p class="eyebrow rv">Commissions</p>
+					<h2 class="rv" style="--d:1">Bring me the object.</h2>
+					<p class="lede rv" style="--d:2">A grandfather's tool, a part off a car, a branch you
+						carried home from a holiday. It works best when the material already means something.</p>
+				</div>
+				<div class="steps">
+					<div class="step rv" style="--d:1"><span class="num">01</span>
+						<div class="step-body">
+							<h3>Send a photo</h3>
+							<p>The object, or the corner of the room it has to light. Shelf depth and a rough sense of
+								how dark you want it is enough to start.</p><span class="when">Reply within 2
+								days</span>
+						</div>
+					</div>
+					<div class="step rv" style="--d:2"><span class="num">02</span>
+						<div class="step-body">
+							<h3>Sketch and price</h3>
+							<p>A hand drawing, the materials I'd use, and a fixed price. No fee for this, and no
+								obligation. Half up front if you go ahead.</p><span class="when">Within a week</span>
+						</div>
+					</div>
+					<div class="step rv" style="--d:3"><span class="num">03</span>
+						<div class="step-body">
+							<h3>On the bench</h3>
+							<p>Photos as it goes. Delivered crated, with the bulb in it and a card listing where each
+								part came from.</p><span class="when">3 – 5 weeks</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 09 ─────────────────────────── CONTACT -->
+		<section class="slide" id="contact" data-label="Contact">
+			<div class="bg" aria-hidden="true">
+				<video muted loop playsinline preload="auto" disablepictureinpicture poster="light-and-matter/videos/contact-poster.jpg">
+					<source src="light-and-matter/videos/contact.webm" type="video/webm">
+					<source src="light-and-matter/videos/contact.mp4" type="video/mp4">
+				</video>
+			</div>
+			<div class="wrap">
+				<div class="head" style="margin-bottom:0">
+					<p class="eyebrow rv">Write</p>
+					<h2 class="rv" style="--d:1">The bench is outside,<br>under the walnut.</h2>
+				</div>
+				<div class="contact-grid">
+					<div class="contact-block rv" style="--d:1">
+						<span class="mono-xs">Write</span>
+						<a href="mailto:me@cristiangabriel.dev">me@cristiangabriel.dev</a>
+						<!-- <a href="tel:+40000000000">+40 000 000 000</a> -->
+						<p>Answered within two days, <span class="nw">usually in the evening.</span></p>
+					</div>
+				</div>
+				<div class="bigmark rv" style="--d:1">LIGHT <span class="amp">&amp;</span> MATTER</div>
+				<div class="colophon">
+					<span class="mono-xs">Handmade lighting · found wood, brass, salvage · est. 2019</span>
+					<span class="mono-xs">All pieces one of one · &copy;
+						2026</span>
+				</div>
+			</div>
+		</section>
+
+	</main>
+
+	<div class="lb" id="lb" role="dialog" aria-modal="true" aria-labelledby="lb-title" aria-hidden="true">
+		<div class="lb-scrim" data-close></div>
+		<div class="lb-panel">
+			<div class="lb-deck" id="lb-deck" aria-live="polite"></div>
+			<div class="lb-info">
+				<p class="eyebrow" id="lb-no"></p>
+				<h2 id="lb-title"></h2>
+				<div class="lb-price"><span class="lb-status" id="lb-status"></span></div>
+				<p class="lb-desc" id="lb-desc"></p>
+				<dl class="dl lb-specs" id="lb-specs"></dl>
+				<a class="lb-more" id="lb-more" href="#arc" hidden>Full specification &rarr;</a>
+				<div class="lb-foot">
+					<p class="lb-cap" id="lb-cap"></p>
+					<div class="lb-nav">
+						<span class="lb-count" id="lb-count"></span>
+						<button type="button" class="lb-btn" id="lb-prev"
+							aria-label="Previous photograph">&larr;</button>
+						<button type="button" class="lb-btn" id="lb-next" aria-label="Next photograph">&rarr;</button>
+					</div>
+				</div>
+			</div>
+			<button type="button" class="lb-close" id="lb-close" aria-label="Close" data-close>&times;</button>
+		</div>
+	</div>
+
+	<!-- ─────────────────────────── FULL SPECIFICATION (standalone popup, opened from "Full specification" in the deck) -->
+	<div class="fs" id="fs" role="dialog" aria-modal="true" aria-labelledby="fs-title" aria-hidden="true">
+		<div class="fs-scrim" data-fs-close></div>
+		<div class="fs-panel">
+			<div class="fs-gallery">
+				<div class="fs-stage" id="fs-stage" aria-roledescription="carousel">
+					<div class="fs-track" id="fs-track"></div>
+					<button type="button" class="fs-arrow prev" id="fs-prev">&larr;</button>
+					<button type="button" class="fs-arrow next" id="fs-next">&rarr;</button>
+					<span class="fs-count" id="fs-count"></span>
+				</div>
+				<div class="fs-strip">
+					<p class="fs-cap" id="fs-cap" aria-live="polite"></p>
+					<div class="fs-thumbs" id="fs-thumbs"></div>
+				</div>
+			</div>
+			<div class="fs-info">
+				<p class="eyebrow" id="fs-no"></p>
+				<h2 id="fs-title"></h2>
+				<div class="fs-price"><span class="price" id="fs-price"></span><span class="fs-status"
+						id="fs-status"></span></div>
+				<p class="fs-lede" id="fs-lede"></p>
+				<dl class="dl fs-specs" id="fs-specs"></dl>
+				<a class="btn fs-cta" id="fs-cta" href="#contact"></a>
+			</div>
+			<button type="button" class="fs-close" id="fs-close" data-fs-close>&times;</button>
+		</div>
+	</div>
+
+	<script>
+		(function () {
+			var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+			var dots = document.getElementById('dots');
+			var bar = document.getElementById('bar');
+			var counter = document.getElementById('counter');
+			var current = 0;
+
+			/* ---- background videos: hold on the poster frame for reduced motion, play only while on screen ---- */
+			var bgVideos = Array.prototype.slice.call(document.querySelectorAll('.bg video'));
+			bgVideos.forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); });
+			if (!reduce) {
+				if ('IntersectionObserver' in window) {
+					var vio = new IntersectionObserver(function (entries) {
+						entries.forEach(function (en) {
+							en.target._near = en.isIntersecting;
+							if (en.isIntersecting) { var p = en.target.play(); if (p && p.catch) p.catch(function () { }); }
+							else en.target.pause();
+						});
+					}, { rootMargin: '100% 0px', threshold: 0 });
+					bgVideos.forEach(function (v) { vio.observe(v); });
+					// some browsers (Safari) only buffer on play: play each far-off video for a moment so it is ready when reached
+					window.addEventListener('load', function () {
+						bgVideos.forEach(function (v) {
+							var r = v.getBoundingClientRect(), vh = window.innerHeight;
+							if (r.bottom > -vh && r.top < 2 * vh) return; // near the screen: the observer already plays it
+							v.addEventListener('playing', function () { if (!v._near) v.pause(); }, { once: true });
+							var p = v.play(); if (p && p.catch) p.catch(function () { });
+						});
+					});
+				} else bgVideos.forEach(function (v) { v.play(); });
+			}
+
+			/* ---- dot navigation ---- */
+			slides.forEach(function (s, i) {
+				var b = document.createElement('button');
+				b.type = 'button';
+				b.setAttribute('data-label', s.dataset.label);
+				b.setAttribute('aria-label', t('Go to ') + s.dataset.label);
+				b.addEventListener('click', function () { go(i); });
+				dots.appendChild(b);
+			});
+			var buttons = Array.prototype.slice.call(dots.children);
+
+			function setActive(i) {
+				if (i === current) return;
+				current = i;
+				buttons.forEach(function (b, n) { b.setAttribute('aria-current', n === i ? 'true' : 'false'); });
+				counter.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+			}
+			buttons[0].setAttribute('aria-current', 'true');
+
+			function go(i) {
+				i = Math.max(0, Math.min(slides.length - 1, i));
+				animateTo(startOf(slides[i]));
+				setActive(i);
+			}
+
+			/* ---- section scrolling: one gesture carries you one section, on an eased glide ---- */
+			var snapQuery = window.matchMedia('(min-width:820px) and (min-height:620px)');
+			var anim = null, restY = window.scrollY, settleTimer = 0;
+			var lastWheelAt = 0, lastMag = 0, consumed = false;
+
+			function snapOn() { return !reduce && snapQuery.matches; }
+			function maxY() { return document.documentElement.scrollHeight - window.innerHeight; }
+			function jump(y) { window.scrollTo({ top: y, behavior: 'instant' }); }
+			function slideAt(y) {
+				var a = 0;
+				for (var n = 0; n < slides.length; n++) if (slides[n].offsetTop <= y + 1) a = n;
+				return a;
+			}
+			// where a section's content sits centred on the screen, or null when the content is taller than the screen
+			function centreOf(s) {
+				var w = s.querySelector(':scope > .wrap'), vh = window.innerHeight;
+				if (!w || w.offsetHeight > vh) return null;
+				return Math.max(s.offsetTop, Math.round(s.offsetTop + w.offsetTop + w.offsetHeight / 2 - vh / 2));
+			}
+			// where a section rests, arriving from above / from below: centred on its content when that fits
+			// (the same spot from either side), otherwise its top, or its bottom flush with the screen's
+			function startOf(s) { var c = centreOf(s); return c === null ? s.offsetTop : c; }
+			function endOf(s) {
+				var c = centreOf(s);
+				return c === null ? Math.max(s.offsetTop, s.offsetTop + s.offsetHeight - window.innerHeight) : c;
+			}
+
+			function bezier(x1, y1, x2, y2) {
+				function c(t, p1, p2) { var u = 1 - t; return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t; }
+				return function (x) {
+					var lo = 0, hi = 1, t = x;
+					for (var i = 0; i < 18; i++) { t = (lo + hi) / 2; if (c(t, x1, x2) < x) lo = t; else hi = t; }
+					return c(t, y1, y2);
+				};
+			}
+			var ease = bezier(.2, .7, .15, 1); // quick pick-up, smooth landing
+
+			function stop() { if (anim) { cancelAnimationFrame(anim.raf); anim = null; restY = window.scrollY; } }
+
+			function animateTo(y) {
+				y = Math.max(0, Math.min(maxY(), Math.round(y)));
+				stop();
+				var from = window.scrollY, dist = y - from;
+				if (reduce || Math.abs(dist) < 2) { jump(y); restY = y; return; }
+				// a phone gets a quicker glide: long pages, short attention, and a thumb that wants to feel in charge
+				var dur = snapOn() ? Math.min(720, 480 + Math.abs(dist) * 0.08) : Math.min(560, 340 + Math.abs(dist) * 0.05), t0 = performance.now();
+				revealAt(y);
+				anim = { to: y };
+				anim.raf = requestAnimationFrame(function step(now) {
+					var t = Math.min(1, (now - t0) / dur);
+					jump(from + dist * ease(t));
+					if (t < 1) anim.raf = requestAnimationFrame(step);
+					else { anim = null; restY = y; }
+				});
+			}
+
+			window.addEventListener('wheel', function (e) {
+				if (lbOpen || !snapOn() || e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+				var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1);
+				var now = performance.now(), mag = Math.abs(dy), gap = now - lastWheelAt;
+				// a pause, or a fresh push while trackpad momentum is fading, starts a new gesture
+				var fresh = gap > 140 || (!anim && mag > lastMag * 1.6 && mag > 14);
+				lastWheelAt = now; lastMag = mag;
+				if (fresh) consumed = false;
+				if (!fresh && (anim || consumed)) { e.preventDefault(); return; } // swallow the momentum tail of a gesture already used
+				if (!dy) return;
+
+				// a fresh flick mid-glide carries on from where the glide is heading
+				var y = anim ? anim.to : window.scrollY, a = slideAt(y), A = slides[a], aTop = startOf(A), aEnd = endOf(A), target;
+				if (dy > 0) {
+					if (y < aEnd - 1) {                   // a tall section still has room: read it natively, stop at its end
+						if (anim) { e.preventDefault(); consumed = true; animateTo(Math.min(aEnd, y + mag)); }
+						else if (dy > aEnd - y) { e.preventDefault(); jump(aEnd); }
+						return;
+					}
+					if (!slides[a + 1]) { e.preventDefault(); consumed = true; return; } // the last section: nowhere to go, so no rubber-band bounce
+					target = startOf(slides[a + 1]);
+				} else {
+					if (y > aTop + 1 && y <= aEnd + 1) {
+						if (anim) { e.preventDefault(); consumed = true; animateTo(Math.max(aTop, y - mag)); }
+						else if (-dy > y - aTop) { e.preventDefault(); jump(aTop); }
+						return;
+					}
+					if (y > aEnd + 1) target = aEnd;      // caught between two sections
+					else if (a > 0) target = endOf(slides[a - 1]);
+					else { e.preventDefault(); consumed = true; return; }
+				}
+				e.preventDefault();                     // any movement of the wheel, however slight, moves one section
+				consumed = true;
+				animateTo(target);
+			}, { passive: false });
+
+			// a finger, a scrollbar drag or a key press takes over from any glide in progress
+			['touchstart', 'mousedown'].forEach(function (ev) { window.addEventListener(ev, stop, { passive: true }); });
+
+			// in-page links glide too
+			document.addEventListener('click', function (e) {
+				var link = e.target.closest && e.target.closest('a[href^="#"]');
+				if (!link || link.getAttribute('href').length < 2) return;
+				var el = document.getElementById(link.getAttribute('href').slice(1));
+				var i = slides.indexOf(el);
+				if (i < 0) return;
+				e.preventDefault();
+				closeDeck();
+				go(i);
+			});
+
+			// after scrolling we did not drive (touch, scrollbar, space bar), settle onto the nearest sensible edge
+			function settle() {
+				if (anim) return;
+				if (!snapOn()) { restY = window.scrollY; return; }
+				var y = window.scrollY, vh = window.innerHeight, dir = y - restY;
+				var nudge = Math.max(32, vh * 0.05);
+				var a = slideAt(y), A = slides[a], B = slides[a + 1], aEnd = endOf(A);
+				if (!B || y <= aEnd + 1) {                            // inside one section: centre it if it fits, else leave it
+					if (centreOf(A) !== null && Math.abs(y - aEnd) > 1) animateTo(aEnd); else restY = y;
+					return;
+				}
+				var bTop = B.offsetTop;
+				if (dir >= 0) animateTo(y + vh - bTop > nudge ? startOf(B) : aEnd);
+				else animateTo(bTop - y > nudge ? aEnd : startOf(B));
+			}
+
+			function onScrollSettle() {
+				if (anim || !snapOn()) return;
+				clearTimeout(settleTimer);
+				settleTimer = setTimeout(settle, 'onscrollend' in window ? 400 : 140);
+			}
+			if ('onscrollend' in window) window.addEventListener('scrollend', function () { clearTimeout(settleTimer); settle(); });
+			window.addEventListener('scroll', onScrollSettle, { passive: true });
+
+			/* ---- keyboard navigation ---- */
+			document.addEventListener('keydown', function (e) {
+				if (lbOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+				var t = e.target;
+				if (t && (/^(input|textarea|select)$/i.test(t.tagName) || t.isContentEditable)) return;
+				var k = e.key, handled = true;
+				if (k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown') go(current + 1);
+				else if (k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp') go(current - 1);
+				else if (k === 'Home') go(0);
+				else if (k === 'End') go(slides.length - 1);
+				else handled = false;
+				if (handled) e.preventDefault();
+			});
+
+			/* ---- which slide are we on ---- */
+			var spy = ('IntersectionObserver' in window) ? new IntersectionObserver(function (entries) {
+				entries.forEach(function (en) { if (en.isIntersecting) setActive(slides.indexOf(en.target)); });
+			}, { rootMargin: '-45% 0px -50% 0px', threshold: 0 }) : null;
+			if (spy) slides.forEach(function (s) { spy.observe(s); });
+
+			/* ---- the collection: card stacks that open into a deck of photographs ---- */
+			// Each piece's photographs, in order. To add one, add a line; a line without a src shows the drawing.
+			var PIECES = {
+				arc: {
+					no: '01', name: 'The Arc', status: 'Built to the branch · 3–5 weeks', more: '#arc',
+					desc: 'A weathered hardwood branch, cured nine months, set in a blind mortise in a bark-edged log slice. The hemp rope carries the flex from socket to base.',
+					specs: [['Height', '420–480 mm'], ['Socket', 'Brass E27, key switch'], ['Bulb', '4 W filament · 2700 K']],
+					photos: [
+						{ src: 'light-and-matter/assets/arc/arc-lit.jpg', w: 843, h: 1500, title: 'Lit', cap: 'Squirrel-cage filament, 2700 K, dimmed to about half.', alt: 'The Arc at night, the filament lit, throwing warm light across the wall' },
+						{ src: 'light-and-matter/assets/arc/arc-bench.jpg', w: 1141, h: 1400, title: 'On the bench', cap: 'Finished that afternoon. Globe bulb, hemp rope run the length of the branch.', alt: 'The Arc on a workbench beside screwdrivers and tape, globe bulb hanging from a brass socket' },
+						{ src: 'light-and-matter/assets/arc/arc-garden.jpg', w: 843, h: 1500, title: 'In the yard', cap: 'Antique-brass socket with a key switch. The branch was dry by May.', alt: 'The Arc outdoors in a garden, the workshop building behind it' },
+						{ src: 'light-and-matter/assets/arc/arc-room.jpg', w: 843, h: 1500, title: 'In the room', cap: 'ST64 amber bulb. 280 mm of shelf, and it holds the whole corner.', alt: 'The Arc indoors on a shelf next to framed pictures, unlit, with an amber Edison bulb' }
+					]
+				},
+				trumpet: {
+					no: '02', name: 'The Trumpet', status: 'One of one · in the studio',
+					desc: 'A B-flat trumpet retired from a brass band, stood on its bell in a turned wooden plinth. The valves still move; the flex runs up the leadpipe to a pleated drum shade.',
+					specs: [['Height', 'approx. 800 mm'], ['Shade', 'Pleated drum, Ø 400 mm'], ['Bulb', '6 W filament · 2700 K']],
+					photos: [
+						{ src: 'light-and-matter/assets/trumpet/trumpet.jpg', w: 1200, h: 1600, title: 'In the corner', cap: 'Lit at dusk beside the sofa. The bell sits in a turned wooden plinth.', alt: 'The Trumpet lamp lit beside a sofa, standing on its bell on a round wooden plinth' },
+						{ src: 'light-and-matter/assets/trumpet/trumpet-valves.jpg', w: 1199, h: 1500, title: 'The valves', cap: 'Left as they came out of the case: worn lacquer, pistons that still press.', alt: 'Close view of the trumpet valves and tubing under the lamp shade' },
+						{ src: 'light-and-matter/assets/trumpet/trumpet-shade.jpg', w: 1200, h: 1500, title: 'The shade', cap: 'A pleated drum over a warm filament. The weave throws a soft grid of light.', alt: 'The pleated drum shade glowing warm above the trumpet' }
+					]
+				},
+				conrod: {
+					no: '03', name: 'Conrod', status: 'Sold · a similar one can be made', sold: true,
+					desc: 'A piston and its connecting rod out of the same engine, cleaned of oil but not polished. The rod arches over the piston and holds a spun steel dome by its small end.',
+					specs: [['Height', 'approx. 450 mm'], ['Shade', 'Spun steel dome'], ['Bulb', '4 W filament · 2700 K']],
+					photos: [
+						{ src: 'light-and-matter/assets/conrod/conrod.jpg', w: 1122, h: 1402, title: 'Lit', cap: 'Long filament under the dome. The flex leaves the piston through its pin bore.', alt: 'The Conrod lamp lit at night on a wooden desk, the dome shade glowing over a filament bulb' }
+					]
+				},
+				canopy: {
+					no: '04', name: 'Canopy', status: 'Available · in the studio',
+					desc: 'A connecting rod stood upright in its piston, the way it ran in the engine, under a square steel shade cut with bare branches. Lit, it throws the branches across the wall.',
+					specs: [['Height', 'approx. 520 mm'], ['Shade', 'Cut steel, 140 × 140 mm'], ['Bulb', '4 W filament · 2700 K']],
+					photos: [
+						{ src: 'light-and-matter/assets/canopy/canopy.jpg', w: 1122, h: 1402, title: 'By the window', cap: 'Lit in the afternoon. The branches in the steel land on the wall behind.', alt: 'The Canopy lamp lit on a wooden table by a window, branch shadows on the wall behind it' }
+					]
+				}
+			};
+
+			var lb = document.getElementById('lb'), deck = document.getElementById('lb-deck');
+			var lbCap = document.getElementById('lb-cap'), lbCount = document.getElementById('lb-count');
+			var lbOpen = false, lbReturn = null, cards = [], cur = 0, drag = null;
+			var JITTER = [-1.4, 1.1, -0.6, 1.6, -1];
+			deck.removeAttribute('aria-live');
+			lbCap.setAttribute('aria-live', 'polite');
+
+			// the resting stack on each card: two more sheets tucked behind the first
+			Array.prototype.slice.call(document.querySelectorAll('.lot[data-piece]')).forEach(function (lot) {
+				var p = PIECES[lot.dataset.piece], stack = lot.querySelector('.stack');
+				[1, 2].forEach(function (k) {
+					var ph = p.photos[k] || {}, sh = document.createElement('span');
+					sh.className = 'sheet s' + k + (ph.src ? '' : ' drawn');
+					sh.setAttribute('aria-hidden', 'true');
+					if (ph.src) { var img = new Image(); img.alt = ''; img.loading = 'lazy'; img.decoding = 'async'; img.src = ph.src; sh.appendChild(img); }
+					stack.appendChild(sh);
+				});
+				stack.addEventListener('click', function () { openDeck(lot, stack); });
+			});
+
+			function cardFor(lot, p, ph, i) {
+				var c = document.createElement('div');
+				c.className = 'card';
+				if (ph.src) {
+					var img = new Image(); img.alt = t(ph.alt || ''); img.decoding = 'async'; img.src = ph.src;
+					c.appendChild(img); c._a = ph.w / ph.h;
+				} else {
+					c.className += ' drawn'; c._a = 0.8;
+					c.innerHTML = '<span class="stamp">' + t('Photograph to come') + '</span><span class="view">' + t(ph.title) + '</span>';
+					var svg = lot.querySelector('.s0 svg');
+					if (svg) c.appendChild(svg.cloneNode(true));
+				}
+				if (i === 0 && p.sold) c.insertAdjacentHTML('beforeend', '<span class="band" aria-hidden="true">' + t('Sold') + '</span>');
+				c._j = JITTER[i % JITTER.length];
+				return c;
+			}
+
+			// k = how far down the pile a card sits (0 is the one on top)
+			function pose(c, k, dx, dy, r, s) {
+				c.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px)) rotate(' + r + 'deg) scale(' + s + ')';
+			}
+			function place(c, k) {
+				var W = deck.clientWidth, H = deck.clientHeight, u = Math.min(1, W / 760), d = Math.min(k, 3);
+				var w = Math.min(W * 0.72, H * 0.78 * c._a);
+				c.style.width = w + 'px'; c.style.height = (w / c._a) + 'px';
+				pose(c, k, [0, 20, 38, 48][d] * u, [0, -16, -30, -38][d] * u, k ? [0, 3, 6, 8][d] + c._j : 0, [1, .955, .915, .89][d]);
+				c.style.opacity = k > 2 ? '0' : '1';
+				c.style.filter = k ? 'brightness(' + [1, .94, .87, .8][d] + ')' : 'none';
+				c.style.zIndex = String(50 - k);
+				c.setAttribute('aria-hidden', k ? 'true' : 'false');
+			}
+			function layout(skip) {
+				var n = cards.length;
+				cards.forEach(function (c, i) { if (c !== skip) place(c, (i - cur + n) % n); });
+			}
+			function tossPose(c, side) {
+				pose(c, 0, side * deck.clientWidth * 0.78, -deck.clientHeight * 0.05, side * 17, 0.96);
+				c.style.opacity = '0';
+			}
+
+			function showInfo() {
+				var p = PIECES[lbPiece], ph = p.photos[cur], n = p.photos.length;
+				lbCap.innerHTML = '<b>' + t(ph.title) + '</b>' + t(ph.cap);
+				lbCount.innerHTML = String(cur + 1).padStart(2, '0') + ' <span>/ ' + String(n).padStart(2, '0') + '</span>';
+			}
+
+			// dir 1: the top photo is tossed aside and slips under the pile; dir -1: the last one comes back on top
+			function flip(dir, side) {
+				var n = cards.length;
+				if (n < 2) return;
+				if (dir > 0) {
+					var out = cards[cur];
+					cur = (cur + 1) % n;
+					out.classList.remove('held', 'settling');
+					out.classList.add('tossing');
+					tossPose(out, side || -1);
+					layout(out);
+					clearTimeout(out._t);
+					out._t = setTimeout(function () { out.classList.remove('tossing'); place(out, (cards.indexOf(out) - cur + n) % n); }, 420);
+				} else {
+					cur = (cur - 1 + n) % n;
+					var back = cards[cur];
+					clearTimeout(back._t);
+					back.classList.remove('tossing');
+					back.classList.add('held');
+					tossPose(back, side || -1);
+					back.style.zIndex = '60';
+					void back.offsetWidth;
+					back.classList.remove('held');
+					layout();
+				}
+				showInfo();
+			}
+
+			var lbPiece = null;
+			function openDeck(lot, from, start) {
+				var key = lot.dataset.piece, p = PIECES[key];
+				lbPiece = key; lbReturn = from; cur = start || 0;
+				deck.innerHTML = '';
+				cards = p.photos.map(function (ph, i) { return cardFor(lot, p, ph, i); });
+				cards.forEach(function (c) { c.classList.add('held'); deck.appendChild(c); });
+
+				document.getElementById('lb-no').textContent = t('The collection · ') + p.no + ' / ' + String(Object.keys(PIECES).length).padStart(2, '0');
+				document.getElementById('lb-title').textContent = t(p.name);
+				var st = document.getElementById('lb-status');
+				st.textContent = t(p.status); st.classList.toggle('sold', !!p.sold);
+				document.getElementById('lb-desc').textContent = t(p.desc);
+				document.getElementById('lb-specs').innerHTML = p.specs.map(function (r) { return '<dt>' + t(r[0]) + '</dt><dd>' + t(r[1]) + '</dd>'; }).join('');
+				var more = document.getElementById('lb-more');
+				more.hidden = !p.more; if (p.more) more.setAttribute('href', p.more);
+				showInfo();
+
+				stop();
+				lbOpen = true;
+				lb.classList.add('open');
+				lb.setAttribute('aria-hidden', 'false');
+				document.documentElement.style.overflow = 'hidden';
+
+				// deal the photographs in: each rises from below and lands on the pile, the top one last
+				var n = cards.length, H = deck.clientHeight;
+				cards.forEach(function (c, i) {
+					var k = (i - cur + n) % n;
+					place(c, k);
+					pose(c, k, (k % 2 ? 1 : -1) * 30, H * 0.55, c._j * 5, 0.92);
+					c.style.opacity = '0';
+				});
+				void deck.offsetWidth;
+				cards.forEach(function (c, i) {
+					var k = (i - cur + n) % n;
+					c.style.transitionDelay = (140 + Math.max(0, 2 - Math.min(k, 2)) * 90) + 'ms';
+					c.classList.remove('held');
+					place(c, k);
+					setTimeout(function () { c.style.transitionDelay = ''; }, 1200);
+				});
+				document.getElementById('lb-close').focus({ preventScroll: true });
+			}
+
+			function closeDeck() {
+				if (!lbOpen) return;
+				lbOpen = false; drag = null;
+				lb.classList.remove('open');
+				lb.setAttribute('aria-hidden', 'true');
+				document.documentElement.style.overflow = '';
+				setTimeout(function () { if (!lbOpen) deck.innerHTML = ''; }, 650);
+				if (lbReturn) lbReturn.focus({ preventScroll: true });
+				heroRun();
+			}
+
+			lb.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeDeck(); });
+			document.getElementById('lb-next').addEventListener('click', function () { flip(1); });
+			document.getElementById('lb-prev').addEventListener('click', function () { flip(-1); });
+			window.addEventListener('resize', function () { if (lbOpen) layout(); });
+
+			document.addEventListener('keydown', function (e) {
+				if (!lbOpen) return;
+				var k = e.key;
+				if (k === 'Escape') { e.preventDefault(); closeDeck(); }
+				else if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown') { e.preventDefault(); flip(1); }
+				else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp') { e.preventDefault(); flip(-1); }
+				else if (k === 'Tab') {
+					var f = Array.prototype.filter.call(lb.querySelectorAll('button, a[href]'), function (el) { return !el.hidden; });
+					var first = f[0], last = f[f.length - 1];
+					if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+					else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+				}
+			});
+
+			// drag the top photo aside, or tap the pile to see the next one
+			deck.addEventListener('pointerdown', function (e) {
+				if (e.button !== 0 || !cards.length) return;
+				drag = { x: e.clientX, y: e.clientY, c: cards[cur], dx: 0, moved: false, lastX: e.clientX, lastT: performance.now(), v: 0 };
+				deck.setPointerCapture(e.pointerId);
+			});
+			deck.addEventListener('pointermove', function (e) {
+				if (!drag) return;
+				var dx = e.clientX - drag.x, dy = e.clientY - drag.y, now = performance.now();
+				if (!drag.moved && Math.abs(dx) < 6) return;
+				drag.v = (e.clientX - drag.lastX) / Math.max(1, now - drag.lastT);
+				drag.lastX = e.clientX; drag.lastT = now;
+				drag.moved = true; drag.dx = dx;
+				deck.classList.add('dragging');
+				clearTimeout(drag.c._s);
+				drag.c.classList.remove('settling');
+				drag.c.classList.add('held');
+				// a lone photo has nowhere to go: it gives a little, then pulls against the hand
+				if (cards.length < 2) {
+					var R = deck.clientWidth * 0.5;
+					dx = (dx < 0 ? -1 : 1) * R * (1 - 1 / (Math.abs(dx) * 0.55 / R + 1));
+					dy = dy * 0.5;
+				}
+				pose(drag.c, 0, dx, dy * 0.2, dx * 0.045, 1);
+			});
+			function settle(c) {
+				c.classList.add('settling');
+				layout();
+				clearTimeout(c._s);
+				c._s = setTimeout(function () { c.classList.remove('settling'); }, 800);
+			}
+			function endDrag() {
+				if (!drag) return;
+				var d = drag; drag = null;
+				deck.classList.remove('dragging');
+				d.c.classList.remove('held');
+				if (!d.moved) { flip(1); return; }
+				if (cards.length > 1 && (Math.abs(d.dx) > deck.clientWidth * 0.14 || Math.abs(d.v) > 0.55)) flip(1, d.dx < 0 ? -1 : 1);
+				else settle(d.c);
+			}
+			deck.addEventListener('pointerup', endDrag);
+			deck.addEventListener('pointercancel', endDrag);
+
+			/* ---- language: the page is written in English; Romanian swaps in string by string ---- */
+			// Keys are the English exactly as the page holds it. An English line with no entry here stays English.
+			var RO = {
+				// chrome
+				'Sections': 'Secțiuni', 'Language': 'Limbă', 'Go to ': 'Mergi la ',
+				'Intro': 'Început', 'Collection': 'Colecție', 'Materials': 'Materiale', 'Specification': 'Specificații',
+				'Workbook': 'Caiet de lucru', 'Process': 'Proces', 'Workshop': 'Atelier', 'Commissions': 'Comenzi', 'Contact': 'Contact',
+
+				// 01 intro
+				'Light &amp; Matter · handmade lighting, one of one': 'Light &amp; Matter · lămpi lucrate manual, unicat',
+				'Material.<br>Form.<br>Light.': 'Material.<br>Formă.<br>Lumină.',
+				'Every lamp starts as something already finished: a branch the water bleached for a decade, a slice off a fallen walnut, now and then a piston or a headlamp bezel that stopped being useful in 1974. I dry it, cut it, polish it, protect it with special lacquer, and wire it myself as an authorized electrician.':
+					'Fiecare lampă pornește de la ceva care și-a încheiat deja viața: o creangă albită de apă vreme de un deceniu, o felie dintr-un nuc căzut, uneori un piston sau o ramă de far care nu mai folosea nimănui din 1974. O usuc, o tai, o lustruiesc, o protejez cu un lac special și fac singur instalația electrică, ca electrician autorizat.',
+				'See the work': 'Vezi lucrările',
+				'Commission a piece': 'Comandă o piesă',
+				'<span class="key">←</span><span class="key">→</span> to move through the studio': '<span class="key">←</span><span class="key">→</span> ca să te plimbi prin atelier',
+
+				// 02 collection
+				'The collection': 'Colecția',
+				'Each one started<br>as something else.': 'Fiecare a început<br>ca altceva.',
+				'One found object per lamp, never a pair. Open a lamp to leaf through its photographs.': 'Un singur obiect găsit pentru fiecare lampă, niciodată perechi. Deschide o lampă ca să-i răsfoiești fotografiile.',
+				'The Arc · open 4 photographs': 'Arcul · deschide 4 fotografii',
+				'The Arc lit at night, amber filament bulb under a brass socket, a dotted mandala on the wall behind': 'Arcul aprins noaptea, bec cu filament chihlimbariu sub o dulie de alamă, o mandala pictată în puncte pe peretele din spate',
+				'<b>4</b> photos': '<b>4</b> fotografii', '<b>3</b> photos': '<b>3</b> fotografii',
+				'The Arc': 'Arcul',
+				'Table lamp. Weathered branch, bark-edged log slice, hemp rope.': 'Veioză. Creangă tocită de vreme, felie de buștean cu scoarță, frânghie de cânepă.',
+				'420–480 mm · built to the branch': '420–480 mm · după forma crengii',
+				'The Trumpet · open 3 photographs': 'Trompeta · deschide 3 fotografii',
+				'A brass trumpet standing on its bell on a round wooden plinth, lit under a pleated drum shade': 'O trompetă de alamă sprijinită pe pavilion pe un soclu rotund de lemn, aprinsă sub un abajur cilindric plisat',
+				'The Trumpet': 'Trompeta',
+				'Table lamp. A retired B-flat trumpet stood on its bell, pleated drum shade.': 'Veioză. O trompetă în si bemol ieșită la pensie, sprijinită pe pavilion, cu abajur cilindric plisat.',
+				'approx. 800 mm · one of one': 'cca. 800 mm · unicat',
+				'Conrod, sold · open 1 photograph': 'Biela, vândută · deschide 1 fotografie',
+				'A connecting rod arching up from an engine piston to a steel dome shade, lit on a wooden desk at night': 'O bielă arcuită de la un piston de motor până la un abajur-cupolă din oțel, aprinsă noaptea pe un birou de lemn',
+				'<b>1</b> photo': '<b>1</b> fotografie',
+				'Sold': 'Vândută',
+				'Conrod': 'Biela',
+				'Desk lamp. Engine piston and connecting rod, spun steel dome.': 'Lampă de birou. Piston și bielă de motor, cupolă din oțel fasonat.',
+				'approx. 450 mm · a twin can be made': 'cca. 450 mm · se poate face una asemănătoare',
+				'Canopy · open 1 photograph': 'Coroana · deschide 1 fotografie',
+				'A connecting rod standing upright in an engine piston under a square steel shade cut with bare branches, lit on a wooden table': 'O bielă ridicată drept dintr-un piston de motor, sub un abajur pătrat din oțel decupat cu ramuri golașe, aprinsă pe o masă de lemn',
+				'Canopy': 'Coroana',
+				'Table lamp. Piston and connecting rod, square steel shade cut with branches.': 'Veioză. Piston și bielă, abajur pătrat din oțel decupat cu ramuri.',
+				'approx. 520 mm · in the studio': 'cca. 520 mm · în atelier',
+
+				// 03 materials
+				'Where it comes from': 'De unde vine',
+				'Three sources,<br>no catalogue.': 'Trei surse,<br>niciun catalog.',
+				'Nothing is bought new except the socket, the flex and the oil. Everything else is found, and what it was stays visible.': 'Nimic nu e cumpărat nou în afară de dulie, cablu și ulei. Restul e găsit, iar ce a fost cândva rămâne la vedere.',
+				'Found wood': 'Lemn găsit',
+				'Gathered by hand along riverbanks and woodlot edges, in the week after storms. Only wood that is already dead and loose. Never cut, never taken off anything still living.': 'Adunat cu mâna de pe malurile râurilor și de la marginea pădurilor, în săptămâna de după furtuni. Doar lemn deja uscat și desprins. Niciodată tăiat, niciodată luat de pe ceva încă viu.',
+				'Weathered hardwood branch · walnut, oak, plum': 'Crengi de esență tare tocite de vreme · nuc, stejar, prun',
+				'Bases are slices off a fallen trunk, bark left on': 'Bazele sunt felii dintr-un trunchi căzut, cu scoarța păstrată',
+				'Air-dried 6–9 months, no kiln': 'Uscat natural 6–9 luni, fără cuptor',
+				'Cracks left open, not resin-poured': 'Crăpăturile rămân deschise, fără rășină turnată',
+				'Repurposed metal': 'Metal refolosit',
+				'Pulled from scrapyards and farm sheds. Degreased, wire-brushed by hand, then clear-lacquered with the pitting left exactly as found. That surface took forty years to make.': 'Scos de la fier vechi și din șoproanele de la țară. Degresat, periat manual cu peria de sârmă, apoi lăcuit transparent, cu ciupiturile lăsate exact cum au fost găsite. Suprafața aceea a avut nevoie de patruzeci de ani ca să se formeze.',
+				'Dacia 1300 pistons, bezels, rocker arms': 'Pistoane, rame de far și culbutori de Dacia 1300',
+				'Tractor gearbox spindles · belt pulleys': 'Axe din cutii de viteze de tractor · fulii',
+				'Brass unions, copper brake line': 'Racorduri de alamă, conducte de frână din cupru',
+				'Never sandblasted, never chromed': 'Niciodată sablat, niciodată cromat',
+				'Oddities': 'Ciudățenii',
+				'The drawer everything else lives in. Some of it waits two years for the right piece of wood to turn up, and some of it never gets used at all.': 'Sertarul în care stă tot restul. Unele lucruri așteaptă doi ani să apară bucata potrivită de lemn, iar altele nu ajung să fie folosite niciodată.',
+				'Porcelain fuse holders, 1960s substation': 'Socluri de siguranțe din porțelan, dintr-o substație din anii ’60',
+				'Bakelite toggle switches': 'Întrerupătoare basculante din bachelită',
+				'Brass sextant vernier plates': 'Plăci de vernier de sextant, din alamă',
+				'Telegraph insulators, lab glass': 'Izolatoare de telegraf, sticlărie de laborator',
+
+				// 04 specification
+				'The Arc photographed indoors in daylight, showing the rope, brass socket and log base': 'Arcul fotografiat în casă, la lumina zilei: frânghia, dulia de alamă și baza din buștean',
+				'Specification': 'Specificații',
+				'The branch spent nine months drying in a shed before it was stable enough to trust. It sits in a blind mortise cut into the log slice: no bracket, no visible screw. The rope is not decoration: it carries the flex from socket to base, and it is what you take hold of when you move the lamp.': 'Creanga a stat nouă luni la uscat într-un șopron până a devenit destul de stabilă cât să mă pot baza pe ea. E prinsă într-un lăcaș orb tăiat în felia de buștean: fără suport, fără vreun șurub la vedere. Frânghia nu e decor: duce cablul de la dulie până la bază și de ea apuci lampa când o muți.',
+				'Height': 'Înălțime', 'Arm': 'Braț', 'Base': 'Bază', 'Socket': 'Dulie', 'Bulb': 'Bec', 'Cord': 'Cablu', 'Weight': 'Greutate', 'Price': 'Preț',
+				'<b>420–480 mm</b> · base Ø 200–240 mm': '<b>420–480 mm</b> · bază Ø 200–240 mm',
+				'Weathered hardwood branch, cured 9 months, oiled': 'Creangă de esență tare tocită de vreme, uscată 9 luni, uleiată',
+				'Slice off a fallen trunk, bark left on, felt-footed': 'Felie dintr-un trunchi căzut, cu scoarță, tălpi de pâslă',
+				'Brass E27, knurled shell, key switch on the socket': 'E27 din alamă, carcasă zimțată, comutator rotativ pe dulie',
+				'<b>4 W</b> filament LED · <b>2700 K</b> · dimmable · included': 'LED cu filament <b>4 W</b> · <b>2700 K</b> · dimabil · inclus',
+				'2 m black braided flex in hemp rope, inline switch': '2 m de cablu textil negru în frânghie de cânepă, întrerupător pe fir',
+				'<b>2.1–2.8 kg</b>': '<b>2,1–2,8 kg</b>',
+				'<b>€240–290</b>, depends on the branch, one of one': '<b>€240–290</b>, depinde de creangă, unicat',
+
+				// 05 workbook
+				'Drawn, not yet built': 'Desenate, încă neconstruite',
+				'From the workbook.': 'Din caietul de lucru.',
+				'Pieces with the metal already in the shop and the wood still drying. Any of the three can be built to order. The drawing is the agreement, the lamp will differ where the material insists.': 'Piese pentru care metalul e deja în atelier, iar lemnul încă se usucă. Oricare dintre ele poate fi făcută la comandă. Desenul e înțelegerea noastră, lampa va diferi acolo unde materialul insistă.',
+				'Drawing · to order': 'Desen · la comandă',
+				'Drawing of the Piston No. 4 desk lamp': 'Desenul lămpii de birou Pistonul nr. 4',
+				'Piston No. 4': 'Pistonul nr. 4',
+				'Desk lamp. Dacia 1300 piston, hand-bent brass arm, opal half-dome.': 'Lampă de birou. Piston de Dacia 1300, braț de alamă îndoit manual, semisferă din sticlă opal.',
+				'410 × 180 mm · 4 weeks': '410 × 180 mm · 4 săptămâni',
+				'Drawing of the Bezel 74 wall sconce': 'Desenul aplicei Rama ’74',
+				'Bezel ’74': 'Rama ’74',
+				'Wall sconce. Headlamp ring off a Dacia 1300, sandblasted opal glass.': 'Aplică. Ramă de far de Dacia 1300, sticlă opal sablată.',
+				'Ø195 × 90 mm · 3 weeks': 'Ø195 × 90 mm · 3 săptămâni',
+				'Drawing of the Spindle gear pendant': 'Desenul lustrei Axul',
+				'Spindle': 'Axul',
+				'Pendant. Tractor gearbox wheel, walnut cone turned to the tooth pitch.': 'Lustră. Roată dințată din cutia de viteze a unui tractor, con din nuc strunjit după pasul dinților.',
+				'Ø310 × 260 mm · 5 weeks': 'Ø310 × 260 mm · 5 săptămâni',
+
+				// 06 process
+				'How a lamp happens': 'Cum se naște o lampă',
+				'Months of waiting,<br>two weeks of work.': 'Luni de așteptare,<br>două săptămâni de lucru.',
+				'The order matters. Skip the drying and the wood splits around the socket a year later, in someone\'s living room.': 'Ordinea contează. Sari peste uscare și lemnul crapă în jurul duliei un an mai târziu, în sufrageria cuiva.',
+				'Finding': 'Căutarea',
+				'Walked after storms, along water and woodlot edges. Only what is already dead and loose. Most of what I pick up goes back.': 'Plimbări după furtuni, pe lângă ape și la marginea pădurilor. Doar ce e deja uscat și desprins. Cea mai mare parte din ce ridic pun la loc.',
+				'Curing': 'Uscarea',
+				'Washed, bark taken back to the hard wood underneath, then stacked in an open shed with air on all four sides. No kiln: kiln-dried branch wood checks along the grain.': 'Spălat, cojit până la lemnul tare de dedesubt, apoi stivuit într-un șopron deschis, cu aer din toate cele patru părți. Fără cuptor: crengile uscate în cuptor crapă de-a lungul fibrei.',
+				'The base': 'Baza',
+				'A slice off a fallen trunk, bark left on the edge. Flattened by hand until it sits on a table without a single rock.': 'O felie dintr-un trunchi căzut, cu scoarța lăsată pe margine. Îndreptată manual până stă pe masă fără să se clatine deloc.',
+				'Fitting': 'Montajul',
+				'The branch decides where the socket goes, not the drawing. Blind mortise into the base, brass E27 with a key switch, nothing structural held by glue.': 'Creanga hotărăște unde merge dulia, nu desenul. Lăcaș orb în bază, E27 din alamă cu comutator rotativ, nimic din structură nu e ținut în lipici.',
+				'Rope and wiring': 'Frânghia și instalația',
+				'Hemp rope spiralled from socket to base with the flex inside it. Strain relief at both ends, then continuity- and insulation-tested before it leaves.': 'Frânghie de cânepă înfășurată în spirală de la dulie la bază, cu cablul în interior. Protecție la smulgere la ambele capete, apoi test de continuitate și de izolație înainte să plece.',
+				'Finish': 'Finisajul',
+				'Three coats of wood oil, 24 hours between, cut back with sandpaper. No stain, ever. That honey colour is the wood and the oil, nothing else.': 'Trei straturi de ulei pentru lemn, la 24 de ore distanță, șlefuite cu glaspapir. Niciodată baiț. Culoarea aceea de miere e lemnul și uleiul, nimic altceva.',
+
+				// 07 workshop
+				'The workshop': 'Atelierul',
+				'One bench,<br>one pair of hands.': 'Un banc de lucru,<br>o pereche de mâini.',
+				'The bench is outside, under a walnut. The first time a finished lamp is switched on, it is switched on in the yard.': 'Bancul de lucru e afară, sub un nuc. Prima dată când o lampă terminată e aprinsă, e aprinsă în curte.',
+				'I don\'t make series. Two lamps off the same tree will still be two different lamps, and if you ask me for a matching pair I\'ll tell you honestly which one to take. What you get is a signed piece, a written note of where every part of it came from, and someone who will rewire it for you in ten years.': 'Nu fac serii. Două lămpi din același copac tot două lămpi diferite vor fi, iar dacă îmi ceri o pereche asortată îți spun sincer pe care s-o iei. Primești o piesă semnată, o notă scrisă despre proveniența fiecărei părți și pe cineva care îți va reface instalația peste zece ani.',
+				'Working since': 'Lucrez din',
+				'Identical pieces made': 'Piese identice făcute',
+				'Lead time on a commission': 'Termen pentru o comandă',
+				'3–5 weeks': '3–5 săptămâni',
+				'Wired by': 'Instalația electrică',
+				'Me, authorized electrician': 'Făcută de mine, electrician autorizat',
+				'Electrical': 'Electric',
+				'Ships': 'Livrare',
+				'EU-wide, crated': 'În toată UE, în ladă',
+				'Repairs &amp; rewiring': 'Reparații și refacerea instalației',
+				'Free, for life': 'Gratuit, pe viață',
+
+				// 08 commissions
+				'Commissions': 'Comenzi',
+				'Bring me the object.': 'Adu-mi obiectul.',
+				'A grandfather\'s tool, a part off a car, a branch you carried home from a holiday. It works best when the material already means something.': 'O unealtă a bunicului, o piesă de la o mașină, o creangă adusă acasă dintr-o vacanță. Iese cel mai bine când materialul înseamnă deja ceva.',
+				'Send a photo': 'Trimite o fotografie',
+				'The object, or the corner of the room it has to light. Shelf depth and a rough sense of how dark you want it is enough to start.': 'Obiectul sau colțul camerei pe care trebuie să-l lumineze. Adâncimea raftului și o idee aproximativă despre cât de întunecat vrei să rămână ajung ca să începem.',
+				'Reply within 2 days': 'Răspuns în 2 zile',
+				'Sketch and price': 'Schiță și preț',
+				'A hand drawing, the materials I\'d use, and a fixed price. No fee for this, and no obligation. Half up front if you go ahead.': 'Un desen de mână, materialele pe care le-aș folosi și un preț fix. Fără taxă pentru asta și fără nicio obligație. Jumătate în avans dacă mergem mai departe.',
+				'Within a week': 'În cel mult o săptămână',
+				'On the bench': 'Pe bancul de lucru',
+				'Photos as it goes. Delivered crated, with the bulb in it and a card listing where each part came from.': 'Fotografii pe parcurs. Livrată în ladă, cu becul inclus și un card care spune de unde vine fiecare parte.',
+				'3 – 5 weeks': '3 – 5 săptămâni',
+
+				// 09 contact
+				'The bench is outside,<br>under the walnut.': 'Bancul de lucru e afară,<br>sub nuc.',
+				'Write': 'Scrie-mi',
+				'Answered within two days, <span class="nw">usually in the evening.</span>': 'Răspund în două zile, <span class="nw">de obicei seara.</span>',
+				'Handmade lighting · found wood, brass, salvage · est. 2019': 'Lămpi lucrate manual · lemn găsit, alamă, recuperări · din 2019',
+				'All pieces one of one · © 2026': 'Toate piesele sunt unicat · © 2026',
+
+				// the photograph deck
+				'Full specification →': 'Specificații complete →',
+				'Previous photograph': 'Fotografia anterioară', 'Next photograph': 'Fotografia următoare', 'Close': 'Închide',
+				'The collection · ': 'Colecția · ',
+				'Photograph to come': 'Fotografie în curând', 'Photograph to come.': 'Fotografie în curând.',
+				'Built to the branch · 3–5 weeks': 'După forma crengii · 3–5 săptămâni',
+				'A weathered hardwood branch, cured nine months, set in a blind mortise in a bark-edged log slice. The hemp rope carries the flex from socket to base.': 'O creangă de esență tare tocită de vreme, uscată nouă luni, prinsă într-un lăcaș orb dintr-o felie de buștean cu scoarță. Frânghia de cânepă duce cablul de la dulie până la bază.',
+				'Brass E27, key switch': 'E27 din alamă, comutator rotativ',
+				'4 W filament · 2700 K': 'Filament 4 W · 2700 K',
+				'Lit': 'Aprinsă',
+				'Squirrel-cage filament, 2700 K, dimmed to about half.': 'Filament „colivie”, 2700 K, redus cam la jumătate.',
+				'The Arc at night, the filament lit, throwing warm light across the wall': 'Arcul noaptea, cu filamentul aprins, aruncând lumină caldă pe perete',
+				'Finished that afternoon. Globe bulb, hemp rope run the length of the branch.': 'Terminată în aceeași după-amiază. Bec glob, frânghie de cânepă pe toată lungimea crengii.',
+				'The Arc on a workbench beside screwdrivers and tape, globe bulb hanging from a brass socket': 'Arcul pe bancul de lucru, lângă șurubelnițe și bandă adezivă, cu un bec glob atârnând dintr-o dulie de alamă',
+				'In the yard': 'În curte',
+				'Antique-brass socket with a key switch. The branch was dry by May.': 'Dulie din alamă patinată, cu comutator rotativ. Până în mai, creanga era uscată.',
+				'The Arc outdoors in a garden, the workshop building behind it': 'Arcul afară, în grădină, cu clădirea atelierului în spate',
+				'In the room': 'În cameră',
+				'ST64 amber bulb. 280 mm of shelf, and it holds the whole corner.': 'Bec ST64 chihlimbariu. 280 mm de raft și umple tot colțul.',
+				'The Arc indoors on a shelf next to framed pictures, unlit, with an amber Edison bulb': 'Arcul în casă, pe un raft lângă tablouri înrămate, stins, cu un bec Edison chihlimbariu',
+				'One of one · in the studio': 'Unicat · în atelier',
+				'A B-flat trumpet retired from a brass band, stood on its bell in a turned wooden plinth. The valves still move; the flex runs up the leadpipe to a pleated drum shade.': 'O trompetă în si bemol retrasă dintr-o fanfară, sprijinită pe pavilion într-un soclu de lemn strunjit. Pistoanele încă se mișcă; cablul urcă pe țeava principală până la un abajur cilindric plisat.',
+				'approx. 800 mm': 'cca. 800 mm',
+				'Shade': 'Abajur',
+				'Pleated drum, Ø 400 mm': 'Cilindru plisat, Ø 400 mm',
+				'6 W filament · 2700 K': 'Filament 6 W · 2700 K',
+				'In the corner': 'În colț',
+				'Lit at dusk beside the sofa. The bell sits in a turned wooden plinth.': 'Aprinsă la apus, lângă canapea. Pavilionul stă într-un soclu de lemn strunjit.',
+				'The Trumpet lamp lit beside a sofa, standing on its bell on a round wooden plinth': 'Lampa Trompeta aprinsă lângă o canapea, sprijinită pe pavilion pe un soclu rotund de lemn',
+				'The valves': 'Pistoanele',
+				'Left as they came out of the case: worn lacquer, pistons that still press.': 'Lăsate cum au ieșit din cutie: lac tocit, pistoane care încă se apasă.',
+				'Close view of the trumpet valves and tubing under the lamp shade': 'Detaliu cu pistoanele și țevile trompetei sub abajur',
+				'The shade': 'Abajurul',
+				'A pleated drum over a warm filament. The weave throws a soft grid of light.': 'Un cilindru plisat peste un filament cald. Țesătura aruncă o rețea fină de lumină.',
+				'The pleated drum shade glowing warm above the trumpet': 'Abajurul plisat strălucind cald deasupra trompetei',
+				'Sold · a similar one can be made': 'Vândută · se poate face una asemănătoare',
+				'A piston and its connecting rod out of the same engine, cleaned of oil but not polished. The rod arches over the piston and holds a spun steel dome by its small end.': 'Un piston și biela lui, din același motor, curățate de ulei, dar nelustruite. Biela se arcuiește peste piston și ține de capătul mic o cupolă din oțel fasonat.',
+				'approx. 450 mm': 'cca. 450 mm', 'Spun steel dome': 'Cupolă din oțel fasonat',
+				'Long filament under the dome. The flex leaves the piston through its pin bore.': 'Filament lung sub cupolă. Cablul iese din piston prin orificiul bolțului.',
+				'The Conrod lamp lit at night on a wooden desk, the dome shade glowing over a filament bulb': 'Lampa Biela aprinsă noaptea pe un birou de lemn, cu cupola luminând peste un bec cu filament',
+				'Available · in the studio': 'Disponibilă · în atelier',
+				'A connecting rod stood upright in its piston, the way it ran in the engine, under a square steel shade cut with bare branches. Lit, it throws the branches across the wall.': 'O bielă ridicată drept în pistonul ei, cum lucra în motor, sub un abajur pătrat din oțel decupat cu ramuri golașe. Aprinsă, aruncă ramurile pe perete.',
+				'approx. 520 mm': 'cca. 520 mm', 'Cut steel, 140 × 140 mm': 'Oțel decupat, 140 × 140 mm',
+				'By the window': 'Lângă fereastră',
+				'Lit in the afternoon. The branches in the steel land on the wall behind.': 'Aprinsă după-amiaza. Ramurile din oțel se așază pe peretele din spate.',
+				'The Canopy lamp lit on a wooden table by a window, branch shadows on the wall behind it': 'Lampa Coroana aprinsă pe o masă de lemn lângă fereastră, cu umbre de ramuri pe peretele din spate'
+			};
+			var lang = 'en';
+			try { if (localStorage.getItem('lang') === 'ro') lang = 'ro'; } catch (e) { }
+			function t(s) { return lang === 'ro' && RO[s] || s; }
+
+			// remember each element's English once, then swap from it in either direction
+			var textEls = Array.prototype.slice.call(document.querySelectorAll(
+				'main h1, main h2, main h3, main p, main li, main dt, main dd, main figcaption:not(#hero-tag), main .btn, main .hint, main .stamp, main .cue, main .band, main .when, main .mono-xs, main .price, #lb-more'));
+			textEls.forEach(function (el) { el._en = el.innerHTML.replace(/\s+/g, ' ').trim(); });
+			var ATTRS = ['alt', 'aria-label', 'data-label'];
+			var attrEls = Array.prototype.filter.call(document.querySelectorAll('[alt], [aria-label], [data-label]'), function (el) { return el.parentNode !== dots; });
+			attrEls.forEach(function (el) { el._en = {}; ATTRS.forEach(function (a) { if (el.hasAttribute(a)) el._en[a] = el.getAttribute(a); }); });
+			var langBtns = Array.prototype.slice.call(document.querySelectorAll('.lang button'));
+
+			function setLang(l) {
+				lang = l;
+				document.documentElement.lang = l;
+				textEls.forEach(function (el) { el.innerHTML = t(el._en); });
+				attrEls.forEach(function (el) { for (var a in el._en) el.setAttribute(a, t(el._en[a])); });
+				buttons.forEach(function (b, i) {
+					b.setAttribute('data-label', slides[i].dataset.label);
+					b.setAttribute('aria-label', t('Go to ') + slides[i].dataset.label);
+				});
+				langBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === l)); });
+				heroTag();
+				try { localStorage.setItem('lang', l); } catch (e) { }
+			}
+			langBtns.forEach(function (b) { b.addEventListener('click', function () { if (b.dataset.lang !== lang) setLang(b.dataset.lang); }); });
+			/* ---- the hero carousel: one lamp after another, a different photograph of it each time round ---- */
+			var hero = document.querySelector('.hero-photo'), heroBtn = hero.querySelector('.hero-open');
+			var heroTagEl = document.getElementById('hero-tag');
+			var HERO_KEYS = Object.keys(PIECES), HERO_MS = 3000;
+			var heroAt = { key: HERO_KEYS[0], i: 0 }, heroImg = heroBtn.querySelector('img'), heroNext = null;
+			var heroSeen = {}; HERO_KEYS.forEach(function (k) { heroSeen[k] = k === heroAt.key ? 1 : 0; });
+			var heroT = 0, heroLast = 0, heroRaf = 0, heroBusy = false, heroHover = false, heroFocus = false;
+			var heroOnScreen = !('IntersectionObserver' in window);
+
+			function heroTag() {
+				var p = PIECES[heroAt.key], ph = p.photos[heroAt.i];
+				heroTagEl.firstChild.textContent = t(p.name) + ' · ' + t(ph.title);
+				heroImg.alt = t(ph.alt);
+				heroBtn.setAttribute('aria-label', document.querySelector('.lot[data-piece="' + heroAt.key + '"] .stack').getAttribute('aria-label'));
+			}
+
+			// every photograph shown so far, so a drag back returns to what was actually there
+			var heroHist = [heroAt], heroPos = 0, heroBackSeen = {}, heroPending = false, heroFinish = null;
+
+			function heroLoad(k, i) {
+				var img = new Image();
+				img.alt = ''; img.decoding = 'async'; img.draggable = false; img.src = PIECES[k].photos[i].src;
+				return { key: k, i: i, img: img, ready: img.decode ? img.decode().catch(function () { }) : Promise.resolve() };
+			}
+
+			// load and decode the next photograph while the current one is on show
+			function heroPrep() {
+				var k = HERO_KEYS[(HERO_KEYS.indexOf(heroHist[heroHist.length - 1].key) + 1) % HERO_KEYS.length];
+				var i = heroSeen[k] % PIECES[k].photos.length;
+				heroSeen[k] = i + 1;
+				heroNext = heroLoad(k, i);
+			}
+
+			// the photograph one step away, and how to make that step count once it is taken
+			function heroTarget(dir) {
+				if (dir > 0) {
+					if (heroPos < heroHist.length - 1) return { n: heroLoad(heroHist[heroPos + 1].key, heroHist[heroPos + 1].i), commit: function () { heroPos++; } };
+					var n = heroNext;
+					return { n: n, commit: function () { heroHist.push({ key: n.key, i: n.i }); heroPos++; heroPrep(); } };
+				}
+				if (heroPos > 0) return { n: heroLoad(heroHist[heroPos - 1].key, heroHist[heroPos - 1].i), commit: function () { heroPos--; } };
+				// back past the first one: the piece before it, a photograph not yet shown this way
+				var k = HERO_KEYS[(HERO_KEYS.indexOf(heroAt.key) + HERO_KEYS.length - 1) % HERO_KEYS.length];
+				var len = PIECES[k].photos.length, b = heroBackSeen[k] || 0, m = heroLoad(k, len - 1 - b % len);
+				return { n: m, commit: function () { heroBackSeen[k] = b + 1; heroHist.unshift({ key: m.key, i: m.i }); } };
+			}
+
+			function heroSwap() {
+				var tg = heroTarget(1), n = tg.n, old = heroImg;
+				tg.commit();
+				heroBusy = true; heroPending = true;
+				n.ready.then(function () {
+					heroPending = false;
+					n.img.className = 'entering';
+					heroBtn.appendChild(n.img);
+					void n.img.offsetWidth;
+					n.img.classList.add('go');
+					old.alt = ''; old.classList.add('leaving');
+					heroTagEl.classList.add('swap');
+					heroAt = { key: n.key, i: n.i }; heroImg = n.img;
+					heroT = 0;
+					var t1 = setTimeout(function () { heroTag(); heroTagEl.classList.remove('swap'); }, 450);
+					// the count to the next one starts once the blind has fully crossed
+					var t2 = setTimeout(function () { heroBusy = false; }, 1300);
+					var t3 = setTimeout(function () { heroFinish(); }, 2200);
+					// a drag that arrives mid-wipe skips straight to the end of it
+					heroFinish = function () {
+						clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+						heroTag(); heroTagEl.classList.remove('swap');
+						if (old.parentNode) old.parentNode.removeChild(old);
+						n.img.className = '';
+						heroBusy = false; heroFinish = null;
+					};
+				});
+			}
+
+			function heroPlaying() { return heroOnScreen && !heroHover && !heroFocus && !lbOpen; }
+			function heroRun() { if (heroPlaying() && !heroRaf) { heroLast = 0; heroRaf = requestAnimationFrame(heroTick); } }
+			function heroTick(now) {
+				heroRaf = 0;
+				if (!heroPlaying()) return;
+				if (heroLast && !heroBusy) heroT += Math.min(now - heroLast, 100);
+				heroLast = now;
+				if (heroT >= HERO_MS && !heroBusy) heroSwap();
+				heroRaf = requestAnimationFrame(heroTick);
+			}
+
+			hero.addEventListener('mouseenter', function () { heroHover = true; });
+			hero.addEventListener('mouseleave', function () { heroHover = false; heroRun(); });
+			// tabbing onto the photograph holds it still; focus handed back by the deck or left by a click does not
+			var heroTab = false;
+			document.addEventListener('keydown', function (e) { heroTab = e.key === 'Tab'; });
+			document.addEventListener('mousedown', function () { heroTab = false; });
+			heroBtn.addEventListener('focus', function () { heroFocus = heroTab; });
+			heroBtn.addEventListener('blur', function () { heroFocus = false; heroRun(); });
+			// drag sideways to leaf through: the photograph follows the hand and the next one slides in beside it
+			var heroDrag = null, heroDragged = false, HERO_SNAP = 'transform .32s cubic-bezier(.2, .8, .2, 1)';
+			heroImg.draggable = false;
+			function heroPeekDrop(d) {
+				if (!d.n) return;
+				if (d.n.img.parentNode) d.n.img.parentNode.removeChild(d.n.img);
+				d.n.img.style.transition = ''; d.n.img.style.transform = '';
+			}
+			heroBtn.addEventListener('pointerdown', function (e) {
+				if (e.button !== 0) return;
+				heroDragged = false;
+				heroDrag = { x: e.clientX, y: e.clientY, dx: 0, moved: false, lastX: e.clientX, lastT: performance.now(), v: 0, dir: 0 };
+			});
+			heroBtn.addEventListener('pointermove', function (e) {
+				var d = heroDrag;
+				if (!d) return;
+				var dx = e.clientX - d.x, now = performance.now();
+				if (!d.moved) {
+					if (Math.abs(dx) < 6) return;
+					if (Math.abs(e.clientY - d.y) > Math.abs(dx) || heroPending) { heroDrag = null; return; }
+					if (heroFinish) heroFinish();
+					d.moved = true; heroBusy = true;
+					d.w = heroBtn.clientWidth; d.cur = heroImg;
+					d.cur.style.transition = 'none';
+					heroBtn.setPointerCapture(e.pointerId);
+					heroBtn.classList.add('dragging');
+				}
+				var dir = dx < 0 ? 1 : -1;
+				if (dir !== d.dir) {
+					heroPeekDrop(d);
+					d.dir = dir; d.t = heroTarget(dir); d.n = d.t.n;
+					d.n.img.className = ''; d.n.img.style.transition = 'none';
+					heroBtn.appendChild(d.n.img);
+				}
+				d.v = (e.clientX - d.lastX) / Math.max(1, now - d.lastT);
+				d.lastX = e.clientX; d.lastT = now; d.dx = dx;
+				d.cur.style.transform = 'translateX(' + dx + 'px)';
+				d.n.img.style.transform = 'translateX(' + (dx + dir * d.w) + 'px)';
+			});
+			function heroEndDrag() {
+				var d = heroDrag;
+				heroDrag = null;
+				if (!d || !d.moved) return;
+				heroDragged = true;
+				heroBtn.classList.remove('dragging');
+				var flick = Math.abs(d.v) > 0.3 ? (d.v * d.dx > 0 ? 1 : -1) : 0;
+				var go = flick === 1 || (flick === 0 && Math.abs(d.dx) > d.w * 0.2);
+				var cur = d.cur, nimg = d.n.img, tm;
+				cur.style.transition = nimg.style.transition = HERO_SNAP;
+				if (go) {
+					cur.style.transform = 'translateX(' + (-d.dir * d.w) + 'px)';
+					nimg.style.transform = 'translateX(0px)';
+					d.t.commit();
+					cur.alt = '';
+					heroAt = { key: d.n.key, i: d.n.i }; heroImg = nimg;
+					heroTag();
+					heroT = 0;
+					heroFinish = function () {
+						clearTimeout(tm);
+						if (cur.parentNode) cur.parentNode.removeChild(cur);
+						cur.style.transition = cur.style.transform = '';
+						nimg.style.transition = nimg.style.transform = '';
+						heroBusy = false; heroFinish = null;
+					};
+				} else {
+					cur.style.transform = 'translateX(0px)';
+					nimg.style.transform = 'translateX(' + (d.dir * d.w) + 'px)';
+					heroFinish = function () {
+						clearTimeout(tm);
+						heroPeekDrop(d);
+						cur.style.transition = cur.style.transform = '';
+						heroBusy = false; heroFinish = null;
+					};
+				}
+				tm = setTimeout(heroFinish, 330);
+			}
+			heroBtn.addEventListener('pointerup', heroEndDrag);
+			heroBtn.addEventListener('pointercancel', heroEndDrag);
+			heroBtn.addEventListener('dragstart', function (e) { e.preventDefault(); });
+			heroBtn.addEventListener('click', function (e) {
+				if (heroDragged) { heroDragged = false; e.preventDefault(); return; }
+				openDeck(document.querySelector('.lot[data-piece="' + heroAt.key + '"]'), heroBtn, heroAt.i);
+			});
+			document.addEventListener('visibilitychange', function () { heroLast = 0; });
+			// stop when the hero is scrolled away, or hidden on a phone
+			if ('IntersectionObserver' in window) new IntersectionObserver(function (entries) {
+				heroOnScreen = entries[entries.length - 1].isIntersecting;
+				heroRun();
+			}).observe(hero);
+			heroPrep();
+			heroRun();
+
+			if (lang !== 'en') setLang(lang);
+
+			/* ---- reveal on scroll ---- */
+			var targets = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+			var rev = null;
+			function reveal(el) {
+				if (el.classList.contains('in')) return;
+				el.classList.add('in');
+				if (rev) rev.unobserve(el);
+			}
+			// everything that will be on screen once the page rests at y
+			function revealAt(y) {
+				var top = y, bottom = y + window.innerHeight, sy = window.scrollY;
+				targets.forEach(function (el) {
+					if (el.classList.contains('in')) return;
+					var r = el.getBoundingClientRect();
+					if (r.top + sy < bottom && r.bottom + sy > top) reveal(el);
+				});
+			}
+			targets.forEach(function (el) {
+				el.addEventListener('transitionend', function (e) {
+					if (e.target === el && e.propertyName === 'opacity' && el.classList.contains('in')) el.classList.add('settled');
+				});
+			});
+			if ('IntersectionObserver' in window && !reduce) {
+				rev = new IntersectionObserver(function (entries) {
+					entries.forEach(function (en) { if (en.isIntersecting) reveal(en.target); });
+				}, window.matchMedia('(max-width:620px)').matches ? { rootMargin: '0px 0px -2% 0px', threshold: 0.02 } : { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+				targets.forEach(function (t) { rev.observe(t); });
+			} else {
+				targets.forEach(function (t) { t.classList.add('in', 'settled'); });
+			}
+
+			/* ---- decode images ahead of time, so none paints blank for a frame when first scrolled to ---- */
+			window.addEventListener('load', function () {
+				Array.prototype.forEach.call(document.querySelectorAll('.slide img'), function (img) {
+					if (img.decode) img.decode().catch(function () { });
+				});
+			});
+
+			/* ---- progress bar ---- */
+			var ticking = false;
+			function paint() {
+				var max = document.documentElement.scrollHeight - window.innerHeight;
+				var p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+				bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+				ticking = false;
+			}
+			window.addEventListener('scroll', function () {
+				if (!ticking) { ticking = true; requestAnimationFrame(paint); }
+			}, { passive: true });
+			window.addEventListener('resize', paint);
+			paint();
+
+			/* ---- phone: halve the gap between the centred hero and the collection ---- */
+			var phone = window.matchMedia('(max-width:620px)');
+			var intro = document.getElementById('intro'), heroWrap = intro.querySelector('.wrap');
+			var collection = document.getElementById('collection');
+			function pull() {
+				if (!phone.matches) { collection.style.removeProperty('--hero-pull'); return; }
+				var below = intro.offsetHeight - (heroWrap.offsetTop + heroWrap.offsetHeight);
+				var above = parseFloat(getComputedStyle(collection).paddingTop) || 0;
+				collection.style.setProperty('--hero-pull', Math.max(0, (below + above) / 2) + 'px');
+			}
+			window.addEventListener('resize', pull);
+			if (document.fonts && document.fonts.ready) document.fonts.ready.then(pull);
+			pull();
+		})();
+	</script>
+
+	<!-- ---------- full specification popup (standalone: own data, own strings, own carousel) ---------- -->
+	<script>
+		(function () {
+			// Each piece's full sheet. A photo without a src shows the card's drawing instead.
+			var SPECS = {
+				arc: {
+					no: '01', name: 'The Arc', price: '€240–290', status: 'Built to the branch · 3–5 weeks',
+					lede: 'The branch spent nine months drying in a shed before it was stable enough to trust. It sits in a blind mortise cut into the log slice: no bracket, no visible screw. The rope is not decoration: it carries the flex from socket to base, and it is what you take hold of when you move the lamp.',
+					rows: [
+						['Height', '<b>420–480 mm</b> · base Ø 200–240 mm'],
+						['Arm', 'Weathered hardwood branch, cured 9 months, oiled'],
+						['Base', 'Slice off a fallen trunk, bark left on, felt-footed'],
+						['Socket', 'Brass E27, knurled shell, key switch on the socket'],
+						['Bulb', '<b>4 W</b> filament LED · <b>2700 K</b> · dimmable · included'],
+						['Cord', '2 m black braided flex in hemp rope, inline switch'],
+						['Weight', '<b>2.1–2.8 kg</b>'],
+						['Price', '<b>€240–290</b>, depends on the branch, one of one']
+					],
+					photos: [
+						{ src: 'light-and-matter/assets/arc/arc-lit.jpg', title: 'Lit', cap: 'Squirrel-cage filament, 2700 K, dimmed to about half.', alt: 'The Arc at night, the filament lit, throwing warm light across the wall' },
+						{ src: 'light-and-matter/assets/arc/arc-bench.jpg', title: 'On the bench', cap: 'Finished that afternoon. Globe bulb, hemp rope run the length of the branch.', alt: 'The Arc on a workbench beside screwdrivers and tape, globe bulb hanging from a brass socket' },
+						{ src: 'light-and-matter/assets/arc/arc-garden.jpg', title: 'In the yard', cap: 'Antique-brass socket with a key switch. The branch was dry by May.', alt: 'The Arc outdoors in a garden, the workshop building behind it' },
+						{ src: 'light-and-matter/assets/arc/arc-room.jpg', title: 'In the room', cap: 'ST64 amber bulb. 280 mm of shelf, and it holds the whole corner.', alt: 'The Arc indoors on a shelf next to framed pictures, unlit, with an amber Edison bulb' }
+					]
+				},
+				trumpet: {
+					no: '02', name: 'The Trumpet', price: '€340', status: 'One of one · in the studio',
+					lede: 'Retired from a brass band with its valves still moving. The lacquer is worn exactly where the hands held it, and it stays that way. The bell sits in a recess turned into the plinth, and the flex runs up the leadpipe to the shade, so no wire crosses the brass.',
+					rows: [
+						['Height', '<b>approx. 800 mm</b> · shade Ø 400 mm'],
+						['Body', 'B-flat trumpet, original lacquer, valves still working'],
+						['Base', 'Turned wooden plinth, bell seated in a recess, felt-footed'],
+						['Shade', 'Pleated fabric drum, Ø 400 mm'],
+						['Socket', 'Brass E27 under the shade'],
+						['Bulb', '<b>6 W</b> filament LED · <b>2700 K</b> · dimmable · included'],
+						['Cord', '2 m black braided flex along the leadpipe, inline switch'],
+						['Weight', '<b>approx. 3.5 kg</b>'],
+						['Price', '<b>€340</b>, one of one']
+					],
+					photos: [
+						{ src: 'light-and-matter/assets/trumpet/trumpet.jpg', title: 'In the corner', cap: 'Lit at dusk beside the sofa. The bell sits in a turned wooden plinth.', alt: 'The Trumpet lamp lit beside a sofa, standing on its bell on a round wooden plinth' },
+						{ src: 'light-and-matter/assets/trumpet/trumpet-valves.jpg', title: 'The valves', cap: 'Left as they came out of the case: worn lacquer, pistons that still press.', alt: 'Close view of the trumpet valves and tubing under the lamp shade' },
+						{ src: 'light-and-matter/assets/trumpet/trumpet-shade.jpg', title: 'The shade', cap: 'A pleated drum over a warm filament. The weave throws a soft grid of light.', alt: 'The pleated drum shade glowing warm above the trumpet' }
+					]
+				},
+				conrod: {
+					no: '03', name: 'Conrod', price: '<s>€180</s>', status: 'Sold · a similar one can be made', sold: true,
+					lede: 'The piston and the rod came out of the same engine, and they stay together here. Both were cleaned of oil and left with their machining marks and pitting. The big end sits bolted on the piston, the small end carries a spun steel dome, and the flex leaves through the pin bore. This one is sold; the next will come from a different engine, so no two are the same.',
+					rows: [
+						['Height', '<b>approx. 450 mm</b> · base Ø 90 mm'],
+						['Body', 'Engine piston and connecting rod, cleaned, unpolished'],
+						['Shade', 'Spun steel dome, raw finish'],
+						['Socket', 'Brass E27 inside the dome'],
+						['Bulb', '<b>4 W</b> filament LED · <b>2700 K</b> · dimmable · included'],
+						['Cord', '2 m black braided flex, inline switch'],
+						['Weight', '<b>approx. 2.4 kg</b>'],
+						['Price', '<b>€180</b>, sold · a similar one can be made']
+					],
+					photos: [
+						{ src: 'light-and-matter/assets/conrod/conrod.jpg', title: 'Lit', cap: 'Long filament under the dome. The flex leaves the piston through its pin bore.', alt: 'The Conrod lamp lit at night on a wooden desk, the dome shade glowing over a filament bulb' }
+					]
+				},
+				canopy: {
+					no: '04', name: 'Canopy', price: '€320', status: 'Available · in the studio',
+					lede: 'The rod stands straight up out of its piston, the way it ran in the engine. On top sits a square shade in blackened steel, cut with bare branches, so the lamp reads as a small tree in iron: roots in the piston, trunk in the rod. Lit, the branches land on the wall around it.',
+					rows: [
+						['Height', '<b>approx. 520 mm</b> · base Ø 90 mm'],
+						['Body', 'Engine piston and connecting rod, cleaned, unpolished'],
+						['Shade', 'Blackened steel cut with a branch pattern, 140 × 140 mm'],
+						['Socket', 'Brass E27 inside the shade'],
+						['Bulb', '<b>4 W</b> filament LED · <b>2700 K</b> · dimmable · included'],
+						['Cord', '2 m black braided flex, inline switch'],
+						['Weight', '<b>approx. 2.2 kg</b>'],
+						['Price', '<b>€320</b>, one of one']
+					],
+					photos: [
+						{ src: 'light-and-matter/assets/canopy/canopy.jpg', title: 'By the window', cap: 'Lit in the afternoon. The branches in the steel land on the wall behind.', alt: 'The Canopy lamp lit on a wooden table by a window, branch shadows on the wall behind it' }
+					]
+				}
+			};
+
+			// Romanian, keyed by the English above. The popup opens in whatever language the page is in at that moment.
+			var RO = {
+				'Full specification · ': 'Specificații complete · ',
+				'Close': 'Închide', 'Previous photograph': 'Fotografia anterioară', 'Next photograph': 'Fotografia următoare',
+				'Photograph': 'Fotografia', 'Photograph to come': 'Fotografie în curând', 'Photograph to come.': 'Fotografie în curând.',
+				'Enquire about this piece': 'Întreabă de această piesă', 'Commission a similar one': 'Comandă una asemănătoare',
+				'The Arc': 'Arcul', 'The Trumpet': 'Trompeta', 'Conrod': 'Biela', 'Canopy': 'Coroana',
+				'Built to the branch · 3–5 weeks': 'După forma crengii · 3–5 săptămâni',
+				'One of one · in the studio': 'Unicat · în atelier',
+				'Sold · a similar one can be made': 'Vândută · se poate face una asemănătoare',
+				'Available · in the studio': 'Disponibilă · în atelier',
+
+				'Height': 'Înălțime', 'Arm': 'Braț', 'Base': 'Bază', 'Socket': 'Dulie', 'Bulb': 'Bec', 'Cord': 'Cablu', 'Weight': 'Greutate', 'Price': 'Preț',
+				'Body': 'Corp', 'Shade': 'Abajur',
+
+				// the arc
+				'The branch spent nine months drying in a shed before it was stable enough to trust. It sits in a blind mortise cut into the log slice: no bracket, no visible screw. The rope is not decoration: it carries the flex from socket to base, and it is what you take hold of when you move the lamp.': 'Creanga a stat nouă luni la uscat într-un șopron până a devenit destul de stabilă cât să mă pot baza pe ea. E prinsă într-un lăcaș orb tăiat în felia de buștean: fără suport, fără vreun șurub la vedere. Frânghia nu e decor: duce cablul de la dulie până la bază și de ea apuci lampa când o muți.',
+				'<b>420–480 mm</b> · base Ø 200–240 mm': '<b>420–480 mm</b> · bază Ø 200–240 mm',
+				'Weathered hardwood branch, cured 9 months, oiled': 'Creangă de esență tare tocită de vreme, uscată 9 luni, uleiată',
+				'Slice off a fallen trunk, bark left on, felt-footed': 'Felie dintr-un trunchi căzut, cu scoarță, tălpi de pâslă',
+				'Brass E27, knurled shell, key switch on the socket': 'E27 din alamă, carcasă zimțată, comutator rotativ pe dulie',
+				'<b>4 W</b> filament LED · <b>2700 K</b> · dimmable · included': 'LED cu filament <b>4 W</b> · <b>2700 K</b> · dimabil · inclus',
+				'2 m black braided flex in hemp rope, inline switch': '2 m de cablu textil negru în frânghie de cânepă, întrerupător pe fir',
+				'<b>2.1–2.8 kg</b>': '<b>2,1–2,8 kg</b>',
+				'<b>€240–290</b>, depends on the branch, one of one': '<b>€240–290</b>, depinde de creangă, unicat',
+				'Lit': 'Aprinsă', 'On the bench': 'Pe bancul de lucru', 'In the yard': 'În curte', 'In the room': 'În cameră',
+				'Squirrel-cage filament, 2700 K, dimmed to about half.': 'Filament „colivie”, 2700 K, redus cam la jumătate.',
+				'The Arc at night, the filament lit, throwing warm light across the wall': 'Arcul noaptea, cu filamentul aprins, aruncând lumină caldă pe perete',
+				'Finished that afternoon. Globe bulb, hemp rope run the length of the branch.': 'Terminată în aceeași după-amiază. Bec glob, frânghie de cânepă pe toată lungimea crengii.',
+				'The Arc on a workbench beside screwdrivers and tape, globe bulb hanging from a brass socket': 'Arcul pe bancul de lucru, lângă șurubelnițe și bandă adezivă, cu un bec glob atârnând dintr-o dulie de alamă',
+				'Antique-brass socket with a key switch. The branch was dry by May.': 'Dulie din alamă patinată, cu comutator rotativ. Până în mai, creanga era uscată.',
+				'The Arc outdoors in a garden, the workshop building behind it': 'Arcul afară, în grădină, cu clădirea atelierului în spate',
+				'ST64 amber bulb. 280 mm of shelf, and it holds the whole corner.': 'Bec ST64 chihlimbariu. 280 mm de raft și umple tot colțul.',
+				'The Arc indoors on a shelf next to framed pictures, unlit, with an amber Edison bulb': 'Arcul în casă, pe un raft lângă tablouri înrămate, stins, cu un bec Edison chihlimbariu',
+
+				// the trumpet
+				'Retired from a brass band with its valves still moving. The lacquer is worn exactly where the hands held it, and it stays that way. The bell sits in a recess turned into the plinth, and the flex runs up the leadpipe to the shade, so no wire crosses the brass.': 'Retrasă dintr-o fanfară, cu pistoanele încă mobile. Lacul e tocit exact acolo unde au ținut-o mâinile și așa rămâne. Pavilionul stă într-un lăcaș strunjit în soclu, iar cablul urcă pe țeava de suflat până la abajur, așa că niciun fir nu trece peste alamă.',
+				'<b>approx. 800 mm</b> · shade Ø 400 mm': '<b>cca. 800 mm</b> · abajur Ø 400 mm',
+				'B-flat trumpet, original lacquer, valves still working': 'Trompetă în si bemol, lac original, pistoane funcționale',
+				'Turned wooden plinth, bell seated in a recess, felt-footed': 'Soclu de lemn strunjit, pavilionul așezat într-un lăcaș, tălpi de pâslă',
+				'Pleated fabric drum, Ø 400 mm': 'Cilindru plisat din material textil, Ø 400 mm',
+				'Brass E27 under the shade': 'E27 din alamă, sub abajur',
+				'<b>6 W</b> filament LED · <b>2700 K</b> · dimmable · included': 'LED cu filament <b>6 W</b> · <b>2700 K</b> · dimabil · inclus',
+				'2 m black braided flex along the leadpipe, inline switch': '2 m de cablu textil negru de-a lungul țevii de suflat, întrerupător pe fir',
+				'<b>approx. 3.5 kg</b>': '<b>cca. 3,5 kg</b>',
+				'<b>€340</b>, one of one': '<b>€340</b>, unicat',
+				'In the corner': 'În colț', 'The valves': 'Pistoanele', 'The shade': 'Abajurul',
+				'Lit at dusk beside the sofa. The bell sits in a turned wooden plinth.': 'Aprinsă la apus, lângă canapea. Pavilionul stă într-un soclu de lemn strunjit.',
+				'The Trumpet lamp lit beside a sofa, standing on its bell on a round wooden plinth': 'Lampa Trompeta aprinsă lângă o canapea, sprijinită pe pavilion pe un soclu rotund de lemn',
+				'Left as they came out of the case: worn lacquer, pistons that still press.': 'Lăsate cum au ieșit din cutie: lac tocit, pistoane care încă se apasă.',
+				'Close view of the trumpet valves and tubing under the lamp shade': 'Detaliu cu pistoanele și țevile trompetei sub abajur',
+				'A pleated drum over a warm filament. The weave throws a soft grid of light.': 'Un cilindru plisat peste un filament cald. Țesătura aruncă o rețea fină de lumină.',
+				'The pleated drum shade glowing warm above the trumpet': 'Abajurul plisat strălucind cald deasupra trompetei',
+
+				// the conrod
+				'The piston and the rod came out of the same engine, and they stay together here. Both were cleaned of oil and left with their machining marks and pitting. The big end sits bolted on the piston, the small end carries a spun steel dome, and the flex leaves through the pin bore. This one is sold; the next will come from a different engine, so no two are the same.': 'Pistonul și biela au ieșit din același motor și aici rămân împreună. Amândouă au fost curățate de ulei și lăsate cu urmele de prelucrare și cu porii din metal. Capul mare al bielei e prins cu șuruburi pe piston, capul mic ține o cupolă din oțel fasonat, iar cablul iese prin orificiul bolțului. Aceasta e vândută; următoarea va veni dintr-un alt motor, așa că niciuna nu seamănă cu alta.',
+				'<b>approx. 450 mm</b> · base Ø 90 mm': '<b>cca. 450 mm</b> · bază Ø 90 mm',
+				'Engine piston and connecting rod, cleaned, unpolished': 'Piston și bielă de motor, curățate, nelustruite',
+				'Spun steel dome, raw finish': 'Cupolă din oțel fasonat, finisaj brut',
+				'Brass E27 inside the dome': 'E27 din alamă, în interiorul cupolei',
+				'2 m black braided flex, inline switch': '2 m de cablu textil negru, întrerupător pe fir',
+				'<b>approx. 2.4 kg</b>': '<b>cca. 2,4 kg</b>',
+				'<b>€180</b>, sold · a similar one can be made': '<b>€180</b>, vândută · se poate face una asemănătoare',
+				'Long filament under the dome. The flex leaves the piston through its pin bore.': 'Filament lung sub cupolă. Cablul iese din piston prin orificiul bolțului.',
+				'The Conrod lamp lit at night on a wooden desk, the dome shade glowing over a filament bulb': 'Lampa Biela aprinsă noaptea pe un birou de lemn, cu cupola luminând peste un bec cu filament',
+
+				// the canopy
+				'The rod stands straight up out of its piston, the way it ran in the engine. On top sits a square shade in blackened steel, cut with bare branches, so the lamp reads as a small tree in iron: roots in the piston, trunk in the rod. Lit, the branches land on the wall around it.': 'Biela stă dreaptă în pistonul ei, cum lucra în motor. Deasupra stă un abajur pătrat din oțel înnegrit, decupat cu ramuri golașe, așa că lampa se citește ca un copac mic de fier: rădăcinile în piston, trunchiul în bielă. Aprinsă, ramurile se așază pe pereții din jur.',
+				'<b>approx. 520 mm</b> · base Ø 90 mm': '<b>cca. 520 mm</b> · bază Ø 90 mm',
+				'Blackened steel cut with a branch pattern, 140 × 140 mm': 'Oțel înnegrit, decupat cu model de ramuri, 140 × 140 mm',
+				'Brass E27 inside the shade': 'E27 din alamă, în interiorul abajurului',
+				'<b>approx. 2.2 kg</b>': '<b>cca. 2,2 kg</b>',
+				'<b>€320</b>, one of one': '<b>€320</b>, unicat',
+				'By the window': 'Lângă fereastră',
+				'Lit in the afternoon. The branches in the steel land on the wall behind.': 'Aprinsă după-amiaza. Ramurile din oțel se așază pe peretele din spate.',
+				'The Canopy lamp lit on a wooden table by a window, branch shadows on the wall behind it': 'Lampa Coroana aprinsă pe o masă de lemn lângă fereastră, cu umbre de ramuri pe peretele din spate'
+			};
+			var ro = false;
+			function tr(s) { return ro && RO[s] || s; }
+
+			var fs = document.getElementById('fs'), lb = document.getElementById('lb'), more = document.getElementById('lb-more');
+			var stage = document.getElementById('fs-stage'), track = document.getElementById('fs-track');
+			var thumbs = document.getElementById('fs-thumbs'), cap = document.getElementById('fs-cap'), count = document.getElementById('fs-count');
+			var prev = document.getElementById('fs-prev'), next = document.getElementById('fs-next'), closeBtn = document.getElementById('fs-close');
+			var cta = document.getElementById('fs-cta'), info = fs.querySelector('.fs-info'), panel = fs.querySelector('.fs-panel');
+			var isOpen = false, key = null, piece = null, cur = 0, slides = [], tabs = [], drag = null;
+
+			// the deck decides which piece is showing; keep the link visible for every piece and remember which one
+			Array.prototype.forEach.call(document.querySelectorAll('.lot[data-piece] .stack'), function (stack) {
+				stack.addEventListener('click', function () {
+					key = stack.closest('.lot').dataset.piece;
+					more.hidden = !SPECS[key];
+					more.setAttribute('href', '#fs');
+				});
+			});
+			more.addEventListener('click', function (e) {
+				e.preventDefault();
+				if (SPECS[key]) open(key);
+			});
+
+			function drawing(ph, withLabels) {
+				var d = document.createElement('div');
+				d.className = 'fs-drawn';
+				if (withLabels) d.innerHTML = '<span class="stamp">' + tr('Photograph to come') + '</span><span class="view">' + tr(ph.title) + '</span>';
+				var svg = document.querySelector('.lot[data-piece="' + key + '"] .s0 svg');
+				if (svg) d.appendChild(svg.cloneNode(true));
+				return d;
+			}
+
+			function build() {
+				track.innerHTML = ''; thumbs.innerHTML = '';
+				slides = []; tabs = [];
+				piece.photos.forEach(function (ph, i) {
+					var s = document.createElement('div');
+					s.className = 'fs-slide';
+					s.setAttribute('role', 'group');
+					s.setAttribute('aria-roledescription', 'slide');
+					if (ph.src) {
+						var img = new Image(); img.src = ph.src; img.alt = tr(ph.alt || ''); img.decoding = 'async'; img.draggable = false;
+						s.appendChild(img);
+					} else s.appendChild(drawing(ph, true));
+					track.appendChild(s); slides.push(s);
+
+					var b = document.createElement('button');
+					b.type = 'button'; b.className = 'fs-thumb';
+					b.setAttribute('aria-label', tr('Photograph') + ' ' + (i + 1) + ': ' + tr(ph.title));
+					if (ph.src) { var ti = new Image(); ti.src = ph.src; ti.alt = ''; ti.decoding = 'async'; b.appendChild(ti); }
+					else b.appendChild(drawing(ph, false).firstChild || document.createElement('span'));
+					b.addEventListener('click', function () { go(i); });
+					thumbs.appendChild(b); tabs.push(b);
+				});
+				thumbs.hidden = slides.length < 2;
+			}
+
+			function go(i, instant) {
+				var n = slides.length;
+				cur = Math.max(0, Math.min(n - 1, i));
+				if (instant) track.style.transition = 'none';
+				track.style.transform = 'translateX(' + (-cur * 100) + '%)';
+				if (instant) { void track.offsetWidth; track.style.transition = ''; }
+				slides.forEach(function (s, k) { s.setAttribute('aria-hidden', String(k !== cur)); });
+				tabs.forEach(function (b, k) { b.setAttribute('aria-current', String(k === cur)); });
+				if (tabs[cur] && thumbs.scrollWidth > thumbs.clientWidth) thumbs.scrollLeft = tabs[cur].offsetLeft - (thumbs.clientWidth - tabs[cur].offsetWidth) / 2;
+				var ph = piece.photos[cur];
+				cap.innerHTML = '<b>' + tr(ph.title) + '</b>' + tr(ph.cap);
+				count.innerHTML = String(cur + 1).padStart(2, '0') + ' <span>/ ' + String(n).padStart(2, '0') + '</span>';
+				prev.disabled = cur === 0;
+				next.disabled = cur === n - 1;
+				prev.hidden = next.hidden = count.hidden = n < 2;
+			}
+
+			function open(k) {
+				key = k; piece = SPECS[k];
+				ro = document.documentElement.lang === 'ro';
+				fs.setAttribute('lang', ro ? 'ro' : 'en');
+
+				closeBtn.setAttribute('aria-label', tr('Close'));
+				prev.setAttribute('aria-label', tr('Previous photograph'));
+				next.setAttribute('aria-label', tr('Next photograph'));
+				document.getElementById('fs-no').textContent = tr('Full specification · ') + piece.no + ' / ' + String(Object.keys(SPECS).length).padStart(2, '0');
+				document.getElementById('fs-title').textContent = tr(piece.name);
+				document.getElementById('fs-price').innerHTML = piece.price;
+				var st = document.getElementById('fs-status');
+				st.textContent = tr(piece.status); st.classList.toggle('sold', !!piece.sold);
+				document.getElementById('fs-lede').textContent = tr(piece.lede);
+				document.getElementById('fs-specs').innerHTML = piece.rows.map(function (r) { return '<dt>' + tr(r[0]) + '</dt><dd>' + tr(r[1]) + '</dd>'; }).join('');
+				cta.innerHTML = tr(piece.sold ? 'Commission a similar one' : 'Enquire about this piece') + ' &rarr;';
+
+				build();
+				go(0, true);
+				info.scrollTop = 0; panel.scrollTop = 0;
+
+				isOpen = true;
+				lb.inert = true;
+				fs.classList.add('open');
+				fs.setAttribute('aria-hidden', 'false');
+				closeBtn.focus({ preventScroll: true });
+			}
+
+			function close(returnFocus) {
+				if (!isOpen) return;
+				isOpen = false; drag = null;
+				fs.classList.remove('open');
+				fs.setAttribute('aria-hidden', 'true');
+				lb.inert = false;
+				setTimeout(function () { if (!isOpen) { track.innerHTML = ''; thumbs.innerHTML = ''; } }, 650);
+				if (returnFocus) more.focus({ preventScroll: true });
+			}
+
+			fs.addEventListener('click', function (e) { if (e.target.closest('[data-fs-close]')) close(true); });
+			prev.addEventListener('click', function () { go(cur - 1); });
+			next.addEventListener('click', function () { go(cur + 1); });
+			// the enquiry link is an ordinary #contact link: the page's own handler closes the deck and glides there
+			cta.addEventListener('click', function () { close(false); });
+
+			// while open, this popup owns the keyboard: nothing reaches the deck or the page behind it
+			window.addEventListener('keydown', function (e) {
+				if (!isOpen) return;
+				e.stopImmediatePropagation();
+				var k = e.key;
+				if (k === 'Escape') { e.preventDefault(); close(true); }
+				else if (k === 'ArrowRight') { e.preventDefault(); go(cur + 1); }
+				else if (k === 'ArrowLeft') { e.preventDefault(); go(cur - 1); }
+				else if (k === 'Tab') {
+					var f = Array.prototype.filter.call(fs.querySelectorAll('button, a[href]'), function (el) { return !el.disabled && !el.hidden && el.offsetParent !== null; });
+					var first = f[0], last = f[f.length - 1];
+					if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+					else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+				}
+			}, true);
+
+			// swipe or drag the photograph sideways
+			stage.addEventListener('pointerdown', function (e) {
+				if (e.button !== 0 || slides.length < 2 || e.target.closest('button')) return;
+				drag = { x: e.clientX, y: e.clientY, dx: 0, moved: false, lastX: e.clientX, lastT: performance.now(), v: 0, id: e.pointerId };
+			});
+			stage.addEventListener('pointermove', function (e) {
+				if (!drag) return;
+				var dx = e.clientX - drag.x, now = performance.now();
+				if (!drag.moved) {
+					if (Math.abs(dx) < 6) return;
+					if (Math.abs(e.clientY - drag.y) > Math.abs(dx)) { drag = null; return; }
+					drag.moved = true;
+					stage.setPointerCapture(drag.id);
+					stage.classList.add('dragging');
+				}
+				// resist past the first and last photograph
+				if ((cur === 0 && dx > 0) || (cur === slides.length - 1 && dx < 0)) dx *= 0.3;
+				drag.v = (e.clientX - drag.lastX) / Math.max(1, now - drag.lastT);
+				drag.lastX = e.clientX; drag.lastT = now; drag.dx = dx;
+				track.style.transform = 'translateX(calc(' + (-cur * 100) + '% + ' + dx + 'px))';
+			});
+			function endDrag() {
+				if (!drag) return;
+				var d = drag; drag = null;
+				stage.classList.remove('dragging');
+				if (!d.moved) return;
+				if (Math.abs(d.dx) > stage.clientWidth * 0.14 || Math.abs(d.v) > 0.5) go(cur + (d.dx < 0 ? 1 : -1));
+				else go(cur);
+			}
+			stage.addEventListener('pointerup', endDrag);
+			stage.addEventListener('pointercancel', endDrag);
+		})();
+	</script>
+</body>
+
+</html>
