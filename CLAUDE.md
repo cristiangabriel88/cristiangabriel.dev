@@ -30,9 +30,10 @@ skip the build, your edits won't show up live.
 
 ## Deploy
 
-Static site, deployed by **drag-and-drop of this folder onto Netlify** — Netlify runs
-no build and installs nothing. Therefore the build must be run **locally first** (see
-above) so the root `*.js` are current before dragging.
+Static site, deployed by **drag-and-drop of this folder onto Netlify**. Netlify detects
+`package.json` and runs `npm run build` itself; `netlify.toml` tells it to publish the
+project root (`.`), since there is no `dist/`. Still run the build **locally first** so
+the committed root `*.js` stay current.
 
 The live site only needs: `index.html`, root `*.js`, `vendor/`, `*.css`, `resources/`,
 `favicon.svg`, `robots.txt`, `sitemap.xml`, and the project subfolders. `node_modules/`,

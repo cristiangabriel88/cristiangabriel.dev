@@ -1,0 +1,4 @@
+# The site is served straight from the project root (no dist/ folder).
+[build]
+  command = "npm run build"
+  publish = "."
