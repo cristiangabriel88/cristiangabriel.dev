@@ -252,6 +252,14 @@
     tweaks
   }) {
     const projects = [{
+      name: "Kohi Grigorescu",
+      tagline: "A bilingual one-page site for a specialty coffee bar in Bucharest, with menu, gallery, live opening hours and directions.",
+      tech: ["HTML", "CSS", "JavaScript", "GSAP"],
+      url: "kohi-grigorescu/",
+      cta: "See the project",
+      thumb: "resources/images/Projects/kohi-grigorescu.jpg",
+      thumbLabel: "KOHI GRIGORESCU"
+    }, {
       name: "Light & Matter",
       tagline: "A single-page portfolio for handmade lamps built from driftwood, walnut and salvaged engine parts.",
       tech: ["HTML", "CSS", "JavaScript"],

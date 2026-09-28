@@ -348,6 +348,16 @@
   function ProjectsPage({ tweaks }) {
     const projects = [
       {
+        name: "Kohi Grigorescu",
+        tagline:
+          "A bilingual one-page site for a specialty coffee bar in Bucharest, with menu, gallery, live opening hours and directions.",
+        tech: ["HTML", "CSS", "JavaScript", "GSAP"],
+        url: "kohi-grigorescu/",
+        cta: "See the project",
+        thumb: "resources/images/Projects/kohi-grigorescu.jpg",
+        thumbLabel: "KOHI GRIGORESCU",
+      },
+      {
         name: "Light & Matter",
         tagline:
           "A single-page portfolio for handmade lamps built from driftwood, walnut and salvaged engine parts.",
@@ -469,7 +479,7 @@
         <div className="project-thumb placeholder">{project.thumbLabel}</div>
       ),
       <div className="project-body">
-        <div className="project-tag">{`0${index + 1} · Personal Project`}</div>
+        {/* <div className="project-tag">{`0${index + 1} · Personal Project`}</div> */}
         <div className="project-name">
           {project.name
             .split(" ")
